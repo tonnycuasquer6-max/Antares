@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// 1. Tu URL real de Supabase
+const supabaseUrl = 'https://ifdvcxlbikqhmdnuxmuy.supabase.co';
 
-// ESTA ES LA LÍNEA QUE BORRÉ POR ERROR Y QUE CAUSABA EL FALLO
-export const areSupabaseCredentialsSet = Boolean(supabaseUrl && supabaseAnonKey);
+// 2. Tu Publishable Key real y exacta
+const supabaseAnonKey = 'sb_publishable_s8dmc0WVFmmf1jdnKRoPbw_S_CdNWn_';
 
-export const supabase = createClient(
-  supabaseUrl || 'https://ifdvcxlbikqhmdnuxmuy.supabase.co', 
-  supabaseAnonKey || 'llave-temporal-para-que-no-explote'
-);
+// 3. Obligamos al sistema a quitar la pantalla negra
+export const areSupabaseCredentialsSet = true;
+
+// 4. Conectamos con tus datos reales
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
