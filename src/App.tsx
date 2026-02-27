@@ -47,19 +47,17 @@ export default function App() {
     <div className="bg-black text-white min-h-screen font-sans flex flex-col relative">
       
       {/* =========================================================================================
-          CABECERA UNIFICADA (LOGO, ICONOS Y MENÚ DE LUJO) - REESTRUCTURACIÓN FINAL
+          CABECERA UNIFICADA - AJUSTADA A 4PX DE SEPARACIÓN
           ========================================================================================= */}
       <header 
-        // 👇 Wrapper unificado: altura automática, sin márgenes superiores, pegado al borde
-        className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-[2px]" 
+        className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50" 
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
         
-        {/* ICONOS SUPERIORES DERECHOS (SOLO SI INICIÓ SESIÓN) - Mantenidos en posición absoluta */}
+        {/* ICONOS SUPERIORES DERECHOS (SOLO SI INICIÓ SESIÓN) */}
         {user && (
           <div className="absolute top-6 right-6 md:right-12 flex items-center gap-6 z-50">
             
-            {/* BOLSA DE COMPRAS */}
             <button className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path>
@@ -67,7 +65,6 @@ export default function App() {
               <span className="absolute -top-1 -right-2 bg-white text-black text-[9px] font-bold px-[5px] py-[1px] rounded-full">0</span>
             </button>
 
-            {/* PERFIL DE USUARIO Y SUBMENÚ CRISTAL OSCURO */}
             <div className="group relative">
               <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26" xmlns="http://www.w3.org/2000/svg">
@@ -87,22 +84,18 @@ export default function App() {
           </div>
         )}
 
-        {/* LOGO PRINCIPAL (SUPABASE) 👇 REESTRUCTURACIÓN FINAL: ESTRICTO A 2MPX DEL TOPE */}
+        {/* LOGO PRINCIPAL 👇 4px desde el tope superior */}
         <img 
           src={LOGO_URL} 
           alt="ANTARES" 
-          // 👇 mt-[2px] para cumplir la regla estricta. h-auto y justify-start hacen el resto.
-          className="h-20 md:h-32 w-auto object-contain mt-[2px] z-10" 
+          className="h-20 md:h-32 w-auto object-contain mt-[4px] z-10" 
         />
 
-        {/* MENÚ HORIZONTAL DE LUJO INTEGRADO (SOLO SI YA INICIÓ SESIÓN) */}
+        {/* MENÚ HORIZONTAL 👇 4px desde el logo, y 4px de margen inferior */}
         {user && (
-          // 👇 Integrado en la cabecera flex-col: border-none, mt-[2px] para cumplir regla estricta.
-          <nav className="w-full border-none mt-[2px] relative z-40 bg-black/40 backdrop-blur-md">
-            {/* 👇 py-0 para eliminar los huecos de padding verticales antiguos */}
+          <nav className="w-full border-none mt-[4px] mb-[4px] relative z-40 bg-black/40 backdrop-blur-md">
             <ul className="flex justify-center gap-8 md:gap-16 py-0 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400">
               
-              {/* ATELIER */}
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Atelier
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -111,7 +104,6 @@ export default function App() {
                 </div>
               </li>
 
-              {/* JOYERÍA */}
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Joyería
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[260px] gap-4 shadow-2xl text-center">
@@ -121,7 +113,6 @@ export default function App() {
                 </div>
               </li>
 
-              {/* ESENCIALES */}
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Esenciales
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -130,7 +121,6 @@ export default function App() {
                 </div>
               </li>
 
-              {/* PRÊT-À-PORTER */}
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Prêt-à-Porter
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -141,7 +131,6 @@ export default function App() {
                 </div>
               </li>
 
-              {/* OBSEQUIOS */}
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Obsequios
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[180px] gap-4 shadow-2xl text-center max-h-64 overflow-y-auto custom-scrollbar">
@@ -157,9 +146,9 @@ export default function App() {
           </nav>
         )}
 
-         {/* ICONO CENTRAL DE LOGIN INTEGRADO (SOLO SI NO HAY USUARIO) 👇 Para mantener la consistencia al cerrar sesión */}
+         {/* ICONO CENTRAL DE LOGIN 👇 Separación de 4px si no hay sesión */}
         {!user && (
-          <div className="w-full flex justify-center mt-[2px]">
+          <div className="w-full flex justify-center mt-[4px] mb-[4px]">
             <button 
               onClick={() => setShowLoginModal(true)}
               className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer"
@@ -179,7 +168,6 @@ export default function App() {
           ========================================================================================= */}
 
       <main className="flex-grow">
-        {/* HERO Y CATEGORÍAS (SOLO SI NO HAY USUARIO) */}
         {!user && (
           <>
             <section className="py-10 flex items-center justify-center text-center px-4">
@@ -205,7 +193,6 @@ export default function App() {
           </>
         )}
 
-        {/* MENSAJE DE BIENVENIDA (SOLO SI HAY USUARIO) */}
         {user && (
           <section className="container mx-auto px-4 pb-20 mt-10">
             <div className="text-center py-20">
@@ -219,7 +206,6 @@ export default function App() {
         &copy; {new Date().getFullYear()} ANTARES.
       </footer>
 
-      {/* COMPONENTE DE AUTENTICACIÓN */}
       {showLoginModal && (
         <Auth onClose={() => setShowLoginModal(false)} />
       )}
