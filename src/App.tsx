@@ -7,9 +7,8 @@ import Auth from './components/Auth';
 import { areSupabaseCredentialsSet, supabase } from './services/supabase';
 import { useState, useEffect } from 'react';
 
-// RUTAS ABSOLUTAS PARA VERCEL (EVITA QUE EL LOGO DESAPAREZCA AL INICIAR SESIÓN)
-// 👇 AQUÍ ESTÁ EL CAMBIO: Actualizado a /logo.png
-const LOGO_URL = "/logo.png"; 
+// RUTAS ABSOLUTAS DESDE SUPABASE
+const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
 export default function App() {
@@ -33,7 +32,6 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  // PANTALLA NEGRA DE EMERGENCIA (SI FALTAN LLAVES)
   if (!areSupabaseCredentialsSet) {
     return (
       <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6">
@@ -48,11 +46,8 @@ export default function App() {
   return (
     <div className="bg-black text-white min-h-screen font-sans flex flex-col relative">
       
-      {/* ICONOS SUPERIORES DERECHOS (SOLO SI INICIÓ SESIÓN) */}
       {user && (
         <div className="absolute top-6 right-6 md:right-12 flex items-center gap-6 z-50">
-          
-          {/* BOLSA DE COMPRAS */}
           <button className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
             <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path>
@@ -60,7 +55,6 @@ export default function App() {
             <span className="absolute -top-1 -right-2 bg-white text-black text-[9px] font-bold px-[5px] py-[1px] rounded-full">0</span>
           </button>
 
-          {/* PERFIL DE USUARIO Y SUBMENÚ CRISTAL OSCURO */}
           <div className="group relative">
             <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26" xmlns="http://www.w3.org/2000/svg">
@@ -80,7 +74,6 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER PRINCIPAL CON LOGO Y FONDO */}
       <header 
         className="w-full h-32 md:h-44 flex flex-col items-center justify-center bg-cover bg-center mt-[5px] relative"
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
@@ -88,7 +81,6 @@ export default function App() {
         <img src={LOGO_URL} alt="ANTARES" className="h-20 md:h-32 w-auto object-contain relative z-10" />
       </header>
 
-      {/* ICONO CENTRAL DE LOGIN (SOLO SI NO HAY USUARIO) */}
       {!user && (
         <div className="w-full flex justify-center mt-[5px]">
           <button 
@@ -103,12 +95,10 @@ export default function App() {
         </div>
       )}
 
-      {/* MENÚ HORIZONTAL DE LUJO (SOLO SI YA INICIÓ SESIÓN) */}
       {user && (
         <nav className="w-full border-y border-white/10 mt-6 relative z-40 bg-black/40 backdrop-blur-md">
           <ul className="flex justify-center gap-8 md:gap-16 py-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400">
             
-            {/* ATELIER */}
             <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
               Atelier
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -117,7 +107,6 @@ export default function App() {
               </div>
             </li>
 
-            {/* JOYERÍA */}
             <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
               Joyería
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[260px] gap-4 shadow-2xl text-center">
@@ -127,7 +116,6 @@ export default function App() {
               </div>
             </li>
 
-            {/* ESENCIALES */}
             <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
               Esenciales
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -136,7 +124,6 @@ export default function App() {
               </div>
             </li>
 
-            {/* PRÊT-À-PORTER */}
             <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
               Prêt-à-Porter
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center">
@@ -147,7 +134,6 @@ export default function App() {
               </div>
             </li>
 
-            {/* OBSEQUIOS */}
             <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
               Obsequios
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/80 backdrop-blur-md border border-white/10 py-6 px-8 min-w-[180px] gap-4 shadow-2xl text-center max-h-64 overflow-y-auto custom-scrollbar">
@@ -164,7 +150,6 @@ export default function App() {
       )}
 
       <main className="flex-grow">
-        {/* HERO Y CATEGORÍAS (SOLO SI NO HAY USUARIO) */}
         {!user && (
           <>
             <section className="py-10 flex items-center justify-center text-center px-4">
@@ -190,7 +175,6 @@ export default function App() {
           </>
         )}
 
-        {/* MENSAJE DE BIENVENIDA (SOLO SI HAY USUARIO) */}
         {user && (
           <section className="container mx-auto px-4 pb-20 mt-10">
             <div className="text-center py-20">
@@ -204,7 +188,6 @@ export default function App() {
         &copy; {new Date().getFullYear()} ANTARES.
       </footer>
 
-      {/* COMPONENTE DE AUTENTICACIÓN */}
       {showLoginModal && (
         <Auth onClose={() => setShowLoginModal(false)} />
       )}
