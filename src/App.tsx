@@ -8,7 +8,8 @@ import { areSupabaseCredentialsSet, supabase } from './services/supabase';
 import { useState, useEffect } from 'react';
 
 // RUTAS ABSOLUTAS PARA VERCEL (EVITA QUE EL LOGO DESAPAREZCA AL INICIAR SESIÓN)
-const LOGO_URL = "/logo-antares.png"; 
+// 👇 AQUÍ ESTÁ EL CAMBIO: Actualizado a /logo.png
+const LOGO_URL = "/logo.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
 export default function App() {
