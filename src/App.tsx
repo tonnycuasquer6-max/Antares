@@ -37,9 +37,9 @@ export default function App() {
 
   if (!areSupabaseCredentialsSet) {
     return (
-      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6">
-        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl">
-          <h2 className="text-3xl font-serif text-white mb-4">Configuración Requerida</h2>
+      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
+        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none">
+          <h2 className="text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
           <p className="text-gray-400">Verifica tus credenciales de Supabase en los Secrets.</p>
         </div>
       </div>
@@ -53,7 +53,8 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-sans flex flex-col relative">
+    // 👇 FUENTE ELEGANTE (font-serif) APLICADA GLOBALMENTE A TODA LA PÁGINA
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative">
       
       <style>{`
         ::-webkit-scrollbar {
@@ -70,15 +71,15 @@ export default function App() {
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
         
-        {/* 👇 BOTÓN DE VOLVER (SOLO APARECE CUANDO ESTÁS EN OTRA PANTALLA QUE NO SEA HOME) */}
+        {/* BOTÓN DE VOLVER (SOLO LA PUNTA '<' Y TEXTO ELEGANTE) */}
         {user && activeView !== 'home' && (
           <button 
             onClick={() => setActiveView('home')}
-            className="absolute top-6 left-6 md:left-12 flex items-center gap-2 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] tracking-[0.2em] uppercase"
+            // 👇 gap-1.5 para que la punta esté pegada al texto
+            className="absolute top-6 left-6 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] tracking-[0.2em] uppercase"
           >
-            <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
-            </svg>
+            {/* 👇 Reemplazado SVG por símbolo '<' en texto */}
+            <span className="text-sm font-light relative -top-[1px]">&lt;</span>
             Volver
           </button>
         )}
@@ -121,7 +122,6 @@ export default function App() {
           className={`h-20 md:h-32 w-auto object-contain mt-[4px] z-10 ${user ? 'cursor-pointer' : ''}`} 
         />
 
-        {/* 👇 EL MENÚ PRINCIPAL AHORA SOLO EXISTE SI activeView ES 'home' */}
         {user && activeView === 'home' && (
           <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0 animate-fade-in">
             <ul className="flex justify-center gap-10 md:gap-20 py-0 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
@@ -219,12 +219,12 @@ export default function App() {
 
       <main className="flex-grow flex flex-col items-center">
         
-        {/* VISTA 1: VISITANTE NO LOGUEADO */}
         {!user && (
           <>
             <section className="py-20 md:py-32 flex items-center justify-center text-center px-4 w-full flex-grow">
               <div className="max-w-4xl">
-                <h2 className="text-5xl md:text-8xl font-serif font-bold text-white tracking-[0.2em] uppercase opacity-90 animate-fade-in">
+                {/* 👇 FUENTE font-serif inherente aquí */}
+                <h2 className="text-5xl md:text-8xl font-bold text-white tracking-[0.2em] uppercase opacity-90 animate-fade-in">
                   Elegancia Atemporal
                 </h2>
               </div>
@@ -232,7 +232,6 @@ export default function App() {
           </>
         )}
 
-        {/* VISTA 2: HOME USUARIO LOGUEADO */}
         {user && activeView === 'home' && (
           <section className="container mx-auto px-4 pb-20 mt-10 flex-grow flex items-center justify-center animate-fade-in">
             <div className="text-center py-20">
@@ -241,35 +240,33 @@ export default function App() {
           </section>
         )}
 
-        {/* VISTA 3: CATEGORÍAS (CUANDO HACES CLIC EN UN SUBMENÚ) */}
         {user && activeView === 'categoria' && (
           <section className="container mx-auto px-4 py-16 flex-grow flex flex-col items-center justify-center animate-fade-in">
-             <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-6 text-center">Colección Seleccionada</h2>
+             <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-6 text-center">Colección Seleccionada</h2>
              <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Los artículos de esta colección estarán disponibles muy pronto.</p>
           </section>
         )}
 
-        {/* VISTA 4: MI PERFIL */}
         {user && activeView === 'perfil' && (
           <section className="w-full max-w-3xl mx-auto px-4 py-16 flex-grow animate-fade-in">
-            <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
+            <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
             
             <div className="bg-black/80 backdrop-blur-md p-10 rounded-sm shadow-2xl border-none">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div>
                   <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Nombres</label>
-                  <p className="text-white font-serif text-lg">{user.user_metadata?.first_name || 'Tonny'}</p>
+                  <p className="text-white text-lg">{user.user_metadata?.first_name || 'Tonny'}</p>
                 </div>
                 <div>
                   <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Apellidos</label>
-                  <p className="text-white font-serif text-lg">{user.user_metadata?.last_name || 'Cuasquer'}</p>
+                  <p className="text-white text-lg">{user.user_metadata?.last_name || 'Cuasquer'}</p>
                 </div>
               </div>
 
               <div className="mb-8">
                 <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Correo Electrónico</label>
-                <p className="text-white font-serif text-lg">{user.email}</p>
+                <p className="text-white text-lg">{user.email}</p>
               </div>
 
               <div className="mb-8">
@@ -298,10 +295,9 @@ export default function App() {
           </section>
         )}
 
-        {/* VISTA 5: MIS PEDIDOS */}
         {user && activeView === 'pedidos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
-            <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mis Pedidos</h2>
+            <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mis Pedidos</h2>
             <div className="text-center py-20 bg-black/80 backdrop-blur-md shadow-2xl rounded-sm border-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1" viewBox="0 0 24 24" className="w-12 h-12 mx-auto text-gray-700 mb-4" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
               <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Aún no has realizado ninguna compra.</p>
@@ -312,10 +308,9 @@ export default function App() {
           </section>
         )}
 
-        {/* VISTA 6: LISTA DE DESEOS */}
         {user && activeView === 'deseos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
-            <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Lista de Deseos</h2>
+            <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Lista de Deseos</h2>
             <div className="text-center py-20 bg-black/80 backdrop-blur-md shadow-2xl rounded-sm border-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1" viewBox="0 0 24 24" className="w-12 h-12 mx-auto text-gray-700 mb-4" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Tu lista de deseos está vacía.</p>
