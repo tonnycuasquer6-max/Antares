@@ -51,7 +51,7 @@ export default function App() {
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
         
-        {/* ICONOS SUPERIORES DERECHOS (SOLO SI INICIÓ SESIÓN) */}
+        {/* ICONOS SUPERIORES DERECHOS */}
         {user && (
           <div className="absolute top-6 right-6 md:right-12 flex items-center gap-6 z-50">
             
@@ -62,14 +62,15 @@ export default function App() {
               <span className="absolute -top-1 -right-2 bg-white text-black text-[9px] font-bold px-[5px] py-[1px] rounded-full">0</span>
             </button>
 
-            {/* PERFIL DE USUARIO Y SUBMENÚ (EFECTO VIDRIO BORROSO APLICADO) */}
+            {/* PERFIL DE USUARIO Y SUBMENÚ (VIDRIO ULTRA BORROSO) */}
             <div className="group relative">
               <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path>
                 </svg>
               </button>
-              <div className="absolute top-full right-0 mt-4 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-5 px-6 min-w-[200px] gap-4 shadow-2xl text-right z-50 rounded-sm">
+              {/* 👇 CAMBIO AQUÍ: bg-black/70 backdrop-blur-3xl */}
+              <div className="absolute top-full right-0 mt-4 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-5 px-6 min-w-[200px] gap-4 shadow-2xl text-right z-50 rounded-sm">
                 <span className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer">Mi Perfil</span>
                 <span className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer">Mis Pedidos</span>
                 <span className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer">Lista de Deseos</span>
@@ -89,14 +90,15 @@ export default function App() {
           className="h-20 md:h-32 w-auto object-contain mt-[4px] z-10" 
         />
 
-        {/* MENÚ HORIZONTAL (SUBMENÚS CON EFECTO VIDRIO BORROSO) */}
+        {/* MENÚ HORIZONTAL (SUBMENÚS CON VIDRIO ULTRA BORROSO) */}
         {user && (
-          <nav className="w-full border-none mt-[4px] mb-[4px] relative z-40 bg-black/40 backdrop-blur-md">
+          <nav className="w-full border-none mt-[4px] mb-[4px] relative z-40">
             <ul className="flex justify-center gap-8 md:gap-16 py-0 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400">
               
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Atelier
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
+                {/* 👇 CAMBIO AQUÍ: bg-black/70 backdrop-blur-3xl */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
                   <span className="hover:text-gray-300 transition-colors">Joyería Exclusiva</span>
                   <span className="hover:text-gray-300 transition-colors">Prêt-à-Porter</span>
                 </div>
@@ -104,7 +106,7 @@ export default function App() {
 
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Joyería
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-6 px-8 min-w-[260px] gap-4 shadow-2xl text-center rounded-sm">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-6 px-8 min-w-[260px] gap-4 shadow-2xl text-center rounded-sm">
                   <span className="hover:text-gray-300 transition-colors">Acero Fino</span>
                   <span className="hover:text-gray-300 transition-colors">Plata de Ley 925</span>
                   <span className="hover:text-gray-300 transition-colors">Gemas y Piedras Naturales</span>
@@ -113,7 +115,7 @@ export default function App() {
 
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Esenciales
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
                   <span className="hover:text-gray-300 transition-colors">Básicos de Joyería</span>
                   <span className="hover:text-gray-300 transition-colors">Básicos de Vestuario</span>
                 </div>
@@ -121,7 +123,7 @@ export default function App() {
 
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Prêt-à-Porter
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-6 px-8 min-w-[220px] gap-4 shadow-2xl text-center rounded-sm">
                   <span className="hover:text-gray-300 transition-colors">Chaquetas</span>
                   <span className="hover:text-gray-300 transition-colors">Camisetas</span>
                   <span className="hover:text-gray-300 transition-colors">Buzos</span>
@@ -131,7 +133,7 @@ export default function App() {
 
               <li className="group relative cursor-pointer hover:text-white transition-colors py-2">
                 Obsequios
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/40 backdrop-blur-lg py-6 px-8 min-w-[180px] gap-4 shadow-2xl text-center max-h-64 overflow-y-auto custom-scrollbar rounded-sm">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex flex-col bg-black/70 backdrop-blur-3xl py-6 px-8 min-w-[180px] gap-4 shadow-2xl text-center max-h-64 overflow-y-auto custom-scrollbar rounded-sm">
                   {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((price) => (
                     <span key={price} className="hover:text-gray-300 transition-colors">
                       $ {price}.00 USD
@@ -144,7 +146,6 @@ export default function App() {
           </nav>
         )}
 
-         {/* ICONO CENTRAL DE LOGIN */}
         {!user && (
           <div className="w-full flex justify-center mt-[4px] mb-[4px]">
             <button 
