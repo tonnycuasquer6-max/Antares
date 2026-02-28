@@ -10,25 +10,23 @@ import { useState, useEffect } from 'react';
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
-// Datos de prueba para que veas el catálogo y el PDF hoy mismo
+// Datos de prueba
 const productosFalsos = [
-  { id: 1, titulo: 'Chaqueta Obsidian', descripcion: 'Lana virgen con forro de seda oscura. Corte asimétrico.', precio: 450, categoria: 'Sastrería a Medida', imagen_url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000' },
+  { id: 1, titulo: 'Chaqueta Obsidian', descripcion: 'Lana virgen con forro de seda oscura. Corte asimétrico.', precio: 450, categoria: 'Chaquetas', imagen_url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000' },
   { id: 2, titulo: 'Anillo Eclipse', descripcion: 'Plata de ley 925 con ónix central tallado a mano.', precio: 120, categoria: 'Plata de Ley 925', imagen_url: 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000' }
 ];
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [userRole, setUserRole] = useState('admin'); // Temporalmente en admin para que veas los controles
+  const [userRole, setUserRole] = useState('admin'); 
   
   const [activeView, setActiveView] = useState('home');
   const [activeCategory, setActiveCategory] = useState(''); 
   
-  // Estados para la Edición In-Situ
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
   
-  // Estado para las descargas del Catálogo
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
 
   useEffect(() => {
@@ -93,22 +91,18 @@ export default function App() {
   return (
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white">
       
-      {/* 👇 ESTILOS DE IMPRESIÓN CORREGIDOS (MATA LOS BORDES DE VERCEL Y IA STUDIO) 👇 */}
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
         
         @media print {
-          @page { margin: 0; } /* ESTO QUITA LAS URLs, VERCEL Y BORDES BLANCOS */
+          @page { margin: 0; }
           body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
           .screen-only { display: none !important; }
           .print-only { display: block !important; }
         }
       `}</style>
 
-      {/* =========================================================
-          CABEZA Y NAVEGACIÓN (VISIBLE SOLO EN PANTALLA)
-          ========================================================= */}
       <div className="screen-only flex flex-col flex-grow w-full">
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-3" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
@@ -144,12 +138,10 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-20 md:h-32 w-auto object-contain mt-[4px] z-10 cursor-pointer`} />
 
-          {/* 👇 MENÚ COMPLETO RESTAURADO AL 100% 👇 */}
           {user && activeView === 'home' && (
             <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0 animate-fade-in">
               <ul className="flex justify-center gap-10 md:gap-20 py-0 text-xs md:text-sm tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
                 
-                {/* ATELIER */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
                   <div className={puenteInvisibleMenuPrincipal}>
@@ -160,7 +152,6 @@ export default function App() {
                   </div>
                 </li>
 
-                {/* JOYERÍA */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Joyería<div className={menuUnderlineClass}></div></span>
                   <div className={puenteInvisibleMenuPrincipal}>
@@ -172,7 +163,6 @@ export default function App() {
                   </div>
                 </li>
 
-                {/* ESENCIALES */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Esenciales<div className={menuUnderlineClass}></div></span>
                   <div className={puenteInvisibleMenuPrincipal}>
@@ -183,7 +173,6 @@ export default function App() {
                   </div>
                 </li>
 
-                {/* PRÊT-À-PORTER */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Prêt-à-Porter<div className={menuUnderlineClass}></div></span>
                   <div className={puenteInvisibleMenuPrincipal}>
@@ -196,7 +185,6 @@ export default function App() {
                   </div>
                 </li>
 
-                {/* OBSEQUIOS */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Obsequios<div className={menuUnderlineClass}></div></span>
                   <div className={puenteInvisibleMenuPrincipal}>
@@ -225,14 +213,60 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center">
           
-          {/* VISTA HOME */}
+          {/* 👇 VISTA HOME EDITORIAL RESTAURADA 👇 */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
+               
                <section className="w-full text-center py-20 md:py-32 px-4">
                  <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
+               </section>
+
+               <section className="w-full max-w-5xl mx-auto py-20 px-6 text-center">
+                 <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-10">Sobre Nosotros</h3>
+                 <p className="text-white text-lg md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                 </p>
+               </section>
+
+               <section className="w-full max-w-6xl mx-auto py-24 px-6">
+                 <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-16 text-center">Nuestros Servicios</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                     <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Sastrería a Medida</h4>
+                     <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                   </div>
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                     <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Joyería Personalizada</h4>
+                     <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                   </div>
+                   <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                     <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Asesoría de Imagen</h4>
+                     <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                   </div>
+                 </div>
+               </section>
+
+               <section className="w-full max-w-6xl mx-auto py-16 px-6">
+                 <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-16 text-center">Locaciones Editoriales</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="relative h-96 bg-zinc-900 overflow-hidden group cursor-pointer">
+                     <div className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-700 z-10"></div>
+                     <div className="absolute bottom-10 left-10 z-20">
+                       <h4 className="text-2xl tracking-[0.2em] uppercase text-white mb-3">El Gran Salón</h4>
+                       <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">Estudio Principal Antares</p>
+                     </div>
+                   </div>
+                   <div className="relative h-96 bg-zinc-900 overflow-hidden group cursor-pointer">
+                     <div className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-700 z-10"></div>
+                     <div className="absolute bottom-10 left-10 z-20">
+                       <h4 className="text-2xl tracking-[0.2em] uppercase text-white mb-3">Jardín de Invierno</h4>
+                       <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">Espacio de Luz Natural</p>
+                     </div>
+                   </div>
+                 </div>
                </section>
             </div>
           )}
@@ -242,14 +276,12 @@ export default function App() {
             <section className="container mx-auto px-4 py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6">{activeCategory}</h2>
                
-               {/* BOTÓN IN-SITU PARA AÑADIR (SOLO ADMIN) */}
                {userRole === 'admin' && !showInlineForm && (
                  <div onClick={() => setShowInlineForm(true)} className="mb-12 border border-dashed border-white/20 py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer">
                    <span className="text-amber-500 tracking-[0.2em] text-xs uppercase">+ Añadir nueva pieza a {activeCategory}</span>
                  </div>
                )}
 
-               {/* FORMULARIO IN-SITU (SOLO ADMIN) */}
                {userRole === 'admin' && showInlineForm && (
                  <div className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
                    <button onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
@@ -270,7 +302,6 @@ export default function App() {
                  </div>
                )}
 
-               {/* GALERÍA DE PRODUCTOS */}
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                  {productosFalsos.filter(p => p.categoria === activeCategory).map(producto => (
                    <div key={producto.id} className="group relative cursor-pointer">
@@ -313,16 +344,18 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* DESCARGA A LA CARTA */}
+                {/* 👇 TODAS LAS OPCIONES DEL MENÚ ESTÁN AQUÍ AHORA 👇 */}
                 <div className="mb-4 pt-8 border-t border-white/10 mt-8">
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                   
-                  {/* CHECKBOXES ELEGANTES */}
-                  <div className="flex flex-col md:flex-row flex-wrap justify-center gap-6 mb-10">
-                    {['Sastrería a Medida', 'Prêt-à-Porter', 'Plata de Ley 925'].map(cat => (
-                      <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-3 h-3 border transition-colors flex items-center justify-center ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                  <div className="flex flex-col md:flex-row flex-wrap justify-center gap-x-6 gap-y-4 mb-10">
+                    {[
+                      'Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales',
+                      'Básicos de Joyería', 'Básicos de Vestuario', 'Chaquetas', 'Camisetas', 'Buzos', 'Pantalones'
+                    ].map(cat => (
+                      <label key={cat} className="flex items-center gap-3 cursor-pointer group w-full md:w-auto">
+                        <div className={`w-3 h-3 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
                           {categoriasDescarga.includes(cat) && <div className="w-1.5 h-1.5 bg-black"></div>}
                         </div>
                         <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
@@ -361,9 +394,8 @@ export default function App() {
       {/* =========================================================
           VISTA FANTASMA PDF (CERO BORDES, ENCABEZADO Y TÍTULOS LIMPIOS)
           ========================================================= */}
-      <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif" style={{ padding: '2cm' }}>
+      <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
-        {/* 👇 ENCABEZADO CON IMAGEN Y LOGO PARA EL PDF 👇 */}
         <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
         </header>
@@ -373,8 +405,7 @@ export default function App() {
           if (piezasDeCategoria.length === 0) return null;
 
           return (
-            <div key={cat} className="mb-24 page-break-after">
-              {/* 👇 SOLO EL NOMBRE DE LA OPCIÓN ELEGIDA 👇 */}
+            <div key={cat} className="mb-24 page-break-after px-10">
               <h2 className="text-4xl tracking-[0.2em] uppercase text-white mb-16 text-center">{cat}</h2>
               
               <div className="grid grid-cols-2 gap-12">
