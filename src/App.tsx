@@ -70,7 +70,7 @@ export default function App() {
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
         
-        {/* BOTÓN DE VOLVER (TAMAÑO AUMENTADO A text-xs) */}
+        {/* BOTÓN DE VOLVER */}
         {user && activeView !== 'home' && (
           <button 
             onClick={() => setActiveView('home')}
@@ -100,7 +100,6 @@ export default function App() {
               
               <div className={puenteInvisibleMenuUsuario}>
                 <div className={`${cristalOpacoSubmenuClass} min-w-[200px] text-right`}>
-                  {/* 👇 TAMAÑO AUMENTADO A text-xs EN LAS OPCIONES DE USUARIO */}
                   <button onClick={() => setActiveView('perfil')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                   <button onClick={() => setActiveView('pedidos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
                   <button onClick={() => setActiveView('deseos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Lista de Deseos</button>
@@ -122,7 +121,6 @@ export default function App() {
 
         {user && activeView === 'home' && (
           <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0 animate-fade-in">
-            {/* 👇 TAMAÑO AUMENTADO A text-xs md:text-sm EN EL MENÚ PRINCIPAL */}
             <ul className="flex justify-center gap-10 md:gap-20 py-0 text-xs md:text-sm tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
               
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
@@ -218,6 +216,7 @@ export default function App() {
 
       <main className="flex-grow flex flex-col items-center">
         
+        {/* VISTA 1: VISITANTE NO LOGUEADO */}
         {!user && (
           <>
             <section className="py-20 md:py-32 flex items-center justify-center text-center px-4 w-full flex-grow">
@@ -230,14 +229,72 @@ export default function App() {
           </>
         )}
 
+        {/* 👇 NUEVA VISTA 2: HOME EDITORIAL / LANDING PAGE 👇 */}
         {user && activeView === 'home' && (
-          <section className="container mx-auto px-4 pb-20 mt-10 flex-grow flex items-center justify-center animate-fade-in">
-            <div className="text-center py-20">
-              <p className="text-gray-500 tracking-[0.3em] uppercase text-xs">Bienvenido al Atelier de Antares. Seleccione una colección del menú superior.</p>
-            </div>
-          </section>
+          <div className="w-full animate-fade-in flex flex-col items-center pb-20">
+             
+             {/* SECCIÓN: HERO / BIENVENIDA */}
+             <section className="w-full text-center py-16 md:py-24 px-4">
+               <h2 className="text-3xl md:text-5xl tracking-[0.3em] uppercase text-white mb-6">El Arte de la Elegancia</h2>
+               <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
+                 Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
+               </p>
+             </section>
+
+             {/* SECCIÓN: SOBRE NOSOTROS */}
+             <section className="w-full max-w-5xl mx-auto py-20 px-6 text-center">
+               <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-10">Sobre Nosotros</h3>
+               <p className="text-white text-lg md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
+                 "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+               </p>
+             </section>
+
+             {/* SECCIÓN: SERVICIOS */}
+             <section className="w-full max-w-6xl mx-auto py-24 px-6">
+               <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-16 text-center">Nuestros Servicios</h3>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                 <div className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                   <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Sastrería a Medida</h4>
+                   <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                 </div>
+                 <div className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                   <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Joyería Personalizada</h4>
+                   <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                 </div>
+                 <div className="p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                   <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Asesoría de Imagen</h4>
+                   <p className="text-gray-400 text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                 </div>
+               </div>
+             </section>
+
+             {/* SECCIÓN: LUGARES PARA FOTOS (EDITORIALES) */}
+             <section className="w-full max-w-6xl mx-auto py-16 px-6">
+               <h3 className="text-lg tracking-[0.3em] uppercase text-gray-500 mb-16 text-center">Locaciones Editoriales</h3>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {/* Locación 1 */}
+                 <div className="relative h-96 bg-zinc-900 overflow-hidden group cursor-pointer">
+                   {/* Capa oscura que se aclara al pasar el mouse */}
+                   <div className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-700 z-10"></div>
+                   <div className="absolute bottom-10 left-10 z-20">
+                     <h4 className="text-2xl tracking-[0.2em] uppercase text-white mb-3">El Gran Salón</h4>
+                     <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">Estudio Principal Antares</p>
+                   </div>
+                 </div>
+                 {/* Locación 2 */}
+                 <div className="relative h-96 bg-zinc-900 overflow-hidden group cursor-pointer">
+                   <div className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-700 z-10"></div>
+                   <div className="absolute bottom-10 left-10 z-20">
+                     <h4 className="text-2xl tracking-[0.2em] uppercase text-white mb-3">Jardín de Invierno</h4>
+                     <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">Espacio de Luz Natural</p>
+                   </div>
+                 </div>
+               </div>
+             </section>
+          </div>
         )}
 
+        {/* VISTA 3: CATEGORÍAS */}
         {user && activeView === 'categoria' && (
           <section className="container mx-auto px-4 py-16 flex-grow flex flex-col items-center justify-center animate-fade-in">
              <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-6 text-center">Colección Seleccionada</h2>
@@ -245,6 +302,7 @@ export default function App() {
           </section>
         )}
 
+        {/* VISTA 4: MI PERFIL */}
         {user && activeView === 'perfil' && (
           <section className="w-full max-w-3xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
@@ -293,6 +351,7 @@ export default function App() {
           </section>
         )}
 
+        {/* VISTA 5: MIS PEDIDOS */}
         {user && activeView === 'pedidos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mis Pedidos</h2>
@@ -306,6 +365,7 @@ export default function App() {
           </section>
         )}
 
+        {/* VISTA 6: LISTA DE DESEOS */}
         {user && activeView === 'deseos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Lista de Deseos</h2>
@@ -318,7 +378,7 @@ export default function App() {
 
       </main>
 
-      <footer className="bg-black py-8 text-center text-gray-700 text-[9px] tracking-[0.5em] uppercase border-none mt-auto px-4">
+      <footer className="bg-black py-12 text-center text-gray-600 text-[9px] tracking-[0.5em] uppercase border-none mt-auto px-4">
         &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
       </footer>
 
