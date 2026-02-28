@@ -21,7 +21,6 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
   
-  // 👇 EL CATÁLOGO AHORA EMPIEZA VACÍO Y ES DINÁMICO 👇
   const [productos, setProductos] = useState<any[]>([]);
   
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
@@ -70,13 +69,11 @@ export default function App() {
     );
   };
 
-  // 👇 FUNCIÓN PARA AÑADIR PIEZAS VISUALMENTE 👇
   const handlePublicarLocal = (e) => {
     e.preventDefault();
     if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio a la pieza.');
     
     const nuevoId = Date.now();
-    // Crea una URL temporal para la imagen si se subió una
     const imageUrl = nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
     setProductos([{
@@ -92,7 +89,6 @@ export default function App() {
     setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null });
   };
 
-  // 👇 FUNCIÓN PARA BORRAR PIEZAS VISUALMENTE 👇
   const handleBorrarLocal = (id) => {
     if(window.confirm('¿Seguro que deseas retirar esta pieza del catálogo?')) {
       setProductos(productos.filter(p => p.id !== id));
@@ -110,17 +106,36 @@ export default function App() {
     );
   }
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
-  const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
-  const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
-
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
     'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
     'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
+
+  // 👇 LOGICA PARA LOS CHECKBOXES PRINCIPALES 👇
+  const isAllSelected = (menuPrincipal) => {
+    return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
+  };
+
+  const toggleAll = (menuPrincipal) => {
+    const subs = estructuraCatalogo[menuPrincipal];
+    if (isAllSelected(menuPrincipal)) {
+      setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
+    } else {
+      const newSelections = [...categoriasDescarga];
+      subs.forEach(sub => {
+        if (!newSelections.includes(sub)) newSelections.push(sub);
+      });
+      setCategoriasDescarga(newSelections);
+    }
+  };
+
+  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
+  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
+  // 👇 CERO BORDES AQUÍ 👇
+  const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md py-6 px-8 shadow-2xl rounded-sm"; 
+  const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white">
@@ -249,7 +264,6 @@ export default function App() {
           
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
-               
                <section className="w-full text-center py-20 md:py-32 px-4">
                  <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
@@ -304,7 +318,6 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA CATEGORÍA */}
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-4 py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6">{activeCategory}</h2>
@@ -319,13 +332,11 @@ export default function App() {
                  <form onSubmit={handlePublicarLocal} className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
                    <button type="button" onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Detalles de la Nueva Pieza</h3>
-                   
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
                      <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
                    </div>
                    <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
-                   
                    <div className="flex items-center justify-between">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
                      <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
@@ -351,7 +362,6 @@ export default function App() {
                    </div>
                  ))}
                  
-                 {/* 👇 MENSAJE SI EL CATÁLOGO ESTÁ VACÍO 👇 */}
                  {productos.filter(p => p.categoria === activeCategory).length === 0 && (
                     <p className="text-gray-500 tracking-[0.2em] uppercase text-xs col-span-full text-center py-10">No hay piezas en esta colección aún.</p>
                  )}
@@ -359,7 +369,6 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA MI PERFIL */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-3xl mx-auto px-4 py-16 flex-grow animate-fade-in">
               <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
@@ -381,17 +390,25 @@ export default function App() {
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                   
-                  {/* EL ACORDEÓN ELEGANTE */}
+                  {/* 👇 ACORDEÓN CON CHECKBOX SIN EL SIGNO "+" 👇 */}
                   <div className="flex flex-col gap-4 mb-10 w-full max-w-md mx-auto">
                     {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                       <div key={menuPrincipal} className="border-b border-white/10 pb-4">
-                        <button 
-                          onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}
-                          className="w-full flex justify-between items-center text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer hover:text-gray-300 transition-colors"
-                        >
-                          {menuPrincipal}
-                          <span className="text-gray-500 text-lg font-light">{menuPdfExpandido === menuPrincipal ? '-' : '+'}</span>
-                        </button>
+                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none">
+                          <button 
+                            onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}
+                            className="text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer hover:text-gray-300 transition-colors text-left flex-grow"
+                          >
+                            {menuPrincipal}
+                          </button>
+                          {/* CHECKBOX EN LUGAR DEL "+" */}
+                          <div 
+                            className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`}
+                            onClick={() => toggleAll(menuPrincipal)}
+                          >
+                            {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+                          </div>
+                        </div>
                         
                         {menuPdfExpandido === menuPrincipal && (
                           <div className="pt-6 flex flex-col gap-4 pl-2 animate-fade-in">
@@ -412,10 +429,7 @@ export default function App() {
                   
                   <div className="flex justify-center">
                     <button 
-                      onClick={() => {
-                        if(categoriasDescarga.length === 0) return alert("Selecciona al menos una categoría.");
-                        window.print(); 
-                      }} 
+                      onClick={() => window.print()} 
                       className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none flex items-center justify-center gap-2"
                     >
                       <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="16" width="16"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -438,7 +452,7 @@ export default function App() {
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
       {/* =========================================================
-          VISTA FANTASMA PDF (CERO BORDES)
+          VISTA FANTASMA PDF (LÓGICA DE VACÍO = TODO, Y TÍTULOS)
           ========================================================= */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
@@ -446,12 +460,17 @@ export default function App() {
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
         </header>
 
-        {categoriasDescarga.map(cat => {
+        {/* LÓGICA DE IMPRESIÓN: Si está vacío, imprime todo */}
+        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           if (piezasDeCategoria.length === 0) return null;
+          
+          const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
 
           return (
             <div key={cat} className="mb-24 page-break-after px-10">
+              {/* 👇 TÍTULO DEL MENÚ Y SUBMENÚ 👇 */}
+              <h3 className="text-xl tracking-[0.3em] uppercase text-gray-500 mb-2 text-center">{parentMenu}</h3>
               <h2 className="text-4xl tracking-[0.2em] uppercase text-white mb-16 text-center">{cat}</h2>
               
               <div className="grid grid-cols-2 gap-12">
