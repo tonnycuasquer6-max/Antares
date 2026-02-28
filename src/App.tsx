@@ -53,7 +53,6 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    // 👇 FUENTE ELEGANTE (font-serif) APLICADA GLOBALMENTE A TODA LA PÁGINA
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative">
       
       <style>{`
@@ -71,14 +70,12 @@ export default function App() {
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
         
-        {/* BOTÓN DE VOLVER (SOLO LA PUNTA '<' Y TEXTO ELEGANTE) */}
+        {/* BOTÓN DE VOLVER (TAMAÑO AUMENTADO A text-xs) */}
         {user && activeView !== 'home' && (
           <button 
             onClick={() => setActiveView('home')}
-            // 👇 gap-1.5 para que la punta esté pegada al texto
-            className="absolute top-6 left-6 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] tracking-[0.2em] uppercase"
+            className="absolute top-6 left-6 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-xs tracking-[0.2em] uppercase"
           >
-            {/* 👇 Reemplazado SVG por símbolo '<' en texto */}
             <span className="text-sm font-light relative -top-[1px]">&lt;</span>
             Volver
           </button>
@@ -103,10 +100,11 @@ export default function App() {
               
               <div className={puenteInvisibleMenuUsuario}>
                 <div className={`${cristalOpacoSubmenuClass} min-w-[200px] text-right`}>
-                  <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
-                  <button onClick={() => setActiveView('pedidos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
-                  <button onClick={() => setActiveView('deseos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Lista de Deseos</button>
-                  <button onClick={handleLogout} className="text-[10px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">
+                  {/* 👇 TAMAÑO AUMENTADO A text-xs EN LAS OPCIONES DE USUARIO */}
+                  <button onClick={() => setActiveView('perfil')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                  <button onClick={() => setActiveView('pedidos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
+                  <button onClick={() => setActiveView('deseos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Lista de Deseos</button>
+                  <button onClick={handleLogout} className="text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">
                     Cerrar Sesión
                   </button>
                 </div>
@@ -124,7 +122,8 @@ export default function App() {
 
         {user && activeView === 'home' && (
           <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0 animate-fade-in">
-            <ul className="flex justify-center gap-10 md:gap-20 py-0 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
+            {/* 👇 TAMAÑO AUMENTADO A text-xs md:text-sm EN EL MENÚ PRINCIPAL */}
+            <ul className="flex justify-center gap-10 md:gap-20 py-0 text-xs md:text-sm tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
               
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                 <span className="hover:text-white transition-colors block relative">
@@ -223,7 +222,6 @@ export default function App() {
           <>
             <section className="py-20 md:py-32 flex items-center justify-center text-center px-4 w-full flex-grow">
               <div className="max-w-4xl">
-                {/* 👇 FUENTE font-serif inherente aquí */}
                 <h2 className="text-5xl md:text-8xl font-bold text-white tracking-[0.2em] uppercase opacity-90 animate-fade-in">
                   Elegancia Atemporal
                 </h2>
@@ -301,7 +299,7 @@ export default function App() {
             <div className="text-center py-20 bg-black/80 backdrop-blur-md shadow-2xl rounded-sm border-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1" viewBox="0 0 24 24" className="w-12 h-12 mx-auto text-gray-700 mb-4" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
               <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Aún no has realizado ninguna compra.</p>
-              <button onClick={() => setActiveView('home')} className="mt-8 text-white hover:text-gray-400 transition-colors text-[10px] tracking-[0.2em] uppercase cursor-pointer bg-transparent outline-none border-none">
+              <button onClick={() => setActiveView('home')} className="mt-8 text-white hover:text-gray-400 transition-colors text-xs tracking-[0.2em] uppercase cursor-pointer bg-transparent outline-none border-none">
                 Explorar Colecciones
               </button>
             </div>
