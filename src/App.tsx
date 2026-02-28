@@ -5,31 +5,30 @@
 
 import Auth from './components/Auth';
 import { areSupabaseCredentialsSet, supabase } from './services/supabase';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
-// Datos de prueba para que veas cómo se ve el catálogo y el PDF hoy mismo
-const productosFalsos = [
-  { id: 1, titulo: 'Chaqueta Obsidian', descripcion: 'Lana virgen con forro de seda oscura. Corte asimétrico.', precio: 450, categoria: 'Prêt-à-Porter', imagen_url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&auto=format&fit=crop&q=60' },
-  { id: 2, titulo: 'Anillo Eclipse', descripcion: 'Plata de ley 925 con ónix central tallado a mano.', precio: 120, categoria: 'Plata de Ley 925', imagen_url: 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?w=500&auto=format&fit=crop&q=60' }
+// Complete simulation data for catalog and PDF export
+const mockProductData = [
+  { id: 1, title: 'Obsidian Suit', description: 'Virgin wool with dark silk lining. Asymmetric cut.', price: 450, category: 'Sastrería a Medida', imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000' },
+  { id: 2, title: 'Eclipse Ring', description: '925 sterling silver with hand-carved central onyx.', price: 120, category: 'Plata de Ley 925', imageUrl: 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000' }
 ];
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [userRole, setUserRole] = useState('admin'); // 👈 LO PUSE EN 'admin' POR AHORA PARA QUE VEAS LOS BOTONES
+  const [userRole, setUserRole] = useState('admin'); // Set to 'admin' temporarily to test features
   
   const [activeView, setActiveView] = useState('home');
-  const [activeCategory, setActiveCategory] = useState(''); // 👈 Sabe en qué menú estás exactamente
+  const [activeCategory, setActiveCategory] = useState(''); // Knows exact menu
   
-  // Estados para la Edición In-Situ
+  // States for in-situ editing
   const [showInlineForm, setShowInlineForm] = useState(false);
-  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
   
-  // Estado para las descargas del Catálogo
-  const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
+  // State for customized catalog downloads
+  const [pdfCategories, setPdfCategories] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,7 +52,7 @@ export default function App() {
       const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
       if (data) setUserRole(data.rol);
     } catch (error) {
-      console.error("Error al obtener rol:", error);
+      console.error("Error fetching role:", error);
     }
   };
 
@@ -62,17 +61,15 @@ export default function App() {
     setActiveView('home'); 
   };
 
-  // Navegación exacta
-  const irACategoria = (nombreCategoria) => {
-    setActiveCategory(nombreCategoria);
+  const goToCategory = (categoryName) => {
+    setActiveCategory(categoryName);
     setActiveView('categoria');
     setShowInlineForm(false);
   };
 
-  // Control de checkboxes para PDF
-  const handleCheckbox = (categoria) => {
-    setCategoriasDescarga(prev => 
-      prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]
+  const handlePdfCheckbox = (category) => {
+    setPdfCategories(prev => 
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
     );
   };
 
@@ -80,65 +77,61 @@ export default function App() {
     return (
       <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
         <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none">
-          <h2 className="text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
-          <p className="text-gray-400">Verifica tus credenciales de Supabase en los Secrets.</p>
+          <h2 className="text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuration Required</h2>
+          <p className="text-gray-400">Verify Supabase credentials in Secrets.</p>
         </div>
       </div>
     );
   }
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
-  const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
+  const invisibleBridgeUserMenu = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
+  const invisibleBridgeMainMenu = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
+  const opaqueCrystalSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white print-adjust">
       
-      {/* ESTILOS DE IMPRESIÓN (PDF FANTASMA) Y SCROLL OCULTO */}
+      {/* Dynamic styles for hidden scrollbar and print mode */}
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Cuando el admin presiona Descargar PDF, ocultamos todo excepto el Catálogo Fantasma */
         @media print {
           body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .screen-only { display: none !important; }
           .print-only { display: block !important; }
-          @page { margin: 2cm; }
+          @page { margin: 1cm; }
         }
       `}</style>
 
-      {/* =========================================================
-          CABEZA Y NAVEGACIÓN (VISIBLE SOLO EN PANTALLA)
-          ========================================================= */}
       <div className="screen-only flex flex-col flex-grow w-full">
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-3" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
             <button onClick={() => setActiveView('home')} className="absolute top-6 left-6 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-xs tracking-[0.2em] uppercase">
-              <span className="text-sm font-light relative -top-[1px]">&lt;</span> Volver
+              <span className="text-sm font-light relative -top-[1px]">&lt;</span> Back
             </button>
           )}
 
           {user && (
             <div className="absolute top-6 right-6 md:right-12 flex items-center gap-6 z-50">
               <button className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="24" width="24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[9px] font-bold px-[5px] py-[1px] rounded-full">0</span>
               </button>
 
               <div className="group relative">
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
-                <div className={puenteInvisibleMenuUsuario}>
-                  <div className={`${cristalOpacoSubmenuClass} min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
-                    <button onClick={() => setActiveView('pedidos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
-                    <button onClick={() => setActiveView('deseos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Lista de Deseos</button>
+                <div className={invisibleBridgeUserMenu}>
+                  <div className={`${opaqueCrystalSubmenuClass} min-w-[200px] text-right`}>
+                    <button onClick={() => setActiveView('perfil')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Profile</button>
+                    <button onClick={() => setActiveView('pedidos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Orders</button>
+                    <button onClick={() => setActiveView('deseos')} className="text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Wishlist</button>
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={handleLogout} className="text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Sign Out</button>
                   </div>
                 </div>
               </div>
@@ -154,10 +147,9 @@ export default function App() {
                 {/* ATELIER */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[220px] text-center`}>
-                      <span onClick={() => irACategoria('Sastrería a Medida')} className="hover:text-gray-300 transition-colors cursor-pointer block">Sastrería a Medida</span>
-                      <span onClick={() => irACategoria('Prêt-à-Porter')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Prêt-à-Porter</span>
+                  <div className={invisibleBridgeMainMenu}>
+                    <div className={`${opaqueCrystalSubmenuClass} min-w-[220px] text-center`}>
+                      <span onClick={() => goToCategory('Sastrería a Medida')} className="hover:text-gray-300 transition-colors cursor-pointer block">Bespoke Tailoring</span>
                     </div>
                   </div>
                 </li>
@@ -165,10 +157,9 @@ export default function App() {
                 {/* JOYERÍA */}
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Joyería<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[260px] text-center`}>
-                      <span onClick={() => irACategoria('Acero Fino')} className="hover:text-gray-300 transition-colors cursor-pointer block">Acero Fino</span>
-                      <span onClick={() => irACategoria('Plata de Ley 925')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Plata de Ley 925</span>
+                  <div className={invisibleBridgeMainMenu}>
+                    <div className={`${opaqueCrystalSubmenuClass} min-w-[260px] text-center`}>
+                      <span onClick={() => goToCategory('Plata de Ley 925')} className="hover:text-gray-300 transition-colors cursor-pointer block">925 Sterling Silver</span>
                     </div>
                   </div>
                 </li>
@@ -180,7 +171,7 @@ export default function App() {
           {!user && (
             <div className="w-full flex justify-center mt-[4px] mb-[4px]">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="35" width="35" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="35" width="35"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
             </div>
           )}
@@ -188,108 +179,105 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center">
           
-          {/* VISTA HOME */}
+          {/* HOME VIEW */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
-               <section className="w-full text-center py-20 md:py-32 px-4">
-                 <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Elegancia Atemporal</h2>
+               <section className="w-full text-center py-20 md:py-32 px-4 hero-adjust">
+                 <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Timeless Elegance</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
-                   Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
+                   Welcome to the Antares Atelier. A space dedicated to sophistication, timeless design, and exclusivity in every detail.
                  </p>
                </section>
             </div>
           )}
 
-          {/* 👇 VISTA CATEGORÍA (CON EDICIÓN IN-SITU PARA ADMIN) 👇 */}
+          {/* CATEGORY VIEW WITH IN-SITU EDITING */}
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-4 py-16 flex-grow animate-fade-in w-full max-w-6xl">
-               <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6">{activeCategory}</h2>
+               <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 category-title">{activeCategory}</h2>
                
-               {/* BOTÓN IN-SITU PARA AÑADIR (SOLO ADMIN) */}
+               {/* IN-SITU ADD BUTTON (ADMIN ONLY) */}
                {userRole === 'admin' && !showInlineForm && (
                  <div onClick={() => setShowInlineForm(true)} className="mb-12 border border-dashed border-white/20 py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer">
-                   <span className="text-amber-500 tracking-[0.2em] text-xs uppercase">+ Añadir nueva pieza a {activeCategory}</span>
+                   <span className="text-amber-500 tracking-[0.2em] text-xs uppercase">+ Add new piece to {activeCategory}</span>
                  </div>
                )}
 
-               {/* FORMULARIO IN-SITU (SOLO ADMIN) */}
+               {/* INLINE EDITING FORM (ADMIN ONLY) */}
                {userRole === 'admin' && showInlineForm && (
-                 <div className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
+                 <div className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative inline-form">
                    <button onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
-                   <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Nueva Pieza</h3>
+                   <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6 form-title">New Piece Details</h3>
                    
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                     <input type="text" placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
-                     <input type="number" placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
+                     <input type="text" placeholder="PIECE TITLE" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
+                     <input type="number" placeholder="PRICE (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
                    </div>
-                   <textarea placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
+                   <textarea placeholder="EDITORIAL DESCRIPTION..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
                    
                    <div className="flex items-center justify-between">
                      <input type="file" className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
                      <button className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
-                       Publicar
+                       Publish
                      </button>
                    </div>
                  </div>
                )}
 
-               {/* GALERÍA DE PRODUCTOS */}
+               {/* PRODUCT GALLERY */}
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                 {productosFalsos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="group relative cursor-pointer">
-                     <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative">
-                       <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                 {mockProductData.filter(p => p.category === activeCategory).map(producto => (
+                   <div key={producto.id} className="group relative cursor-pointer product-card">
+                     <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative image-container">
+                       <img src={producto.imageUrl} alt={producto.title} className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
                        
-                       {/* CONTROLES IN-SITU DE EDICIÓN (SOLO ADMIN) */}
+                       {/* IN-SITU EDITING CONTROLS (ADMIN ONLY) */}
                        {userRole === 'admin' && (
-                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px]">EDITAR</button>
-                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]">BORRAR</button>
+                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity admin-controls">
+                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px]">EDIT</button>
+                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]">DELETE</button>
                          </div>
                        )}
                      </div>
-                     <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-1">{producto.titulo}</h4>
-                     <p className="text-xs tracking-[0.1em] text-gray-500">${producto.precio} USD</p>
+                     <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-1 title-adjust">{producto.title}</h4>
+                     <p className="text-xs tracking-[0.1em] text-gray-500 price-adjust">${producto.price} USD</p>
                    </div>
                  ))}
-                 {productosFalsos.filter(p => p.categoria === activeCategory).length === 0 && (
-                    <p className="text-gray-500 tracking-[0.2em] uppercase text-xs col-span-full text-center py-10">No hay piezas en esta colección aún.</p>
-                 )}
                </div>
             </section>
           )}
 
-          {/* 👇 VISTA MI PERFIL (CON CHECKBOXES PARA DESCARGA) 👇 */}
+          {/* PROFILE VIEW WITH CUSTOMIZABLE LOOKBOOK */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-3xl mx-auto px-4 py-16 flex-grow animate-fade-in">
-              <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
+              <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-10 text-center pb-4 profile-title">My Profile</h2>
               
-              <div className="bg-black/80 backdrop-blur-md p-10 rounded-sm shadow-2xl border-none">
+              <div className="bg-black/80 backdrop-blur-md p-10 rounded-sm shadow-2xl border-none profile-card">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Nombres</label>
+                    <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Name</label>
                     <p className="text-white text-lg">{user.user_metadata?.first_name || 'Tonny'}</p>
                   </div>
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Correo Electrónico</label>
+                    <label className="block text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-2">Email</label>
                     <p className="text-white text-lg">{user.email}</p>
                   </div>
                 </div>
 
-                {/* DESCARGA A LA CARTA */}
-                <div className="mb-4 pt-8 border-t border-white/10 mt-8">
-                  <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
-                  <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                {/* CUSTOMIZABLE DOWNLOAD SECTION */}
+                <div className="mb-4 pt-8 border-t border-white/10 mt-8 lookbook-section">
+                  <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center lookbook-title">A La Carte Catalog</label>
+                  <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8 lookbook-desc">Select collections to include in your interactive PDF lookbook.</p>
                   
-                  {/* CHECKBOXES ELEGANTES */}
-                  <div className="flex flex-col md:flex-row justify-center gap-6 mb-10">
-                    {['Sastrería a Medida', 'Prêt-à-Porter', 'Acero Fino', 'Plata de Ley 925'].map(cat => (
+                  {/* CUSTOM CHECKBOXES */}
+                  <div className="flex flex-col md:flex-row justify-center gap-6 mb-10 check-group">
+                    {['Sastrería a Medida', 'Plata de Ley 925'].map(cat => (
                       <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-3 h-3 border transition-colors flex items-center justify-center ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                          {categoriasDescarga.includes(cat) && <div className="w-1.5 h-1.5 bg-black"></div>}
+                        <div className={`w-3 h-3 border transition-colors flex items-center justify-center ${pdfCategories.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                          {pdfCategories.includes(cat) && <div className="w-1.5 h-1.5 bg-black"></div>}
                         </div>
-                        <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
+                        <input type="checkbox" className="hidden" onChange={() => handlePdfCheckbox(cat)} checked={pdfCategories.includes(cat)} />
                         <span className="text-gray-400 group-hover:text-white text-[9px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
                       </label>
                     ))}
@@ -298,13 +286,13 @@ export default function App() {
                   <div className="flex justify-center">
                     <button 
                       onClick={() => {
-                        if(categoriasDescarga.length === 0) return alert("Selecciona al menos una categoría.");
+                        if(pdfCategories.length === 0) return alert("Select at least one category.");
                         window.print(); 
                       }} 
                       className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none flex items-center justify-center gap-2"
                     >
-                      <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                      Generar Lookbook PDF
+                      <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="16" width="16"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                      Generate Lookbook PDF
                     </button>
                   </div>
                 </div>
@@ -315,34 +303,37 @@ export default function App() {
 
         </main>
 
-        <footer className="bg-black py-12 text-center text-gray-600 text-[9px] tracking-[0.5em] uppercase border-none mt-auto px-4">
-          &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
+        <footer className="bg-black py-12 text-center text-gray-600 text-[9px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only">
+          &copy; {new Date().getFullYear()} ANTARES. Timeless Elegance.
         </footer>
       </div>
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
       {/* =========================================================
-          VISTA FANTASMA (SOLO SE VE CUANDO DESCARGAS EL PDF)
+          GHOST VIEW (ONLY VISIBLE IN GENERATED PDF)
           ========================================================= */}
-      <div className="hidden print-only bg-black text-white w-full min-h-screen p-10 font-serif">
-        <h1 className="text-5xl tracking-[0.3em] uppercase text-center mb-4 mt-10">ANTARES</h1>
-        <p className="text-center text-xs tracking-[0.5em] uppercase text-gray-400 mb-20 border-b border-white/20 pb-10">Lookbook Editorial Seleccionado</p>
+      <div className="hidden print-only bg-black text-white w-full min-h-screen p-10 font-serif pdf-container">
         
-        {categoriasDescarga.map(cat => {
-          const piezasDeCategoria = productosFalsos.filter(p => p.categoria === cat);
-          if (piezasDeCategoria.length === 0) return null;
+        {/* PDF HEADER WITH IMAGE AND LOGO */}
+        <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-3 pb-6 border-b border-white/10 pdf-header" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
+          <img src={LOGO_URL} alt="ANTARES" className={`h-20 md:h-32 w-auto object-contain mt-[4px] z-10`} />
+        </header>
+
+        {pdfCategories.map(cat => {
+          const catPieces = mockProductData.filter(p => p.category === cat);
+          if (catPieces.length === 0) return null;
 
           return (
-            <div key={cat} className="mb-24 page-break-after">
-              <h2 className="text-2xl tracking-[0.2em] uppercase text-white mb-12 text-center">{cat}</h2>
-              <div className="grid grid-cols-2 gap-12">
-                {piezasDeCategoria.map(p => (
-                  <div key={p.id} className="flex flex-col items-center text-center">
-                    <img src={p.imagen_url} className="w-full aspect-[3/4] object-cover grayscale mb-6" alt={p.titulo} />
-                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2">{p.titulo}</h3>
-                    <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
-                    <p className="text-[10px] leading-relaxed text-gray-500 px-4">{p.descripcion}</p>
+            <div key={cat} className="mb-24 page-break-after pdf-section">
+              <h2 className="text-2xl tracking-[0.2em] uppercase text-white mb-12 text-center section-title">{cat}</h2>
+              <div className="grid grid-cols-2 gap-12 pdf-grid">
+                {catPieces.map(p => (
+                  <div key={p.id} className="flex flex-col items-center text-center pdf-card">
+                    <img src={p.imageUrl} className="w-full aspect-[3/4] object-cover grayscale mb-6 pdf-image" alt={p.title} />
+                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2 pdf-item-title">{p.title}</h3>
+                    <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4 pdf-item-price">${p.price} USD</p>
+                    <p className="text-[10px] leading-relaxed text-gray-500 px-4 pdf-item-desc">{p.description}</p>
                   </div>
                 ))}
               </div>
