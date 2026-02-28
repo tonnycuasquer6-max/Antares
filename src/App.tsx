@@ -27,7 +27,9 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
   
+  // Estados para las descargas del Catálogo
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
+  const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null); // 👈 NUEVO ESTADO PARA EL ACORDEÓN
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -87,6 +89,14 @@ export default function App() {
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
+
+  // 👇 ESTRUCTURA DEL MENÚ PARA EL DESPLEGABLE DEL PDF 👇
+  const estructuraCatalogo = {
+    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
+    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
+  };
 
   return (
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white">
@@ -213,10 +223,9 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center">
           
-          {/* 👇 VISTA HOME EDITORIAL RESTAURADA 👇 */}
+          {/* VISTA HOME EDITORIAL */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
-               
                <section className="w-full text-center py-20 md:py-32 px-4">
                  <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
@@ -271,7 +280,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA CATEGORÍA (CON EDICIÓN IN-SITU PARA ADMIN) */}
+          {/* VISTA CATEGORÍA */}
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-4 py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6">{activeCategory}</h2>
@@ -286,13 +295,11 @@ export default function App() {
                  <div className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
                    <button onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Detalles de la Nueva Pieza</h3>
-                   
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                      <input type="text" placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
                      <input type="number" placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
                    </div>
                    <textarea placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
-                   
                    <div className="flex items-center justify-between">
                      <input type="file" className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
                      <button className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
@@ -307,7 +314,6 @@ export default function App() {
                    <div key={producto.id} className="group relative cursor-pointer">
                      <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative">
                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                       
                        {userRole === 'admin' && (
                          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                            <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px]">EDITAR</button>
@@ -344,23 +350,38 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 👇 TODAS LAS OPCIONES DEL MENÚ ESTÁN AQUÍ AHORA 👇 */}
+                {/* 👇 SECCIÓN ACORDEÓN PARA DESCARGA A LA CARTA 👇 */}
                 <div className="mb-4 pt-8 border-t border-white/10 mt-8">
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                   
-                  <div className="flex flex-col md:flex-row flex-wrap justify-center gap-x-6 gap-y-4 mb-10">
-                    {[
-                      'Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales',
-                      'Básicos de Joyería', 'Básicos de Vestuario', 'Chaquetas', 'Camisetas', 'Buzos', 'Pantalones'
-                    ].map(cat => (
-                      <label key={cat} className="flex items-center gap-3 cursor-pointer group w-full md:w-auto">
-                        <div className={`w-3 h-3 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                          {categoriasDescarga.includes(cat) && <div className="w-1.5 h-1.5 bg-black"></div>}
-                        </div>
-                        <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                        <span className="text-gray-400 group-hover:text-white text-[9px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
-                      </label>
+                  {/* EL ACORDEÓN ELEGANTE */}
+                  <div className="flex flex-col gap-4 mb-10 w-full max-w-md mx-auto">
+                    {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
+                      <div key={menuPrincipal} className="border-b border-white/10 pb-4">
+                        <button 
+                          onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}
+                          className="w-full flex justify-between items-center text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer hover:text-gray-300 transition-colors"
+                        >
+                          {menuPrincipal}
+                          <span className="text-gray-500 text-lg font-light">{menuPdfExpandido === menuPrincipal ? '-' : '+'}</span>
+                        </button>
+                        
+                        {/* Submenús desplegados */}
+                        {menuPdfExpandido === menuPrincipal && (
+                          <div className="pt-6 flex flex-col gap-4 pl-2 animate-fade-in">
+                            {submenus.map(cat => (
+                              <label key={cat} className="flex items-center gap-4 cursor-pointer group w-full">
+                                <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                                  {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
+                                </div>
+                                <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
+                                <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                   
@@ -392,7 +413,7 @@ export default function App() {
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
       {/* =========================================================
-          VISTA FANTASMA PDF (CERO BORDES, ENCABEZADO Y TÍTULOS LIMPIOS)
+          VISTA FANTASMA PDF
           ========================================================= */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
