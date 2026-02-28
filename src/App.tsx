@@ -113,7 +113,6 @@ export default function App() {
     'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
 
-  // 👇 LOGICA PARA LOS CHECKBOXES PRINCIPALES 👇
   const isAllSelected = (menuPrincipal) => {
     return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
   };
@@ -133,7 +132,6 @@ export default function App() {
 
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
-  // 👇 CERO BORDES AQUÍ 👇
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -390,18 +388,19 @@ export default function App() {
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                   
-                  {/* 👇 ACORDEÓN CON CHECKBOX SIN EL SIGNO "+" 👇 */}
+                  {/* 👇 ACORDEÓN CON CHECKBOX. LETRAS GRISES QUE SE VUELVEN BLANCAS AL PASAR MOUSE 👇 */}
                   <div className="flex flex-col gap-4 mb-10 w-full max-w-md mx-auto">
                     {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                       <div key={menuPrincipal} className="border-b border-white/10 pb-4">
-                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none">
+                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer">
                           <button 
                             onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}
-                            className="text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer hover:text-gray-300 transition-colors text-left flex-grow"
+                            className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow"
                           >
                             {menuPrincipal}
                           </button>
-                          {/* CHECKBOX EN LUGAR DEL "+" */}
+                          
+                          {/* CHECKBOX PARA SELECCIONAR TODA LA CATEGORÍA */}
                           <div 
                             className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`}
                             onClick={() => toggleAll(menuPrincipal)}
@@ -452,7 +451,7 @@ export default function App() {
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
       {/* =========================================================
-          VISTA FANTASMA PDF (LÓGICA DE VACÍO = TODO, Y TÍTULOS)
+          VISTA FANTASMA PDF (MUESTRA TÍTULOS AUNQUE ESTÉN VACÍOS)
           ========================================================= */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
@@ -460,29 +459,33 @@ export default function App() {
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
         </header>
 
-        {/* LÓGICA DE IMPRESIÓN: Si está vacío, imprime todo */}
+        {/* LÓGICA DE IMPRESIÓN: Si está vacío (no eligió nada), imprime todo */}
         {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
-          if (piezasDeCategoria.length === 0) return null;
-          
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
 
           return (
             <div key={cat} className="mb-24 page-break-after px-10">
-              {/* 👇 TÍTULO DEL MENÚ Y SUBMENÚ 👇 */}
+              
+              {/* 👇 TÍTULOS SIEMPRE VISIBLES 👇 */}
               <h3 className="text-xl tracking-[0.3em] uppercase text-gray-500 mb-2 text-center">{parentMenu}</h3>
               <h2 className="text-4xl tracking-[0.2em] uppercase text-white mb-16 text-center">{cat}</h2>
               
-              <div className="grid grid-cols-2 gap-12">
-                {piezasDeCategoria.map(p => (
-                  <div key={p.id} className="flex flex-col items-center text-center">
-                    <img src={p.imagen_url} className="w-full aspect-[3/4] object-cover grayscale mb-6" alt={p.titulo} />
-                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2">{p.titulo}</h3>
-                    <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
-                    <p className="text-[10px] leading-relaxed text-gray-500 px-4">{p.descripcion}</p>
-                  </div>
-                ))}
-              </div>
+              {piezasDeCategoria.length > 0 ? (
+                <div className="grid grid-cols-2 gap-12">
+                  {piezasDeCategoria.map(p => (
+                    <div key={p.id} className="flex flex-col items-center text-center">
+                      <img src={p.imagen_url} className="w-full aspect-[3/4] object-cover grayscale mb-6" alt={p.titulo} />
+                      <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2">{p.titulo}</h3>
+                      <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
+                      <p className="text-[10px] leading-relaxed text-gray-500 px-4">{p.descripcion}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* 👇 MENSAJE SI LA CATEGORÍA NO TIENE PRODUCTOS AÚN 👇 */
+                <p className="text-gray-600 text-center tracking-[0.2em] text-[10px] uppercase">Colección en desarrollo</p>
+              )}
             </div>
           )
         })}
