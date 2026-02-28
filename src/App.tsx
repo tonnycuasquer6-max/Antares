@@ -49,16 +49,12 @@ export default function App() {
   // CLASES MAESTRAS
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
-  // 👇 Clase reutilizable para SUBMENÚS (Vidrio Opaco con borde para legibilidad)
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
-
-  // 👇 Clase para el EFECTO DE LÍNEA SUBRAYADA EN MENÚ (Cristal Puro)
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
     <div className="bg-black text-white min-h-screen font-sans flex flex-col relative">
       
-      {/* 👇 ELIMINAR BARRA LATERAL NAVEGADOR */}
       <style>{`
         ::-webkit-scrollbar {
           display: none;
@@ -73,10 +69,23 @@ export default function App() {
         className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-3" 
         style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}
       >
+        
+        {/* 👇 BOTÓN DE VOLVER (SOLO APARECE CUANDO ESTÁS EN OTRA PANTALLA QUE NO SEA HOME) */}
+        {user && activeView !== 'home' && (
+          <button 
+            onClick={() => setActiveView('home')}
+            className="absolute top-6 left-6 md:left-12 flex items-center gap-2 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] tracking-[0.2em] uppercase"
+          >
+            <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+            </svg>
+            Volver
+          </button>
+        )}
+
         {user && (
           <div className="absolute top-6 right-6 md:right-12 flex items-center gap-6 z-50">
             
-            {/* BOTÓN CARRITO */}
             <button className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path>
@@ -84,7 +93,6 @@ export default function App() {
               <span className="absolute -top-1 -right-2 bg-white text-black text-[9px] font-bold px-[5px] py-[1px] rounded-full">0</span>
             </button>
 
-            {/* MENÚ DE USUARIO (CON PUENTE pt-3) */}
             <div className="group relative">
               <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="26" width="26" xmlns="http://www.w3.org/2000/svg">
@@ -93,7 +101,6 @@ export default function App() {
               </button>
               
               <div className={puenteInvisibleMenuUsuario}>
-                {/* 👇 Submenú de usuario (Sigue siendo opaco para legibilidad del texto) */}
                 <div className={`${cristalOpacoSubmenuClass} min-w-[200px] text-right`}>
                   <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                   <button onClick={() => setActiveView('pedidos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
@@ -114,82 +121,75 @@ export default function App() {
           className={`h-20 md:h-32 w-auto object-contain mt-[4px] z-10 ${user ? 'cursor-pointer' : ''}`} 
         />
 
-        {user && (
-          // 👇 MENÚ PRINCIPAL SIN FONDOS, BORDES NI SOMBRAS (CRISTAL PURO)
-          <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0">
+        {/* 👇 EL MENÚ PRINCIPAL AHORA SOLO EXISTE SI activeView ES 'home' */}
+        {user && activeView === 'home' && (
+          <nav className="w-full border-none bg-transparent mt-[4px] mb-[4px] relative z-40 px-6 pt-0 animate-fade-in">
             <ul className="flex justify-center gap-10 md:gap-20 py-0 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent">
               
-              {/* ATELIER */}
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                {/* 👇 Texto puro con hover subrayado */}
                 <span className="hover:text-white transition-colors block relative">
                   Atelier
-                  <div className={menuUnderlineClass}></div> {/* Línea subrayada */}
+                  <div className={menuUnderlineClass}></div>
                 </span>
                 <div className={puenteInvisibleMenuPrincipal}>
-                  {/* 👇 Submenú (Opaco para legibilidad) */}
                   <div className={`${cristalOpacoSubmenuClass} min-w-[220px] text-center`}>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block">Joyería Exclusiva</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Prêt-à-Porter</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block">Joyería Exclusiva</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Prêt-à-Porter</span>
                   </div>
                 </div>
               </li>
 
-              {/* JOYERÍA */}
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                 <span className="hover:text-white transition-colors block relative">
                   Joyería
-                  <div className={menuUnderlineClass}></div> {/* Línea subrayada */}
+                  <div className={menuUnderlineClass}></div>
                 </span>
                 <div className={puenteInvisibleMenuPrincipal}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[260px] text-center`}>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block">Acero Fino</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Plata de Ley 925</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Gemas y Piedras Naturales</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block">Acero Fino</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Plata de Ley 925</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Gemas y Piedras Naturales</span>
                   </div>
                 </div>
               </li>
 
-              {/* ESENCIALES */}
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                 <span className="hover:text-white transition-colors block relative">
                   Esenciales
-                  <div className={menuUnderlineClass}></div> {/* Línea subrayada */}
+                  <div className={menuUnderlineClass}></div>
                 </span>
                 <div className={puenteInvisibleMenuPrincipal}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[220px] text-center`}>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block">Básicos de Joyería</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Básicos de Vestuario</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block">Básicos de Joyería</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Básicos de Vestuario</span>
                   </div>
                 </div>
               </li>
 
-              {/* PRÊT-À-PORTER */}
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                 <span className="hover:text-white transition-colors block relative">
                   Prêt-à-Porter
-                  <div className={menuUnderlineClass}></div> {/* Línea subrayada */}
+                  <div className={menuUnderlineClass}></div>
                 </span>
                 <div className={puenteInvisibleMenuPrincipal}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[220px] text-center`}>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block">Chaquetas</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Camisetas</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Buzos</span>
-                    <span className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Pantalones</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block">Chaquetas</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Camisetas</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Buzos</span>
+                    <span onClick={() => setActiveView('categoria')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4">Pantalones</span>
                   </div>
                 </div>
               </li>
 
-              {/* OBSEQUIOS */}
               <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                 <span className="hover:text-white transition-colors block relative">
                   Obsequios
-                  <div className={menuUnderlineClass}></div> {/* Línea subrayada */}
+                  <div className={menuUnderlineClass}></div>
                 </span>
                 <div className={puenteInvisibleMenuPrincipal}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[180px] text-center max-h-64 overflow-y-auto custom-scrollbar`}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((price, idx) => (
-                      <span key={price} className={`hover:text-gray-300 transition-colors cursor-pointer block ${idx !== 0 ? 'mt-4' : ''}`}>
+                      <span key={price} onClick={() => setActiveView('categoria')} className={`hover:text-gray-300 transition-colors cursor-pointer block ${idx !== 0 ? 'mt-4' : ''}`}>
                         $ {price}.00 USD
                       </span>
                     ))}
@@ -219,7 +219,7 @@ export default function App() {
 
       <main className="flex-grow flex flex-col items-center">
         
-        {/* VISTA 1: VISITANTE NO LOGUEADO 👇 Cards eliminadas */}
+        {/* VISTA 1: VISITANTE NO LOGUEADO */}
         {!user && (
           <>
             <section className="py-20 md:py-32 flex items-center justify-center text-center px-4 w-full flex-grow">
@@ -229,25 +229,31 @@ export default function App() {
                 </h2>
               </div>
             </section>
-            {/* 👇 Sección grid de cards eliminada 👇 */}
           </>
         )}
 
         {/* VISTA 2: HOME USUARIO LOGUEADO */}
         {user && activeView === 'home' && (
-          <section className="container mx-auto px-4 pb-20 mt-10 flex-grow flex items-center justify-center">
+          <section className="container mx-auto px-4 pb-20 mt-10 flex-grow flex items-center justify-center animate-fade-in">
             <div className="text-center py-20">
               <p className="text-gray-500 tracking-[0.3em] uppercase text-xs">Bienvenido al Atelier de Antares. Seleccione una colección del menú superior.</p>
             </div>
           </section>
         )}
 
-        {/* VISTA 3: MI PERFIL */}
+        {/* VISTA 3: CATEGORÍAS (CUANDO HACES CLIC EN UN SUBMENÚ) */}
+        {user && activeView === 'categoria' && (
+          <section className="container mx-auto px-4 py-16 flex-grow flex flex-col items-center justify-center animate-fade-in">
+             <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-6 text-center">Colección Seleccionada</h2>
+             <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Los artículos de esta colección estarán disponibles muy pronto.</p>
+          </section>
+        )}
+
+        {/* VISTA 4: MI PERFIL */}
         {user && activeView === 'perfil' && (
           <section className="w-full max-w-3xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mi Perfil</h2>
             
-            {/* 👇 Cards de perfil sin bordes */}
             <div className="bg-black/80 backdrop-blur-md p-10 rounded-sm shadow-2xl border-none">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -292,11 +298,10 @@ export default function App() {
           </section>
         )}
 
-        {/* VISTA 4: MIS PEDIDOS */}
+        {/* VISTA 5: MIS PEDIDOS */}
         {user && activeView === 'pedidos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Mis Pedidos</h2>
-            {/* 👇 Contenedor sin bordes */}
             <div className="text-center py-20 bg-black/80 backdrop-blur-md shadow-2xl rounded-sm border-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1" viewBox="0 0 24 24" className="w-12 h-12 mx-auto text-gray-700 mb-4" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
               <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Aún no has realizado ninguna compra.</p>
@@ -307,11 +312,10 @@ export default function App() {
           </section>
         )}
 
-        {/* VISTA 5: LISTA DE DESEOS */}
+        {/* VISTA 6: LISTA DE DESEOS */}
         {user && activeView === 'deseos' && (
           <section className="w-full max-w-4xl mx-auto px-4 py-16 flex-grow animate-fade-in">
             <h2 className="text-2xl font-serif tracking-[0.3em] uppercase text-white mb-10 text-center pb-4">Lista de Deseos</h2>
-            {/* 👇 Contenedor sin bordes */}
             <div className="text-center py-20 bg-black/80 backdrop-blur-md shadow-2xl rounded-sm border-none">
               <svg stroke="currentColor" fill="none" strokeWidth="1" viewBox="0 0 24 24" className="w-12 h-12 mx-auto text-gray-700 mb-4" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               <p className="text-gray-500 tracking-[0.2em] uppercase text-xs">Tu lista de deseos está vacía.</p>
