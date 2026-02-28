@@ -10,12 +10,6 @@ import { useState, useEffect } from 'react';
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
-// Datos de prueba
-const productosFalsos = [
-  { id: 1, titulo: 'Chaqueta Obsidian', descripcion: 'Lana virgen con forro de seda oscura. Corte asimétrico.', precio: 450, categoria: 'Chaquetas', imagen_url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000' },
-  { id: 2, titulo: 'Anillo Eclipse', descripcion: 'Plata de ley 925 con ónix central tallado a mano.', precio: 120, categoria: 'Plata de Ley 925', imagen_url: 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000' }
-];
-
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -27,9 +21,11 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
   
-  // Estados para las descargas del Catálogo
+  // 👇 EL CATÁLOGO AHORA EMPIEZA VACÍO Y ES DINÁMICO 👇
+  const [productos, setProductos] = useState<any[]>([]);
+  
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
-  const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null); // 👈 NUEVO ESTADO PARA EL ACORDEÓN
+  const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -74,6 +70,35 @@ export default function App() {
     );
   };
 
+  // 👇 FUNCIÓN PARA AÑADIR PIEZAS VISUALMENTE 👇
+  const handlePublicarLocal = (e) => {
+    e.preventDefault();
+    if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio a la pieza.');
+    
+    const nuevoId = Date.now();
+    // Crea una URL temporal para la imagen si se subió una
+    const imageUrl = nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
+
+    setProductos([{
+      id: nuevoId,
+      titulo: nuevaPieza.titulo,
+      descripcion: nuevaPieza.descripcion,
+      precio: nuevaPieza.precio,
+      categoria: activeCategory,
+      imagen_url: imageUrl
+    }, ...productos]);
+
+    setShowInlineForm(false);
+    setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null });
+  };
+
+  // 👇 FUNCIÓN PARA BORRAR PIEZAS VISUALMENTE 👇
+  const handleBorrarLocal = (id) => {
+    if(window.confirm('¿Seguro que deseas retirar esta pieza del catálogo?')) {
+      setProductos(productos.filter(p => p.id !== id));
+    }
+  };
+
   if (!areSupabaseCredentialsSet) {
     return (
       <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
@@ -90,7 +115,6 @@ export default function App() {
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/95 backdrop-blur-md border border-white/10 py-6 px-8 shadow-2xl rounded-sm";
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
-  // 👇 ESTRUCTURA DEL MENÚ PARA EL DESPLEGABLE DEL PDF 👇
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
@@ -223,9 +247,9 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center">
           
-          {/* VISTA HOME EDITORIAL */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
+               
                <section className="w-full text-center py-20 md:py-32 px-4">
                  <h2 className="text-5xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-8 opacity-90">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-xs max-w-2xl mx-auto leading-loose">
@@ -292,32 +316,33 @@ export default function App() {
                )}
 
                {userRole === 'admin' && showInlineForm && (
-                 <div className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
-                   <button onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
+                 <form onSubmit={handlePublicarLocal} className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
+                   <button type="button" onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
                    <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Detalles de la Nueva Pieza</h3>
+                   
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                     <input type="text" placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
-                     <input type="number" placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" />
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
                    </div>
-                   <textarea placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none mb-6 resize-none"></textarea>
+                   
                    <div className="flex items-center justify-between">
-                     <input type="file" className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
-                     <button className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
+                     <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
                        Publicar
                      </button>
                    </div>
-                 </div>
+                 </form>
                )}
 
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                 {productosFalsos.filter(p => p.categoria === activeCategory).map(producto => (
+                 {productos.filter(p => p.categoria === activeCategory).map(producto => (
                    <div key={producto.id} className="group relative cursor-pointer">
                      <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative">
                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
                        {userRole === 'admin' && (
                          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px]">EDITAR</button>
-                           <button className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]">BORRAR</button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]">BORRAR</button>
                          </div>
                        )}
                      </div>
@@ -325,7 +350,9 @@ export default function App() {
                      <p className="text-xs tracking-[0.1em] text-gray-500">${producto.precio} USD</p>
                    </div>
                  ))}
-                 {productosFalsos.filter(p => p.categoria === activeCategory).length === 0 && (
+                 
+                 {/* 👇 MENSAJE SI EL CATÁLOGO ESTÁ VACÍO 👇 */}
+                 {productos.filter(p => p.categoria === activeCategory).length === 0 && (
                     <p className="text-gray-500 tracking-[0.2em] uppercase text-xs col-span-full text-center py-10">No hay piezas en esta colección aún.</p>
                  )}
                </div>
@@ -350,7 +377,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 👇 SECCIÓN ACORDEÓN PARA DESCARGA A LA CARTA 👇 */}
                 <div className="mb-4 pt-8 border-t border-white/10 mt-8">
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
@@ -367,7 +393,6 @@ export default function App() {
                           <span className="text-gray-500 text-lg font-light">{menuPdfExpandido === menuPrincipal ? '-' : '+'}</span>
                         </button>
                         
-                        {/* Submenús desplegados */}
                         {menuPdfExpandido === menuPrincipal && (
                           <div className="pt-6 flex flex-col gap-4 pl-2 animate-fade-in">
                             {submenus.map(cat => (
@@ -413,7 +438,7 @@ export default function App() {
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
       {/* =========================================================
-          VISTA FANTASMA PDF
+          VISTA FANTASMA PDF (CERO BORDES)
           ========================================================= */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
@@ -422,7 +447,7 @@ export default function App() {
         </header>
 
         {categoriasDescarga.map(cat => {
-          const piezasDeCategoria = productosFalsos.filter(p => p.categoria === cat);
+          const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           if (piezasDeCategoria.length === 0) return null;
 
           return (
