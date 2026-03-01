@@ -32,7 +32,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchProductos(); // <-- Carga los productos desde Supabase al inicio
+    fetchProductos();
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchUserRole(session.user.id);
@@ -86,16 +86,16 @@ export default function App() {
       const fileName = `${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('assets') 
+        .from('catalogo') 
         .upload(fileName, nuevaPieza.imagen);
 
       if (uploadError) {
-        alert('Error subiendo la imagen a Supabase. Verifica los permisos de storage.');
+        alert('Error subiendo la imagen a Supabase. Verifica las Policies de la carpeta catalogo.');
         console.error(uploadError);
         return;
       }
 
-      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(fileName);
       imageUrl = publicUrl;
     }
 
