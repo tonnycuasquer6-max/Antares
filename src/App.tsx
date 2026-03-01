@@ -19,7 +19,8 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState(''); 
   
   const [showInlineForm, setShowInlineForm] = useState(false);
-  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null });
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null, imagen_url: '' });
   
   const [productos, setProductos] = useState<any[]>([]);
   
@@ -27,7 +28,7 @@ export default function App() {
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
   const fetchProductos = async () => {
-    const { data, error } = await supabase.from('productos').select('*');
+    const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
     if (data) setProductos(data);
   };
 
@@ -67,6 +68,7 @@ export default function App() {
     setActiveCategory(nombreCategoria);
     setActiveView('categoria');
     setShowInlineForm(false);
+    setEditandoId(null);
   };
 
   const handleCheckbox = (categoria) => {
@@ -75,11 +77,44 @@ export default function App() {
     );
   };
 
+  const prepararEdicion = (producto) => {
+    setNuevaPieza({
+      titulo: producto.titulo,
+      descripcion: producto.descripcion || '',
+      precio: producto.precio,
+      imagen: null, 
+      imagen_url: producto.imagen_url
+    });
+    setEditandoId(producto.id);
+    setShowInlineForm(true);
+  };
+
+  const cerrarFormulario = () => {
+    setShowInlineForm(false);
+    setEditandoId(null);
+    setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null, imagen_url: '' });
+  };
+
+  const toggleVendido = async (id, estadoActual) => {
+    const { data, error } = await supabase
+      .from('productos')
+      .update({ vendido: !estadoActual })
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      alert("Error al actualizar. ¿Aseguraste de crear la columna 'vendido' en tu tabla de Supabase como te indiqué?");
+      console.error(error);
+    } else if (data) {
+      setProductos(productos.map(p => p.id === id ? { ...p, vendido: !estadoActual } : p));
+    }
+  };
+
   const handlePublicarLocal = async (e) => {
     e.preventDefault();
     if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio a la pieza.');
     
-    let imageUrl = 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
+    let imageUrl = nuevaPieza.imagen_url || 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
     if (nuevaPieza.imagen) {
       const fileExt = nuevaPieza.imagen.name.split('.').pop();
@@ -90,7 +125,7 @@ export default function App() {
         .upload(fileName, nuevaPieza.imagen);
 
       if (uploadError) {
-        alert('Error subiendo la imagen a Supabase. Verifica las Policies de la carpeta catalogo.');
+        alert('Error subiendo la imagen a Supabase.');
         console.error(uploadError);
         return;
       }
@@ -99,26 +134,34 @@ export default function App() {
       imageUrl = publicUrl;
     }
 
-    const { data, error } = await supabase
-      .from('productos')
-      .insert([
-        {
-          titulo: nuevaPieza.titulo,
-          descripcion: nuevaPieza.descripcion,
-          precio: Number(nuevaPieza.precio),
-          categoria: activeCategory,
-          imagen_url: imageUrl
-        }
-      ])
-      .select();
+    const payload = {
+      titulo: nuevaPieza.titulo,
+      descripcion: nuevaPieza.descripcion,
+      precio: Number(nuevaPieza.precio),
+      categoria: activeCategory,
+      imagen_url: imageUrl
+    };
 
-    if (error) {
-      alert('Error al guardar en la base de datos de Supabase.');
-      console.error(error);
-    } else if (data) {
-      setProductos([data[0], ...productos]);
-      setShowInlineForm(false);
-      setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null });
+    if (editandoId) {
+      // Actualizar producto existente
+      const { data, error } = await supabase.from('productos').update(payload).eq('id', editandoId).select();
+      if (error) {
+        alert('Error al actualizar en la base de datos.');
+        console.error(error);
+      } else if (data) {
+        setProductos(productos.map(p => p.id === editandoId ? data[0] : p));
+        cerrarFormulario();
+      }
+    } else {
+      // Insertar producto nuevo
+      const { data, error } = await supabase.from('productos').insert([payload]).select();
+      if (error) {
+        alert('Error al guardar en la base de datos.');
+        console.error(error);
+      } else if (data) {
+        setProductos([data[0], ...productos]);
+        cerrarFormulario();
+      }
     }
   };
 
@@ -180,7 +223,12 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;  
+          overflow: hidden;
+        }
         @media print {
           @page { margin: 0; }
           body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
@@ -360,15 +408,22 @@ export default function App() {
                <h2 className="text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6">{activeCategory}</h2>
                
                {userRole === 'admin' && !showInlineForm && (
-                 <div onClick={() => setShowInlineForm(true)} className="mb-12 border border-dashed border-white/20 py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer">
+                 <div onClick={() => { setEditandoId(null); setShowInlineForm(true); }} className="mb-12 border border-dashed border-white/20 py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer">
                    <span className="text-amber-500 tracking-[0.2em] text-xs uppercase">+ Añadir nueva pieza a {activeCategory}</span>
                  </div>
                )}
 
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-16 bg-zinc-900/30 p-8 border border-white/5 relative">
-                   <button type="button" onClick={() => setShowInlineForm(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
-                   <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">Detalles de la Nueva Pieza</h3>
+                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer bg-transparent border-none text-xl">×</button>
+                   <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-6">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+                   
+                   {editandoId && nuevaPieza.imagen_url && (
+                     <div className="mb-6 flex justify-center">
+                       <img src={nuevaPieza.imagen_url} alt="Vista previa" className="h-32 w-auto object-cover border border-white/20" />
+                     </div>
+                   )}
+
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
                      <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-xs tracking-[0.1em] py-2 outline-none" required/>
@@ -377,7 +432,7 @@ export default function App() {
                    <div className="flex items-center justify-between">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer" />
                      <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none rounded-sm border-none">
-                       Publicar
+                       {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
                    </div>
                  </form>
@@ -385,17 +440,45 @@ export default function App() {
 
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="group relative cursor-pointer">
-                     <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative">
+                   <div key={producto.id} className="group relative">
+                     <div className="overflow-hidden aspect-[3/4] bg-zinc-900 mb-4 relative cursor-pointer">
                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                       
+                       {/* OVERLAY DE VENTA (ELEGANTE) */}
+                       {producto.vendido && (
+                         <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                           <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-6 py-3 bg-black/40">Adquirido</span>
+                         </div>
+                       )}
+
+                       {/* BOTONES ADMINISTRADOR (LÁPIZ Y BASURA) */}
                        {userRole === 'admin' && (
-                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]">BORRAR</button>
+                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px]" title="Editar">
+                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                           </button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px]" title="Borrar">
+                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                           </button>
                          </div>
                        )}
                      </div>
+                     
                      <h4 className="text-sm tracking-[0.2em] uppercase text-white mb-1">{producto.titulo}</h4>
-                     <p className="text-xs tracking-[0.1em] text-gray-500">${producto.precio} USD</p>
+                     <p className="text-xs tracking-[0.1em] text-gray-400 mb-2">${producto.precio} USD</p>
+                     
+                     {/* DESCRIPCION CON ACORTAMIENTO (...) SI ES MUY LARGA */}
+                     <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed mb-4">{producto.descripcion}</p>
+
+                     {/* BOTON MARCAR COMO VENDIDA */}
+                     {userRole === 'admin' && (
+                       <button
+                         onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }}
+                         className={`w-full py-2.5 mt-2 text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
+                       >
+                         {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
+                       </button>
+                     )}
                    </div>
                  ))}
                  
@@ -506,11 +589,19 @@ export default function App() {
               {piezasDeCategoria.length > 0 ? (
                 <div className="grid grid-cols-2 gap-12">
                   {piezasDeCategoria.map(p => (
-                    <div key={p.id} className="flex flex-col items-center text-center">
-                      <img src={p.imagen_url} className="w-full aspect-[3/4] object-cover grayscale mb-6" alt={p.titulo} />
+                    <div key={p.id} className="flex flex-col items-center text-center relative">
+                      <div className="relative w-full mb-6">
+                        <img src={p.imagen_url} className="w-full aspect-[3/4] object-cover grayscale" alt={p.titulo} />
+                        {/* ETIQUETA ADQUIRIDO EN EL PDF */}
+                        {p.vendido && (
+                          <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Adquirido</span>
+                          </div>
+                        )}
+                      </div>
                       <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2">{p.titulo}</h3>
                       <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
-                      <p className="text-[10px] leading-relaxed text-gray-500 px-4">{p.descripcion}</p>
+                      <p className="text-[10px] leading-relaxed text-gray-500 px-4 line-clamp-2">{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
