@@ -244,7 +244,7 @@ export default function App() {
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
   
-  const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
+  const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
@@ -279,8 +279,10 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-50">
               
+              {/* ICONO DEL BOLSO (CARRITO) */}
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                {/* AQUI SE ACTUALIZA EL NUMERO DEL CARRITO AUTOMATICAMENTE */}
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
 
@@ -303,9 +305,10 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-10 cursor-pointer`} />
 
+          {/* 👇 NAVEGACIÓN CORREGIDA: Se eliminó overflow-x-auto que cortaba los submenús 👇 */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-40 px-2 md:px-6 pt-0 animate-fade-in overflow-x-auto">
-              <ul className="flex flex-row justify-center gap-6 md:gap-20 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent min-w-max md:min-w-0 px-4 md:px-0">
+            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
                 
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
@@ -424,7 +427,6 @@ export default function App() {
                )}
 
                {userRole === 'admin' && showInlineForm && (
-                 // FORMULARIO AÑADIR PIEZA - DISEÑO CRISTAL DESENFOCADO SIN MARCOS
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-2xl p-6 md:p-10 shadow-2xl relative w-full rounded-sm">
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer bg-transparent border-none text-2xl md:text-xl outline-none">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-8 text-center">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
@@ -520,7 +522,6 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VENTANA EMERGENTE (MODAL) PARA CLIENTES: EFECTO CRISTAL TOTAL 👇 */}
           {productoSeleccionado && (
             <div 
               className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
@@ -575,7 +576,6 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA DEL BOLSO (CARRITO) */}
           {userRole === 'cliente' && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
@@ -615,7 +615,6 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA LISTA DE DESEOS */}
           {userRole === 'cliente' && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
