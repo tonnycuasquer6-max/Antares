@@ -265,6 +265,7 @@ export default function App() {
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
+        {/* HEADER CORREGIDO: SE QUITO EL OVERFLOW PARA QUE BAJEN LOS MENUS */}
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
@@ -447,7 +448,7 @@ export default function App() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="flex flex-col group relative bg-transparent rounded-sm p-0">
+                   <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                      
                      <div 
                        className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
@@ -515,56 +516,65 @@ export default function App() {
             </section>
           )}
 
+          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA: CRISTAL REAL Y SIN MARCOS 👇 */}
           {productoSeleccionado && (
             <div 
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
+              className="fixed inset-0 bg-black/40 backdrop-blur-md z-[200] flex items-center justify-center p-0 screen-only animate-fade-in"
               onClick={() => setProductoSeleccionado(null)}
             >
-              {/* MODIFICACIÓN: Modal sin marcos y con fondo transparente para las secciones */}
               <div 
-                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border-none shadow-none"
+                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-hidden h-full md:h-auto border-none shadow-none"
                 onClick={e => e.stopPropagation()} 
               >
                 <button 
                   onClick={() => setProductoSeleccionado(null)} 
-                  className="absolute top-2 right-2 md:top-4 md:right-4 text-white hover:text-gray-400 z-50 text-2xl md:text-3xl cursor-pointer bg-transparent border-none outline-none w-10 h-10 flex items-center justify-center rounded-full bg-black/30 md:bg-transparent"
+                  className="absolute top-4 right-4 text-white z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none drop-shadow-lg"
                 >
                   ×
                 </button>
                 
-                {/* Modal: Imagen a la izquierda, sin marcos ni bordes */}
-                <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative flex items-center justify-center bg-transparent p-0">
-                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale" />
+                {/* Sección Imagen: Totalmente limpia */}
+                <div className="w-full md:w-1/2 flex items-center justify-center bg-transparent p-4 md:p-12">
+                  <img 
+                    src={productoSeleccionado.imagen_url} 
+                    alt={productoSeleccionado.titulo} 
+                    className="w-full h-full object-contain grayscale drop-shadow-2xl" 
+                  />
                 </div>
                 
-                {/* MODIFICACIÓN: Información a la derecha con EFECTO CRISTAL NEGRO BORROSO */}
-                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-xl border-none">
-                  <h2 className="text-xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 md:mb-4">{productoSeleccionado.titulo}</h2>
-                  <p className="text-lg md:text-2xl tracking-[0.1em] text-white font-light mb-6 md:mb-8">${productoSeleccionado.precio} USD</p>
+                {/* Sección Info: FONDO CRISTAL NEGRO BORROSO REAL */}
+                <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-none">
+                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-4 drop-shadow-md">
+                    {productoSeleccionado.titulo}
+                  </h2>
+                  <p className="text-xl md:text-2xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
+                    ${productoSeleccionado.precio} USD
+                  </p>
                   
-                  <div className="w-8 md:w-12 h-px bg-white/20 mb-6 md:mb-8"></div>
+                  <div className="w-12 h-px bg-white/30 mb-8"></div>
                   
-                  <p className="text-[10px] md:text-xs text-gray-300 leading-loose mb-8 md:mb-12 break-words uppercase tracking-[0.1em]">{productoSeleccionado.descripcion}</p>
+                  <p className="text-[10px] md:text-xs text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">
+                    {productoSeleccionado.descripcion}
+                  </p>
                   
                   {!productoSeleccionado.vendido ? (
-                    <div className="flex gap-3 md:gap-4 mt-auto">
+                    <div className="flex gap-4 mt-auto">
                       <button 
                         onClick={() => { agregarAlCarrito(productoSeleccionado); setProductoSeleccionado(null); }} 
-                        className="flex-grow bg-white text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase py-4 md:py-5 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none rounded-sm"
+                        className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none rounded-none"
                       >
                         Añadir al Bolso
                       </button>
                       <button 
                         onClick={() => toggleFavorito(productoSeleccionado.id)} 
-                        className="border border-white/20 px-4 md:px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-lg md:text-xl bg-transparent outline-none rounded-sm flex items-center justify-center"
-                        title="Agregar a favoritos"
+                        className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center rounded-none"
                       >
                         {favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-auto py-4 md:py-5 text-center border border-white/20">
-                       <span className="text-gray-400 tracking-[0.4em] text-[9px] md:text-[10px] font-bold uppercase">Pieza Agotada</span>
+                    <div className="mt-auto py-5 text-center border border-white/20 bg-black/20">
+                       <span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span>
                     </div>
                   )}
                 </div>
@@ -574,7 +584,7 @@ export default function App() {
 
           {userRole === 'cliente' && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-10">Su bolso está vacío en este momento.</p>
@@ -596,13 +606,13 @@ export default function App() {
                   
                   <div className="mt-8 md:mt-12 flex flex-col items-end gap-2 md:gap-3 text-[10px] md:text-xs tracking-[0.1em] uppercase">
                     <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito}.00 USD</span></p>
-                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío y Curaduría: <span className="text-white ml-0 sm:ml-6">Gratis (ANTARES)</span></p>
+                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">Gratis</span></p>
                     <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
                     <p className="text-xs md:text-sm text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {totalCarrito}.00 USD</span></p>
                   </div>
                   
                   <div className="flex justify-center mt-10 md:mt-16">
-                    <button onClick={finalPedido} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
+                    <button onClick={finalizarPedido} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
                       Finalizar Pedido
                     </button>
                   </div>
@@ -623,11 +633,6 @@ export default function App() {
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
-                        {producto.vendido && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
-                          </div>
-                        )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
@@ -668,24 +673,23 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                   <div>
                     <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Nombres</label>
-                    <p className="text-white text-base md:text-lg truncate">{user.user_metadata?.first_name || 'Tonny'}</p>
+                    <p className="text-white text-base md:text-lg truncate uppercase">{user.user_metadata?.first_name || 'Tonny'}</p>
                   </div>
                   <div className="overflow-hidden">
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Correo Electrónico</label>
+                    <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Email</label>
                     <p className="text-white text-sm md:text-lg truncate" title={user.email}>{user.email}</p>
                   </div>
                 </div>
                 <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
-                  <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo a la Carta</label>
-                  <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                  <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
                   <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
                     {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                       <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
-                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer">
-                          <button onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)} className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow">
+                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
+                          <button className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow">
                             {menuPrincipal}
                           </button>
-                          <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={() => toggleAll(menuPrincipal)}>
+                          <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
                             {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
                           </div>
                         </div>
