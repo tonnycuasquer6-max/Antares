@@ -265,7 +265,6 @@ export default function App() {
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        {/* HEADER CORREGIDO: SE QUITO EL OVERFLOW PARA QUE BAJEN LOS MENUS */}
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
@@ -448,7 +447,7 @@ export default function App() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                   <div key={producto.id} className="flex flex-col group relative bg-transparent rounded-sm p-0">
                      
                      <div 
                        className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
@@ -489,7 +488,7 @@ export default function App() {
                             </button>
                             <button 
                               onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                              className="px-4 md:px-5 py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm"
+                              className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm"
                               title="Agregar a favoritos"
                             >
                               {favoritos.includes(producto.id) ? '♥' : '♡'}
@@ -518,11 +517,12 @@ export default function App() {
 
           {productoSeleccionado && (
             <div 
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
               onClick={() => setProductoSeleccionado(null)}
             >
+              {/* MODIFICACIÓN: Modal sin marcos y con fondo transparente para las secciones */}
               <div 
-                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border border-white/10"
+                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border-none shadow-none"
                 onClick={e => e.stopPropagation()} 
               >
                 <button 
@@ -532,11 +532,13 @@ export default function App() {
                   ×
                 </button>
                 
-                <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative flex items-center justify-center bg-transparent">
+                {/* Modal: Imagen a la izquierda, sin marcos ni bordes */}
+                <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative flex items-center justify-center bg-transparent p-0">
                   <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale" />
                 </div>
                 
-                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-xl">
+                {/* MODIFICACIÓN: Información a la derecha con EFECTO CRISTAL NEGRO BORROSO */}
+                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-xl border-none">
                   <h2 className="text-xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 md:mb-4">{productoSeleccionado.titulo}</h2>
                   <p className="text-lg md:text-2xl tracking-[0.1em] text-white font-light mb-6 md:mb-8">${productoSeleccionado.precio} USD</p>
                   
@@ -652,6 +654,7 @@ export default function App() {
           {userRole === 'cliente' && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
