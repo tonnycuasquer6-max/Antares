@@ -17,15 +17,22 @@ export default function App() {
   
   const [activeView, setActiveView] = useState('home');
   const [activeCategory, setActiveCategory] = useState(''); 
+  const [activeSubCategory, setActiveSubCategory] = useState('Todo');
   
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', imagen: null, imagen_url: '' });
+  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', imagen: null, imagen_url: '' });
   
   const [productos, setProductos] = useState<any[]>([]);
   
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
+
+  // ESTADO PARA OCULTAR MENÚS (Guardado en LocalStorage)
+  const [hiddenItems, setHiddenItems] = useState<string[]>(() => {
+    const saved = localStorage.getItem('antares_hidden_menus');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
@@ -70,6 +77,7 @@ export default function App() {
 
   const irACategoria = (nombreCategoria) => {
     setActiveCategory(nombreCategoria);
+    setActiveSubCategory('Todo');
     setActiveView('categoria');
     setShowInlineForm(false);
     setEditandoId(null);
@@ -79,6 +87,14 @@ export default function App() {
     setCategoriasDescarga(prev => 
       prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]
     );
+  };
+
+  const toggleMenuVisibility = (itemName) => {
+    const newHidden = hiddenItems.includes(itemName) 
+      ? hiddenItems.filter(i => i !== itemName) 
+      : [...hiddenItems, itemName];
+    setHiddenItems(newHidden);
+    localStorage.setItem('antares_hidden_menus', JSON.stringify(newHidden));
   };
 
   const agregarAlCarrito = (producto) => {
@@ -99,7 +115,7 @@ export default function App() {
   };
 
   const finalizarPedido = () => {
-    alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
+    alert('Esta función aún no está configurada.');
   };
 
   const prepararEdicion = (producto) => {
@@ -107,6 +123,8 @@ export default function App() {
       titulo: producto.titulo,
       descripcion: producto.descripcion || '',
       precio: producto.precio,
+      disponibilidad: producto.disponibilidad || '',
+      subcategoria: producto.subcategoria || '',
       imagen: null, 
       imagen_url: producto.imagen_url
     });
@@ -117,71 +135,50 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null, imagen_url: '' });
+    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', imagen: null, imagen_url: '' });
   };
 
   const toggleVendido = async (id, estadoActual) => {
-    const { data, error } = await supabase
-      .from('productos')
-      .update({ vendido: !estadoActual })
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      alert("Error al actualizar. ¿Creaste la columna 'vendido' en tu tabla de Supabase?");
-      console.error(error);
-    } else if (data) {
+    const { data, error } = await supabase.from('productos').update({ vendido: !estadoActual }).eq('id', id).select();
+    if (!error && data) {
       setProductos(productos.map(p => p.id === id ? { ...p, vendido: !estadoActual } : p));
     }
   };
 
   const handlePublicarLocal = async (e) => {
     e.preventDefault();
-    if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio a la pieza.');
+    if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio.');
     
     let imageUrl = nuevaPieza.imagen_url || 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
     if (nuevaPieza.imagen) {
       const fileExt = nuevaPieza.imagen.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('catalogo') 
-        .upload(fileName, nuevaPieza.imagen);
-
-      if (uploadError) {
-        alert('Error subiendo la imagen a Supabase.');
-        console.error(uploadError);
-        return;
-      }
-
+      const { error: uploadError } = await supabase.storage.from('catalogo').upload(fileName, nuevaPieza.imagen);
+      if (uploadError) return alert('Error subiendo la imagen.');
       const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(fileName);
       imageUrl = publicUrl;
     }
 
-    const payload = {
-      titulo: nuevaPieza.titulo,
-      descripcion: nuevaPieza.descripcion,
-      precio: Number(nuevaPieza.precio),
-      categoria: activeCategory,
-      imagen_url: imageUrl
+    const payload = { 
+      titulo: nuevaPieza.titulo, 
+      descripcion: nuevaPieza.descripcion, 
+      precio: Number(nuevaPieza.precio), 
+      categoria: activeCategory, 
+      disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
+      subcategoria: nuevaPieza.subcategoria || 'General',
+      imagen_url: imageUrl 
     };
 
     if (editandoId) {
       const { data, error } = await supabase.from('productos').update(payload).eq('id', editandoId).select();
-      if (error) {
-        alert('Error al actualizar en la base de datos.');
-        console.error(error);
-      } else if (data) {
+      if (data) {
         setProductos(productos.map(p => p.id === editandoId ? data[0] : p));
         cerrarFormulario();
       }
     } else {
       const { data, error } = await supabase.from('productos').insert([payload]).select();
-      if (error) {
-        alert('Error al guardar en la base de datos.');
-        console.error(error);
-      } else if (data) {
+      if (data) {
         setProductos([data[0], ...productos]);
         cerrarFormulario();
       }
@@ -189,27 +186,13 @@ export default function App() {
   };
 
   const handleBorrarLocal = async (id) => {
-    if(window.confirm('¿Seguro que deseas retirar esta pieza del catálogo?')) {
+    if(window.confirm('¿Seguro que deseas retirar esta pieza?')) {
       const { error } = await supabase.from('productos').delete().eq('id', id);
-      if (!error) {
-        setProductos(productos.filter(p => p.id !== id));
-      } else {
-        alert('Error al borrar de Supabase.');
-        console.error(error);
-      }
+      if (!error) setProductos(productos.filter(p => p.id !== id));
     }
   };
 
-  if (!areSupabaseCredentialsSet) {
-    return (
-      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
-        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none w-full mx-4">
-          <h2 className="text-xl md:text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
-          <p className="text-gray-400 text-sm md:text-base">Verifica tus credenciales de Supabase en los Secrets.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!areSupabaseCredentialsSet) return null;
 
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
@@ -218,9 +201,9 @@ export default function App() {
     'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
 
-  const isAllSelected = (menuPrincipal) => {
-    return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
-  };
+  const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
+
+  const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
   const toggleAll = (menuPrincipal) => {
     const subs = estructuraCatalogo[menuPrincipal];
@@ -228,19 +211,13 @@ export default function App() {
       setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
     } else {
       const newSelections = [...categoriasDescarga];
-      subs.forEach(sub => {
-        if (!newSelections.includes(sub)) newSelections.push(sub);
-      });
+      subs.forEach(sub => { if (!newSelections.includes(sub)) newSelections.push(sub); });
       setCategoriasDescarga(newSelections);
     }
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
-  const totalCarrito = subtotalCarrito; 
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
-  
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -250,18 +227,8 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;  
-          overflow: hidden;
-        }
-        @media print {
-          @page { margin: 0; }
-          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
-          .screen-only { display: none !important; }
-          .print-only { display: block !important; }
-        }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
@@ -275,7 +242,6 @@ export default function App() {
 
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
-              
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
@@ -285,7 +251,7 @@ export default function App() {
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
-                <div className={puenteInvisibleMenuUsuario}>
+                <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
                     <button onClick={() => setActiveView('perfil')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                     <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
@@ -298,68 +264,56 @@ export default function App() {
             </div>
           )}
 
-          <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-[100] cursor-pointer`} />
+          <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className="h-16 md:h-32 w-auto mt-[10px] md:mt-[4px] z-[100] cursor-pointer" />
 
+          {/* LÓGICA DE OCULTAR MENÚS APLICADA AQUÍ */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
+            <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
               <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
+                {Object.keys(estructuraCatalogo).map(menu => {
+                  const isMenuHidden = hiddenItems.includes(menu);
+                  if (userRole === 'cliente' && isMenuHidden) return null;
+
+                  return (
+                    <li key={menu} className={`group relative cursor-pointer py-2 border-none bg-transparent ${isMenuHidden ? 'opacity-50' : ''}`}>
+                      <span className="hover:text-white transition-colors block relative">
+                        {menu} {userRole === 'admin' && isMenuHidden && '(Oculto)'}
+                        <div className={menuUnderlineClass}></div>
+                      </span>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
+                        <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
+                          {estructuraCatalogo[menu].map(sub => {
+                            const isSubHidden = hiddenItems.includes(sub);
+                            if (userRole === 'cliente' && isSubHidden) return null;
+                            
+                            return (
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs ${isSubHidden ? 'opacity-50 text-red-400' : ''}`}>
+                                {sub} {userRole === 'admin' && isSubHidden && '(Oculto)'}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
                 
-                <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                  <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
-                      <span onClick={() => irACategoria('Joyería Exclusiva')} className="hover:text-gray-300 transition-colors cursor-pointer block text-[10px] md:text-xs">Joyería Exclusiva</span>
-                      <span onClick={() => irACategoria('Prêt-à-Porter')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Prêt-à-Porter</span>
+                {/* OBSEQUIOS */}
+                {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
+                  <li className={`group relative cursor-pointer py-2 border-none bg-transparent ${hiddenItems.includes('Obsequios') ? 'opacity-50' : ''}`}>
+                    <span className="hover:text-white transition-colors block relative">
+                      Obsequios {userRole === 'admin' && hiddenItems.includes('Obsequios') && '(Oculto)'}
+                      <div className={menuUnderlineClass}></div>
+                    </span>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
+                      <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
+                        {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
+                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </li>
-
-                <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                  <span className="hover:text-white transition-colors block relative">Joyería<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[200px] md:min-w-[260px] text-center`}>
-                      <span onClick={() => irACategoria('Acero Fino')} className="hover:text-gray-300 transition-colors cursor-pointer block text-[10px] md:text-xs">Acero Fino</span>
-                      <span onClick={() => irACategoria('Plata de Ley 925')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Plata de Ley 925</span>
-                      <span onClick={() => irACategoria('Gemas y Piedras Naturales')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Gemas Naturales</span>
-                    </div>
-                  </div>
-                </li>
-
-                <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                  <span className="hover:text-white transition-colors block relative">Esenciales<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
-                      <span onClick={() => irACategoria('Básicos de Joyería')} className="hover:text-gray-300 transition-colors cursor-pointer block text-[10px] md:text-xs">Básicos de Joyería</span>
-                      <span onClick={() => irACategoria('Básicos de Vestuario')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Básicos de Vestuario</span>
-                    </div>
-                  </div>
-                </li>
-
-                <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                  <span className="hover:text-white transition-colors block relative">Prêt-à-Porter<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
-                      <span onClick={() => irACategoria('Chaquetas')} className="hover:text-gray-300 transition-colors cursor-pointer block text-[10px] md:text-xs">Chaquetas</span>
-                      <span onClick={() => irACategoria('Camisetas')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Camisetas</span>
-                      <span onClick={() => irACategoria('Buzos')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Buzos</span>
-                      <span onClick={() => irACategoria('Pantalones')} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 text-[10px] md:text-xs">Pantalones</span>
-                    </div>
-                  </div>
-                </li>
-
-                <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                  <span className="hover:text-white transition-colors block relative">Obsequios<div className={menuUnderlineClass}></div></span>
-                  <div className={puenteInvisibleMenuPrincipal}>
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
-                      {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((price, idx) => (
-                        <span key={price} onClick={() => irACategoria(`Obsequios $${price}`)} className={`hover:text-gray-300 transition-colors cursor-pointer block ${idx !== 0 ? 'mt-4' : ''} text-[10px] md:text-xs`}>
-                          $ {price}.00 USD
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </li>
-
+                  </li>
+                )}
               </ul>
             </nav>
           )}
@@ -390,6 +344,7 @@ export default function App() {
                    "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
+
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
@@ -414,6 +369,21 @@ export default function App() {
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
+               {/* NUEVO SUBMENÚ HORIZONTAL PARA ACERO FINO Y PLATA 925 */}
+               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
+                   {subcategoriasJoyeria.map(sub => (
+                     <li 
+                       key={sub}
+                       onClick={() => setActiveSubCategory(sub)}
+                       className={`text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}
+                     >
+                       {sub}
+                     </li>
+                   ))}
+                 </ul>
+               )}
+
                {userRole === 'admin' && !showInlineForm && (
                  <div onClick={() => { setEditandoId(null); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0">
                    <span className="text-amber-500 tracking-[0.2em] text-[10px] md:text-xs uppercase">+ Añadir nueva pieza a {activeCategory}</span>
@@ -434,7 +404,21 @@ export default function App() {
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
                      <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
+                     
+                     {/* NUEVO INPUT DE DISPONIBILIDAD */}
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK, O 'BAJO PEDIDO')" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" />
+                     
+                     {/* SELECTOR DE SUBCATEGORÍA SI ES JOYERÍA */}
+                     {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none">
+                         <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
+                         {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
+                           <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
+                         ))}
+                       </select>
+                     )}
                    </div>
+
                    <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 outline-none mb-8 md:mb-10 resize-none"></textarea>
                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[10px] md:file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer w-full md:w-auto" />
@@ -446,7 +430,7 @@ export default function App() {
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                 {productos.filter(p => p.categoria === activeCategory).map(producto => (
+                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).map(producto => (
                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                      
                      <div 
@@ -463,53 +447,37 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full" title="Editar">
-                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                           </button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full" title="Borrar">
-                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                           </button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
                      
                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
-                       <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                       <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+                       
+                       {/* ETIQUETA DE DISPONIBILIDAD */}
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                        {userRole === 'cliente' && !producto.vendido && (
                          <div className="flex gap-2 mt-auto">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} 
-                              className="flex-grow py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm"
-                            >
-                              Comprar
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                              className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm"
-                              title="Agregar a favoritos"
-                            >
-                              {favoritos.includes(producto.id) ? '♥' : '♡'}
-                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm">Comprar</button>
+                            <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                          </div>
                        )}
 
                        {userRole === 'admin' && (
-                         <button
-                           onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }}
-                           className={`w-full py-2.5 mt-auto text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
-                         >
-                           {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
-                         </button>
+                         <button onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }} className={`w-full py-2.5 mt-auto text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
                        )}
                      </div>
                    </div>
                  ))}
                  
-                 {productos.filter(p => p.categoria === activeCategory).length === 0 && (
-                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs col-span-full text-center py-10">No hay piezas en esta colección aún.</p>
+                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).length === 0 && (
+                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
                  )}
                </div>
             </section>
@@ -527,7 +495,7 @@ export default function App() {
               >
                 <button 
                   onClick={() => setProductoSeleccionado(null)} 
-                  className="absolute top-4 right-4 text-white hover:text-gray-400 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none"
+                  className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none"
                 >
                   ×
                 </button>
@@ -542,12 +510,17 @@ export default function App() {
                 </div>
                 
                 {/* Sección Info: FONDO CRISTAL BORROSO, pegada sin espacios, altura igual a imagen */}
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-none m-0">
+                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
                   <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">
                     {productoSeleccionado.titulo}
                   </h2>
-                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
+                  <p className="text-xl tracking-[0.1em] text-white font-light mb-2 drop-shadow-md">
                     ${productoSeleccionado.precio} USD
+                  </p>
+                  
+                  {/* ETIQUETA DE DISPONIBILIDAD EN MODAL */}
+                  <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                    {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
                   
                   <div className="w-12 h-px bg-white/30 mb-8"></div>
@@ -674,6 +647,7 @@ export default function App() {
             <section className="w-full max-w-3xl mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-10 text-center pb-2 md:pb-4">Mi Perfil</h2>
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 rounded-sm shadow-2xl border-none relative">
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                   <div>
                     <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Nombres</label>
@@ -684,42 +658,85 @@ export default function App() {
                     <p className="text-white text-sm md:text-lg truncate" title={user.email}>{user.email}</p>
                   </div>
                 </div>
-                <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
-                  <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
-                  <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
-                    {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
-                      <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
-                        <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                          <button className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow">
-                            {menuPrincipal}
-                          </button>
-                          <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
-                            {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+
+                {/* MENÚ DE ADMINISTRACIÓN DE VISIBILIDAD (SÓLO ADMIN) */}
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
+                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8">Oculta o muestra secciones en la página principal.</p>
+                    
+                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
+                      {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
+                        <div key={menu} className="bg-black/40 p-3 rounded-sm">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-[10px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500 line-through' : 'text-white'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-1 cursor-pointer">
+                              {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
+                            </button>
                           </div>
+                          
+                          {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
+                            <div key={sub} className="flex justify-between items-center pl-6 mt-2 pt-2 border-t border-white/5">
+                              <span className={`text-[9px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400 line-through' : 'text-gray-400'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer">
+                                {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                        {menuPdfExpandido === menuPrincipal && (
-                          <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
-                            {submenus.map(cat => (
-                              <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
-                                <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                                  {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
-                                </div>
-                                <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
-                              </label>
-                            ))}
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* GENERACIÓN DE PDF (SÓLO ADMIN) */}
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
+                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
+                      {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
+                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
+                          <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
+                            <button className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow">
+                              {menuPrincipal}
+                            </button>
+                            <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
+                              {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {menuPdfExpandido === menuPrincipal && (
+                            <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
+                              {submenus.map(cat => (
+                                <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
+                                  <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                                    {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
+                                  </div>
+                                  <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
+                                  <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-center">
+                      <button onClick={() => window.print()} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-6 md:px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm flex items-center justify-center gap-2">
+                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Generar Catálogo PDF
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex justify-center">
-                    <button onClick={() => window.print()} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-6 md:px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm flex items-center justify-center gap-2">
-                      <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                      Generar Catálogo PDF
-                    </button>
+                )}
+                
+                {/* MENSAJE PARA EL CLIENTE (CUANDO NO ES ADMIN Y NO VE EL PDF) */}
+                {userRole === 'cliente' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
+                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
                   </div>
-                </div>
+                )}
+
               </div>
             </section>
           )}
