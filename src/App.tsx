@@ -27,7 +27,6 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  // ESTADOS DEL CLIENTE
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
@@ -82,7 +81,6 @@ export default function App() {
     );
   };
 
-  // FUNCIONES DEL CLIENTE
   const agregarAlCarrito = (producto) => {
     if (carrito.some(item => item.id === producto.id)) {
       alert(`"${producto.titulo}" ya está en tu bolso.`);
@@ -104,7 +102,6 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
-  // FUNCIONES DEL ADMINISTRADOR
   const prepararEdicion = (producto) => {
     setNuevaPieza({
       titulo: producto.titulo,
@@ -241,15 +238,14 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
   const totalCarrito = subtotalCarrito; 
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
+  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
+  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
   
-  // CLASE SUBMENU MODIFICADA: Cristal opaco sheeter sin marcos sólidos
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
@@ -269,7 +265,8 @@ export default function App() {
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-50 pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
+        {/* HEADER CORREGIDO: SE QUITO EL OVERFLOW PARA QUE BAJEN LOS MENUS */}
+        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
             <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
@@ -278,7 +275,7 @@ export default function App() {
           )}
 
           {user && (
-            <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-50">
+            <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
@@ -302,12 +299,11 @@ export default function App() {
             </div>
           )}
 
-          <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-10 cursor-pointer`} />
+          <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-[100] cursor-pointer`} />
 
-          {/* 👇 NAVEGACIÓN MODIFICADA: Sin fondos sólidos 👇 */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in overflow-x-auto">
-              <ul className="flex flex-row justify-center gap-6 md:gap-20 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent min-w-max md:min-w-0 px-4 md:px-0">
+            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
                 
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
@@ -371,14 +367,14 @@ export default function App() {
 
           {!user && (
             <div className="w-full flex justify-center mt-4 mb-4">
-              <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer">
+              <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="30" width="30" className="md:w-[35px] md:h-[35px]"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
             </div>
           )}
         </header>
 
-        <main className="flex-grow flex flex-col items-center relative w-full px-4 md:px-0">
+        <main className="flex-grow flex flex-col items-center w-full px-4 md:px-0">
           
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
@@ -452,10 +448,8 @@ export default function App() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   // 👇 TARJETA MODIFICADA: Layout vertical, info bajo la foto 👇
                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                      
-                     {/* Imagen flush, sin marcos sólidos */}
                      <div 
                        className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
                        onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
@@ -480,9 +474,8 @@ export default function App() {
                        )}
                      </div>
                      
-                     {/* Info flush, con efecto cristal opaco y sin marcos */}
                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
-                       <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2">{producto.titulo}</h4>
+                       <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
@@ -523,14 +516,13 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VENTANA EMERGENTE (MODAL) MODIFICADA: Layout horizontal y sin bordes 👇 */}
           {productoSeleccionado && (
             <div 
               className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
               onClick={() => setProductoSeleccionado(null)}
             >
               <div 
-                className="bg-white/5 backdrop-blur-3xl max-w-5xl w-full flex flex-col md:flex-row relative shadow-2xl rounded-sm overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border border-white/10"
+                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border border-white/10"
                 onClick={e => e.stopPropagation()} 
               >
                 <button 
@@ -540,13 +532,11 @@ export default function App() {
                   ×
                 </button>
                 
-                {/* Sección Imagen: Flush, sin marcos ni fondos sólidos */}
-                <div className="w-full md:w-1/2 aspect-square md:aspect-auto p-0 relative flex items-center justify-center bg-transparent">
-                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale drop-shadow-2xl p-4 md:p-12" />
+                <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative flex items-center justify-center bg-transparent">
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale" />
                 </div>
                 
-                {/* Sección Info: Flush, con efecto cristal opaco y sin marcos */}
-                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-sm">
+                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-xl">
                   <h2 className="text-xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 md:mb-4">{productoSeleccionado.titulo}</h2>
                   <p className="text-lg md:text-2xl tracking-[0.1em] text-white font-light mb-6 md:mb-8">${productoSeleccionado.precio} USD</p>
                   
@@ -610,7 +600,7 @@ export default function App() {
                   </div>
                   
                   <div className="flex justify-center mt-10 md:mt-16">
-                    <button onClick={finalizarPedido} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
+                    <button onClick={finalPedido} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
                       Finalizar Pedido
                     </button>
                   </div>
@@ -628,7 +618,6 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => (
-                    // 👇 TARJETA MODIFICADA (reutilizada de categoría) 👇
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
