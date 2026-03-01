@@ -26,7 +26,13 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
+  const fetchProductos = async () => {
+    const { data, error } = await supabase.from('productos').select('*');
+    if (data) setProductos(data);
+  };
+
   useEffect(() => {
+    fetchProductos(); // <-- Carga los productos desde Supabase al inicio
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchUserRole(session.user.id);
@@ -69,29 +75,62 @@ export default function App() {
     );
   };
 
-  const handlePublicarLocal = (e) => {
+  const handlePublicarLocal = async (e) => {
     e.preventDefault();
     if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio a la pieza.');
     
-    const nuevoId = Date.now();
-    const imageUrl = nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
+    let imageUrl = 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
-    setProductos([{
-      id: nuevoId,
-      titulo: nuevaPieza.titulo,
-      descripcion: nuevaPieza.descripcion,
-      precio: nuevaPieza.precio,
-      categoria: activeCategory,
-      imagen_url: imageUrl
-    }, ...productos]);
+    if (nuevaPieza.imagen) {
+      const fileExt = nuevaPieza.imagen.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('assets') 
+        .upload(fileName, nuevaPieza.imagen);
 
-    setShowInlineForm(false);
-    setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null });
+      if (uploadError) {
+        alert('Error subiendo la imagen a Supabase. Verifica los permisos de storage.');
+        console.error(uploadError);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(fileName);
+      imageUrl = publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from('productos')
+      .insert([
+        {
+          titulo: nuevaPieza.titulo,
+          descripcion: nuevaPieza.descripcion,
+          precio: Number(nuevaPieza.precio),
+          categoria: activeCategory,
+          imagen_url: imageUrl
+        }
+      ])
+      .select();
+
+    if (error) {
+      alert('Error al guardar en la base de datos de Supabase.');
+      console.error(error);
+    } else if (data) {
+      setProductos([data[0], ...productos]);
+      setShowInlineForm(false);
+      setNuevaPieza({ titulo: '', descripcion: '', precio: '', imagen: null });
+    }
   };
 
-  const handleBorrarLocal = (id) => {
+  const handleBorrarLocal = async (id) => {
     if(window.confirm('¿Seguro que deseas retirar esta pieza del catálogo?')) {
-      setProductos(productos.filter(p => p.id !== id));
+      const { error } = await supabase.from('productos').delete().eq('id', id);
+      if (!error) {
+        setProductos(productos.filter(p => p.id !== id));
+      } else {
+        alert('Error al borrar de Supabase.');
+        console.error(error);
+      }
     }
   };
 
@@ -388,7 +427,6 @@ export default function App() {
                   <label className="block text-sm tracking-[0.3em] uppercase text-white mb-6 text-center">Catálogo a la Carta</label>
                   <p className="text-gray-500 text-[10px] tracking-[0.2em] uppercase text-center mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                   
-                  {/* 👇 ACORDEÓN CON CHECKBOX. LETRAS GRISES QUE SE VUELVEN BLANCAS AL PASAR MOUSE 👇 */}
                   <div className="flex flex-col gap-4 mb-10 w-full max-w-md mx-auto">
                     {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                       <div key={menuPrincipal} className="border-b border-white/10 pb-4">
@@ -400,7 +438,6 @@ export default function App() {
                             {menuPrincipal}
                           </button>
                           
-                          {/* CHECKBOX PARA SELECCIONAR TODA LA CATEGORÍA */}
                           <div 
                             className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`}
                             onClick={() => toggleAll(menuPrincipal)}
@@ -450,16 +487,12 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* =========================================================
-          VISTA FANTASMA PDF (MUESTRA TÍTULOS AUNQUE ESTÉN VACÍOS)
-          ========================================================= */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         
         <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
         </header>
 
-        {/* LÓGICA DE IMPRESIÓN: Si está vacío (no eligió nada), imprime todo */}
         {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
@@ -467,7 +500,6 @@ export default function App() {
           return (
             <div key={cat} className="mb-24 page-break-after px-10">
               
-              {/* 👇 TÍTULOS SIEMPRE VISIBLES 👇 */}
               <h3 className="text-xl tracking-[0.3em] uppercase text-gray-500 mb-2 text-center">{parentMenu}</h3>
               <h2 className="text-4xl tracking-[0.2em] uppercase text-white mb-16 text-center">{cat}</h2>
               
@@ -483,7 +515,6 @@ export default function App() {
                   ))}
                 </div>
               ) : (
-                /* 👇 MENSAJE SI LA CATEGORÍA NO TIENE PRODUCTOS AÚN 👇 */
                 <p className="text-gray-600 text-center tracking-[0.2em] text-[10px] uppercase">Colección en desarrollo</p>
               )}
             </div>
