@@ -27,6 +27,7 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
+  // ESTADOS DEL CLIENTE
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
@@ -81,6 +82,7 @@ export default function App() {
     );
   };
 
+  // FUNCIONES DEL CLIENTE
   const agregarAlCarrito = (producto) => {
     if (carrito.some(item => item.id === producto.id)) {
       alert(`"${producto.titulo}" ya está en tu bolso.`);
@@ -102,6 +104,7 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
+  // FUNCIONES DEL ADMINISTRADOR
   const prepararEdicion = (producto) => {
     setNuevaPieza({
       titulo: producto.titulo,
@@ -241,6 +244,7 @@ export default function App() {
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
   
+  // CLASE SUBMENU MODIFICADA: Cristal opaco sheeter sin marcos sólidos
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -300,10 +304,10 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-10 cursor-pointer`} />
 
-          {/* AQUI ESTA LA NAVEGACIÓN CORREGIDA */}
+          {/* 👇 NAVEGACIÓN MODIFICADA: Sin fondos sólidos 👇 */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
+            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in overflow-x-auto">
+              <ul className="flex flex-row justify-center gap-6 md:gap-20 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent min-w-max md:min-w-0 px-4 md:px-0">
                 
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
@@ -446,12 +450,14 @@ export default function App() {
                  </form>
                )}
 
-               <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
+                   // 👇 TARJETA MODIFICADA: Layout vertical, info bajo la foto 👇
+                   <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                      
+                     {/* Imagen flush, sin marcos sólidos */}
                      <div 
-                       className={`w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
+                       className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
                        onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
                      >
                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
@@ -474,12 +480,11 @@ export default function App() {
                        )}
                      </div>
                      
-                     <div className="w-full md:w-1/2 bg-black/40 backdrop-blur-xl rounded-sm p-4 md:p-8 flex flex-col justify-between">
-                       <div>
-                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2">{producto.titulo}</h4>
-                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-4 md:mb-6 block">${producto.precio} USD</span>
-                         <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 md:line-clamp-none leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
-                       </div>
+                     {/* Info flush, con efecto cristal opaco y sin marcos */}
+                     <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
+                       <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2">{producto.titulo}</h4>
+                       <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                       <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                        {userRole === 'cliente' && !producto.vendido && (
                          <div className="flex gap-2 mt-auto">
@@ -518,13 +523,14 @@ export default function App() {
             </section>
           )}
 
+          {/* 👇 VENTANA EMERGENTE (MODAL) MODIFICADA: Layout horizontal y sin bordes 👇 */}
           {productoSeleccionado && (
             <div 
               className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-2 md:p-4 screen-only animate-fade-in"
               onClick={() => setProductoSeleccionado(null)}
             >
               <div 
-                className="bg-white/5 backdrop-blur-3xl max-w-5xl w-full flex flex-col md:flex-row relative shadow-2xl rounded-sm overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none"
+                className="bg-white/5 backdrop-blur-3xl max-w-5xl w-full flex flex-col md:flex-row relative shadow-2xl rounded-sm overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-none border border-white/10"
                 onClick={e => e.stopPropagation()} 
               >
                 <button 
@@ -534,17 +540,19 @@ export default function App() {
                   ×
                 </button>
                 
-                <div className="w-full md:w-1/2 aspect-square md:aspect-auto p-4 md:p-12 relative flex items-center justify-center">
-                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale drop-shadow-2xl" />
+                {/* Sección Imagen: Flush, sin marcos ni fondos sólidos */}
+                <div className="w-full md:w-1/2 aspect-square md:aspect-auto p-0 relative flex items-center justify-center bg-transparent">
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale drop-shadow-2xl p-4 md:p-12" />
                 </div>
                 
+                {/* Sección Info: Flush, con efecto cristal opaco y sin marcos */}
                 <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-sm">
                   <h2 className="text-xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 md:mb-4">{productoSeleccionado.titulo}</h2>
                   <p className="text-lg md:text-2xl tracking-[0.1em] text-white font-light mb-6 md:mb-8">${productoSeleccionado.precio} USD</p>
                   
                   <div className="w-8 md:w-12 h-px bg-white/20 mb-6 md:mb-8"></div>
                   
-                  <p className="text-[10px] md:text-xs text-gray-300 leading-loose mb-8 md:mb-12 uppercase tracking-[0.1em break-words uppercase">{productoSeleccionado.descripcion}</p>
+                  <p className="text-[10px] md:text-xs text-gray-300 leading-loose mb-8 md:mb-12 break-words uppercase tracking-[0.1em]">{productoSeleccionado.descripcion}</p>
                   
                   {!productoSeleccionado.vendido ? (
                     <div className="flex gap-3 md:gap-4 mt-auto">
@@ -618,10 +626,11 @@ export default function App() {
               {favoritos.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => (
-                    <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
-                      <div className="w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                    // 👇 TARJETA MODIFICADA (reutilizada de categoría) 👇
+                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                      <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -629,12 +638,10 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <div className="w-full md:w-1/2 bg-black/40 backdrop-blur-xl rounded-sm p-4 md:p-8 flex flex-col justify-between">
-                        <div>
-                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
-                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-4 md:mb-6 block">${producto.precio} USD</span>
-                          <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 md:line-clamp-none leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
-                        </div>
+                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
+                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
+                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto">
                           {!producto.vendido && (
                             <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-2.5 md:py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm">
