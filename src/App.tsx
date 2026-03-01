@@ -28,7 +28,6 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  // ESTADO PARA OCULTAR MENÚS
   const [hiddenItems, setHiddenItems] = useState<string[]>(() => {
     const saved = localStorage.getItem('antares_hidden_menus');
     return saved ? JSON.parse(saved) : [];
@@ -68,14 +67,20 @@ export default function App() {
   const fetchUserRole = async (userId) => {
     try {
       const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
-      if (data) setUserRole(data.rol);
+      if (data && data.rol) {
+        setUserRole(data.rol);
+      } else {
+        setUserRole('cliente');
+      }
     } catch (error) {
       console.error("Error al obtener rol:", error);
+      setUserRole('cliente');
     }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setUserRole('cliente'); 
     setActiveView('home'); 
   };
 
@@ -199,7 +204,16 @@ export default function App() {
     }
   };
 
-  if (!areSupabaseCredentialsSet) return null;
+  if (!areSupabaseCredentialsSet) {
+    return (
+      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
+        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none w-full mx-4">
+          <h2 className="text-xl md:text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
+          <p className="text-gray-400 text-sm md:text-base">Verifica tus credenciales de Supabase en los Secrets.</p>
+        </div>
+      </div>
+    );
+  }
 
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
@@ -210,7 +224,9 @@ export default function App() {
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
 
-  const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
+  const isAllSelected = (menuPrincipal) => {
+    return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
+  };
 
   const toggleAll = (menuPrincipal) => {
     const subs = estructuraCatalogo[menuPrincipal];
@@ -218,7 +234,9 @@ export default function App() {
       setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
     } else {
       const newSelections = [...categoriasDescarga];
-      subs.forEach(sub => { if (!newSelections.includes(sub)) newSelections.push(sub); });
+      subs.forEach(sub => {
+        if (!newSelections.includes(sub)) newSelections.push(sub);
+      });
       setCategoriasDescarga(newSelections);
     }
   };
@@ -238,8 +256,18 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;  
+          overflow: hidden;
+        }
+        @media print {
+          @page { margin: 0; }
+          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+          .screen-only { display: none !important; }
+          .print-only { display: block !important; }
+        }
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
@@ -277,13 +305,12 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className="h-16 md:h-32 w-auto mt-[10px] md:mt-[4px] z-[100] cursor-pointer" />
 
-          {/* LÓGICA DE OCULTAR MENÚS APLICADA Y CORREGIDA AQUÍ */}
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
               <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
-                  // SI EL USUARIO NO ES ADMIN Y EL MENÚ ESTÁ OCULTO, DESAPARECE
+                  
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
@@ -296,7 +323,7 @@ export default function App() {
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
-                            // SI EL USUARIO NO ES ADMIN Y EL SUBMENÚ ESTÁ OCULTO, DESAPARECE
+                            
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
@@ -311,7 +338,6 @@ export default function App() {
                   );
                 })}
                 
-                {/* OBSEQUIOS OCULTAR */}
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
                   <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                     <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
@@ -457,8 +483,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
@@ -664,7 +690,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* MENÚ DE ADMINISTRACIÓN DE VISIBILIDAD (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500">Configuración de Menús</label>
@@ -694,7 +719,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* GENERACIÓN DE PDF (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
@@ -735,7 +759,6 @@ export default function App() {
                   </div>
                 )}
                 
-                {/* MENSAJE PARA EL CLIENTE */}
                 {userRole === 'cliente' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
