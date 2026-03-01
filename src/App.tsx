@@ -245,7 +245,7 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
@@ -265,7 +265,6 @@ export default function App() {
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        {/* HEADER CORREGIDO: SE QUITO EL OVERFLOW PARA QUE BAJEN LOS MENUS */}
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
@@ -516,38 +515,38 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA: CRISTAL REAL Y SIN MARCOS 👇 */}
+          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA: MISMO LARGO, CERO SEPARACION Y CRISTAL BORROSO 👇 */}
           {productoSeleccionado && (
             <div 
-              className="fixed inset-0 bg-black/40 backdrop-blur-md z-[200] flex items-center justify-center p-0 screen-only animate-fade-in"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in"
               onClick={() => setProductoSeleccionado(null)}
             >
               <div 
-                className="bg-transparent max-w-5xl w-full flex flex-col md:flex-row relative overflow-hidden h-full md:h-auto border-none shadow-none"
+                className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent"
                 onClick={e => e.stopPropagation()} 
               >
                 <button 
                   onClick={() => setProductoSeleccionado(null)} 
-                  className="absolute top-4 right-4 text-white z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none drop-shadow-lg"
+                  className="absolute top-4 right-4 text-white hover:text-gray-400 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none"
                 >
                   ×
                 </button>
                 
-                {/* Sección Imagen: Totalmente limpia */}
-                <div className="w-full md:w-1/2 flex items-center justify-center bg-transparent p-4 md:p-12">
+                {/* Sección Imagen: Totalmente limpia, ajustada al borde derecho sin separación */}
+                <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
                   <img 
                     src={productoSeleccionado.imagen_url} 
                     alt={productoSeleccionado.titulo} 
-                    className="w-full h-full object-contain grayscale drop-shadow-2xl" 
+                    className="w-full h-full object-cover grayscale block m-0 p-0" 
                   />
                 </div>
                 
-                {/* Sección Info: FONDO CRISTAL NEGRO BORROSO REAL */}
-                <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-none">
-                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-4 drop-shadow-md">
+                {/* Sección Info: FONDO CRISTAL BORROSO, pegada sin espacios, altura igual a imagen */}
+                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-none m-0">
+                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">
                     {productoSeleccionado.titulo}
                   </h2>
-                  <p className="text-xl md:text-2xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
+                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
                     ${productoSeleccionado.precio} USD
                   </p>
                   
@@ -561,19 +560,19 @@ export default function App() {
                     <div className="flex gap-4 mt-auto">
                       <button 
                         onClick={() => { agregarAlCarrito(productoSeleccionado); setProductoSeleccionado(null); }} 
-                        className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none rounded-none"
+                        className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none"
                       >
                         Añadir al Bolso
                       </button>
                       <button 
                         onClick={() => toggleFavorito(productoSeleccionado.id)} 
-                        className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center rounded-none"
+                        className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center"
                       >
                         {favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-auto py-5 text-center border border-white/20 bg-black/20">
+                    <div className="mt-auto py-4 text-center border border-white/20 bg-black/20">
                        <span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span>
                     </div>
                   )}
@@ -593,9 +592,9 @@ export default function App() {
                   <h3 className="text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                   
                   {carrito.map(item => (
-                    <div key={item.id} className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
-                      <button onClick={() => setCarrito(carrito.filter(p => p.id !== item.id))} className="absolute top-2 right-0 sm:relative sm:top-auto sm:order-last text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
-                      <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 sm:w-20 sm:h-20 object-contain border border-white/10" />
+                    <div key={item.id} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
+                      <button onClick={() => setCarrito(carrito.filter(p => p.id !== item.id))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                      <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                         <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
                         <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">{item.categoria}</p>
@@ -633,6 +632,11 @@ export default function App() {
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                        {producto.vendido && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                            <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                          </div>
+                        )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
