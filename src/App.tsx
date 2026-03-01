@@ -244,6 +244,7 @@ export default function App() {
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
   
+  // CLASE SUBMENU MODIFICADA: Cristal opaco sheeter sin marcos
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -279,10 +280,8 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-50">
               
-              {/* ICONO DEL BOLSO (CARRITO) */}
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                {/* AQUI SE ACTUALIZA EL NUMERO DEL CARRITO AUTOMATICAMENTE */}
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
 
@@ -305,10 +304,10 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-10 cursor-pointer`} />
 
-          {/* 👇 NAVEGACIÓN CORREGIDA: Se eliminó overflow-x-auto que cortaba los submenús 👇 */}
+          {/* 👇 NAVEGACIÓN MODIFICADA: Sin fondos sólidos 👇 */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
+            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in overflow-x-auto">
+              <ul className="flex flex-row justify-center gap-6 md:gap-20 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent min-w-max md:min-w-0 px-4 md:px-0">
                 
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
@@ -393,7 +392,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
                  </p>
                </section>
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
@@ -451,15 +450,17 @@ export default function App() {
                  </form>
                )}
 
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+               <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   <div key={producto.id} className="group relative bg-white/5 backdrop-blur-xl shadow-2xl p-4 md:p-6 rounded-sm flex flex-col">
+                   // 👇 TARJETA MODIFICADA: Layout horizontal y cristal opaco en info 👇
+                   <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
                      
+                     {/* Imagen flush a la izquierda, sin marcos sólidos */}
                      <div 
-                       className={`overflow-hidden aspect-[3/4] mb-4 relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
+                       className={`w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
                        onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
                      >
-                       <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                       <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
                        
                        {producto.vendido && (
                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -469,49 +470,51 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full md:rounded-none" title="Editar">
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-amber-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full" title="Editar">
                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                            </button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full md:rounded-none" title="Borrar">
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white hover:text-red-500 border border-white/10 cursor-pointer text-[10px] outline-none rounded-full" title="Borrar">
                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                            </button>
                          </div>
                        )}
                      </div>
                      
-                     <div className="flex justify-between items-start mb-2 mt-2 md:mt-4">
-                       <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white pr-2 md:pr-4 line-clamp-2">{producto.titulo}</h4>
-                       <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap">${producto.precio} USD</span>
-                     </div>
-                     
-                     <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4">{producto.descripcion}</p>
-
-                     {userRole === 'cliente' && !producto.vendido && (
-                       <div className="flex gap-2 mt-auto">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} 
-                            className="flex-grow py-2.5 md:py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none"
-                          >
-                            Comprar
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                            className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none"
-                            title="Agregar a favoritos"
-                          >
-                            {favoritos.includes(producto.id) ? '♥' : '♡'}
-                          </button>
+                     {/* Info flush a la derecha, con efecto cristal opaco y sin marcos */}
+                     <div className="w-full md:w-1/2 bg-black/40 backdrop-blur-xl rounded-sm p-4 md:p-8 flex flex-col justify-between">
+                       <div>
+                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2">{producto.titulo}</h4>
+                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-4 md:mb-6 block">${producto.precio} USD</span>
+                         <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 md:line-clamp-none leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                        </div>
-                     )}
 
-                     {userRole === 'admin' && (
-                       <button
-                         onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }}
-                         className={`w-full py-2.5 mt-auto text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
-                       >
-                         {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
-                       </button>
-                     )}
+                       {userRole === 'cliente' && !producto.vendido && (
+                         <div className="flex gap-2 mt-auto">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} 
+                              className="flex-grow py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm"
+                            >
+                              Comprar
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
+                              className="px-4 md:px-5 py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm"
+                              title="Agregar a favoritos"
+                            >
+                              {favoritos.includes(producto.id) ? '♥' : '♡'}
+                            </button>
+                         </div>
+                       )}
+
+                       {userRole === 'admin' && (
+                         <button
+                           onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }}
+                           className={`w-full py-2.5 mt-auto text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
+                         >
+                           {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
+                         </button>
+                       )}
+                     </div>
                    </div>
                  ))}
                  
@@ -542,13 +545,13 @@ export default function App() {
                   <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain grayscale drop-shadow-2xl" />
                 </div>
                 
-                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center">
+                <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col justify-center bg-black/60 backdrop-blur-sm">
                   <h2 className="text-xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 md:mb-4">{productoSeleccionado.titulo}</h2>
                   <p className="text-lg md:text-2xl tracking-[0.1em] text-white font-light mb-6 md:mb-8">${productoSeleccionado.precio} USD</p>
                   
                   <div className="w-8 md:w-12 h-px bg-white/20 mb-6 md:mb-8"></div>
                   
-                  <p className="text-[10px] md:text-xs text-gray-300 leading-loose mb-8 md:mb-12 uppercase tracking-[0.1em]">{productoSeleccionado.descripcion}</p>
+                  <p className="text-[10px] md:text-xs text-gray-300 leading-loose mb-8 md:mb-12 uppercase tracking-[0.1em break-words uppercase">{productoSeleccionado.descripcion}</p>
                   
                   {!productoSeleccionado.vendido ? (
                     <div className="flex gap-3 md:gap-4 mt-auto">
@@ -591,7 +594,7 @@ export default function App() {
                       <button onClick={() => setCarrito(carrito.filter(p => p.id !== item.id))} className="absolute top-2 right-0 sm:relative sm:top-auto sm:order-last text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 sm:w-20 sm:h-20 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                        <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2">{item.titulo}</h4>
+                        <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
                         <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">{item.categoria}</p>
                       </div>
                       <span className="text-xs md:text-sm tracking-[0.1em] text-white whitespace-nowrap">${item.precio} USD</span>
@@ -622,36 +625,34 @@ export default function App() {
               {favoritos.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => (
-                    <div key={producto.id} className="group relative bg-white/5 backdrop-blur-xl shadow-2xl p-4 md:p-6 rounded-sm flex flex-col">
-                      
-                      <div className="overflow-hidden aspect-[3/4] mb-4 relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
-                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all" />
-                        
+                    // 👇 TARJETA MODIFICADA (reutilizada de categoría) 👇
+                    <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
+                      <div className="w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                           </div>
                         )}
                       </div>
-                      
-                      <div className="flex justify-between items-start mb-2 mt-2 md:mt-4">
-                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white pr-2 md:pr-4 line-clamp-2">{producto.titulo}</h4>
-                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap">${producto.precio} USD</span>
-                      </div>
-                      
-                      <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4">{producto.descripcion}</p>
-
-                      <div className="flex gap-2 mt-auto">
-                        {!producto.vendido && (
-                          <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-2.5 md:py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none">
-                            Comprar
+                      <div className="w-full md:w-1/2 bg-black/40 backdrop-blur-xl rounded-sm p-4 md:p-8 flex flex-col justify-between">
+                        <div>
+                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
+                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-4 md:mb-6 block">${producto.precio} USD</span>
+                          <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 md:line-clamp-none leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        </div>
+                        <div className="flex gap-2 mt-auto">
+                          {!producto.vendido && (
+                            <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-2.5 md:py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm">
+                              Comprar
+                            </button>
+                          )}
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                            ♥
                           </button>
-                        )}
-                        <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none" title="Quitar de deseos">
-                          ♥
-                        </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -663,7 +664,6 @@ export default function App() {
           {userRole === 'cliente' && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
-              
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
@@ -734,6 +734,7 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
+      {/* VISTA FANTASMA PDF */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
@@ -760,7 +761,7 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2">{p.titulo}</h3>
+                      <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2 break-words uppercase">{p.titulo}</h3>
                       <p className="text-[10px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
                       <p className="text-[10px] leading-relaxed text-gray-500 px-4 line-clamp-2 uppercase">{p.descripcion}</p>
                     </div>
