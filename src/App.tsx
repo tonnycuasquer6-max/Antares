@@ -13,7 +13,7 @@ const FONDO_HEADER_URL = "/fondo-header.png";
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [userRole, setUserRole] = useState('admin'); 
+  const [userRole, setUserRole] = useState('cliente'); // POR DEFECTO TODOS SON CLIENTES
   
   const [activeView, setActiveView] = useState('home');
   const [activeCategory, setActiveCategory] = useState(''); 
@@ -28,7 +28,6 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  // ESTADO PARA OCULTAR MENÚS (Guardado en LocalStorage)
   const [hiddenItems, setHiddenItems] = useState<string[]>(() => {
     const saved = localStorage.getItem('antares_hidden_menus');
     return saved ? JSON.parse(saved) : [];
@@ -47,7 +46,11 @@ export default function App() {
     fetchProductos();
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) fetchUserRole(session.user.id);
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      } else {
+        setUserRole('cliente');
+      }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -115,7 +118,7 @@ export default function App() {
   };
 
   const finalizarPedido = () => {
-    alert('Esta función aún no está configurada.');
+    alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
   const prepararEdicion = (producto) => {
@@ -140,8 +143,8 @@ export default function App() {
 
   const toggleVendido = async (id, estadoActual) => {
     const { data, error } = await supabase.from('productos').update({ vendido: !estadoActual }).eq('id', id).select();
-    if (!error && data) {
-      setProductos(productos.map(p => p.id === id ? { ...p, vendido: !estadoActual } : p));
+    if (!error && data && data.length > 0) {
+      setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
     }
   };
 
@@ -172,14 +175,17 @@ export default function App() {
 
     if (editandoId) {
       const { data, error } = await supabase.from('productos').update(payload).eq('id', editandoId).select();
-      if (data) {
-        setProductos(productos.map(p => p.id === editandoId ? data[0] : p));
+      if (data && data.length > 0) {
+        setProductos(prev => prev.map(p => p.id === editandoId ? data[0] : p));
         cerrarFormulario();
       }
     } else {
       const { data, error } = await supabase.from('productos').insert([payload]).select();
-      if (data) {
-        setProductos([data[0], ...productos]);
+      if (data && data.length > 0) {
+        setProductos(prev => {
+          if (prev.some(p => p.id === data[0].id)) return prev;
+          return [data[0], ...prev];
+        });
         cerrarFormulario();
       }
     }
@@ -188,7 +194,7 @@ export default function App() {
   const handleBorrarLocal = async (id) => {
     if(window.confirm('¿Seguro que deseas retirar esta pieza?')) {
       const { error } = await supabase.from('productos').delete().eq('id', id);
-      if (!error) setProductos(productos.filter(p => p.id !== id));
+      if (!error) setProductos(prev => prev.filter(p => p.id !== id));
     }
   };
 
@@ -217,7 +223,11 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
+  const totalCarrito = subtotalCarrito; 
 
+  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
+  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
+  
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -266,29 +276,29 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className="h-16 md:h-32 w-auto mt-[10px] md:mt-[4px] z-[100] cursor-pointer" />
 
-          {/* LÓGICA DE OCULTAR MENÚS APLICADA AQUÍ */}
+          {/* NAVEGACIÓN MODIFICADA: Color ROJO si está oculto y eres Admin. Desaparece si eres cliente. */}
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
-                  if (userRole === 'cliente' && isMenuHidden) return null;
+                  if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
-                    <li key={menu} className={`group relative cursor-pointer py-2 border-none bg-transparent ${isMenuHidden ? 'opacity-50' : ''}`}>
-                      <span className="hover:text-white transition-colors block relative">
-                        {menu} {userRole === 'admin' && isMenuHidden && '(Oculto)'}
+                    <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
+                      <span className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                        {menu} {isMenuHidden && userRole === 'admin' && '(Oculto)'}
                         <div className={menuUnderlineClass}></div>
                       </span>
                       <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
-                            if (userRole === 'cliente' && isSubHidden) return null;
+                            if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs ${isSubHidden ? 'opacity-50 text-red-400' : ''}`}>
-                                {sub} {userRole === 'admin' && isSubHidden && '(Oculto)'}
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
+                                {sub} {isSubHidden && userRole === 'admin' && '(Oculto)'}
                               </span>
                             );
                           })}
@@ -298,17 +308,16 @@ export default function App() {
                   );
                 })}
                 
-                {/* OBSEQUIOS */}
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
-                  <li className={`group relative cursor-pointer py-2 border-none bg-transparent ${hiddenItems.includes('Obsequios') ? 'opacity-50' : ''}`}>
-                    <span className="hover:text-white transition-colors block relative">
-                      Obsequios {userRole === 'admin' && hiddenItems.includes('Obsequios') && '(Oculto)'}
+                  <li className="group relative cursor-pointer py-2 border-none bg-transparent">
+                    <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                      Obsequios {hiddenItems.includes('Obsequios') && userRole === 'admin' && '(Oculto)'}
                       <div className={menuUnderlineClass}></div>
                     </span>
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
+                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
                         ))}
                       </div>
                     </div>
@@ -369,7 +378,6 @@ export default function App() {
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
-               {/* NUEVO SUBMENÚ HORIZONTAL PARA ACERO FINO Y PLATA 925 */}
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                  <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
                    {subcategoriasJoyeria.map(sub => (
@@ -405,10 +413,8 @@ export default function App() {
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
                      <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
                      
-                     {/* NUEVO INPUT DE DISPONIBILIDAD */}
                      <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK, O 'BAJO PEDIDO')" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" />
                      
-                     {/* SELECTOR DE SUBCATEGORÍA SI ES JOYERÍA */}
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                        <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
@@ -437,7 +443,8 @@ export default function App() {
                        className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
                        onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
                      >
-                       <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                       {/* QUITE EL GRAYSCALE AQUÍ TAMBIÉN */}
+                       <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                        
                        {producto.vendido && (
                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -457,7 +464,6 @@ export default function App() {
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       {/* ETIQUETA DE DISPONIBILIDAD */}
                        <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                        
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
@@ -483,7 +489,7 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA: MISMO LARGO, CERO SEPARACION Y CRISTAL BORROSO 👇 */}
+          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA: FOTO Y TEXTO MISMAS ALTURAS, SIN MARGENES, SIN ESCALA DE GRISES 👇 */}
           {productoSeleccionado && (
             <div 
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in"
@@ -500,25 +506,24 @@ export default function App() {
                   ×
                 </button>
                 
-                {/* Sección Imagen: Totalmente limpia, ajustada al borde derecho sin separación */}
+                {/* Imagen: SIN MARGENES (p-0 m-0), object-cover para igualar alturas y SIN grayscale */}
                 <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
                   <img 
                     src={productoSeleccionado.imagen_url} 
                     alt={productoSeleccionado.titulo} 
-                    className="w-full h-full object-cover grayscale block m-0 p-0" 
+                    className="w-full h-full object-cover block m-0 p-0" 
                   />
                 </div>
                 
-                {/* Sección Info: FONDO CRISTAL BORROSO, pegada sin espacios, altura igual a imagen */}
+                {/* Info: CRISTAL BORROSO BLANCO, pegado sin espacios, misma altura */}
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
                   <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">
                     {productoSeleccionado.titulo}
                   </h2>
-                  <p className="text-xl tracking-[0.1em] text-white font-light mb-2 drop-shadow-md">
+                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
                     ${productoSeleccionado.precio} USD
                   </p>
                   
-                  {/* ETIQUETA DE DISPONIBILIDAD EN MODAL */}
                   <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
                     {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
@@ -567,6 +572,7 @@ export default function App() {
                   {carrito.map(item => (
                     <div key={item.id} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                       <button onClick={() => setCarrito(carrito.filter(p => p.id !== item.id))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                      {/* QUITE EL GRAYSCALE AQUÍ TAMBIÉN */}
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                         <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
@@ -578,7 +584,7 @@ export default function App() {
                   
                   <div className="mt-8 md:mt-12 flex flex-col items-end gap-2 md:gap-3 text-[10px] md:text-xs tracking-[0.1em] uppercase">
                     <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito}.00 USD</span></p>
-                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">Gratis</span></p>
+                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío y Curaduría: <span className="text-white ml-0 sm:ml-6">Gratis (ANTARES)</span></p>
                     <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
                     <p className="text-xs md:text-sm text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {totalCarrito}.00 USD</span></p>
                   </div>
@@ -604,7 +610,8 @@ export default function App() {
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => (
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
-                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                        {/* QUITE EL GRAYSCALE AQUÍ TAMBIÉN */}
+                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
@@ -730,7 +737,7 @@ export default function App() {
                   </div>
                 )}
                 
-                {/* MENSAJE PARA EL CLIENTE (CUANDO NO ES ADMIN Y NO VE EL PDF) */}
+                {/* MENSAJE PARA EL CLIENTE */}
                 {userRole === 'cliente' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
@@ -769,7 +776,8 @@ export default function App() {
                   {piezasDeCategoria.map(p => (
                     <div key={p.id} className="flex flex-col items-center text-center relative border border-white/5 p-4 rounded-sm">
                       <div className="relative w-full mb-6 flex items-center justify-center h-80 bg-zinc-900/10">
-                        <img src={p.imagen_url} className="w-full h-full object-contain grayscale" alt={p.titulo} />
+                        {/* QUITE EL GRAYSCALE AQUÍ TAMBIÉN */}
+                        <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         {p.vendido && (
                           <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
                             <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
