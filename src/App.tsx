@@ -27,7 +27,6 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  // ESTADOS DEL CLIENTE
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
@@ -82,7 +81,6 @@ export default function App() {
     );
   };
 
-  // FUNCIONES DEL CLIENTE
   const agregarAlCarrito = (producto) => {
     if (carrito.some(item => item.id === producto.id)) {
       alert(`"${producto.titulo}" ya está en tu bolso.`);
@@ -104,7 +102,6 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
-  // FUNCIONES DEL ADMINISTRADOR
   const prepararEdicion = (producto) => {
     setNuevaPieza({
       titulo: producto.titulo,
@@ -244,7 +241,6 @@ export default function App() {
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-50";
   const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-50";
   
-  // CLASE SUBMENU MODIFICADA: Cristal opaco sheeter sin marcos
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -304,10 +300,10 @@ export default function App() {
 
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className={`h-16 md:h-32 w-auto object-contain mt-[10px] md:mt-[4px] z-10 cursor-pointer`} />
 
-          {/* 👇 NAVEGACIÓN MODIFICADA: Sin fondos sólidos 👇 */}
+          {/* AQUI ESTA LA NAVEGACIÓN CORREGIDA */}
           {user && activeView === 'home' && (
-            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in overflow-x-auto">
-              <ul className="flex flex-row justify-center gap-6 md:gap-20 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent min-w-max md:min-w-0 px-4 md:px-0">
+            <nav className="w-full border-none bg-transparent mt-4 mb-2 relative z-50 px-2 md:px-6 pt-0 animate-fade-in">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-400 border-none bg-transparent px-4 md:px-0">
                 
                 <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                   <span className="hover:text-white transition-colors block relative">Atelier<div className={menuUnderlineClass}></div></span>
@@ -392,7 +388,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
@@ -452,10 +448,8 @@ export default function App() {
 
                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                  {productos.filter(p => p.categoria === activeCategory).map(producto => (
-                   // 👇 TARJETA MODIFICADA: Layout horizontal y cristal opaco en info 👇
                    <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
                      
-                     {/* Imagen flush a la izquierda, sin marcos sólidos */}
                      <div 
                        className={`w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
                        onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
@@ -480,7 +474,6 @@ export default function App() {
                        )}
                      </div>
                      
-                     {/* Info flush a la derecha, con efecto cristal opaco y sin marcos */}
                      <div className="w-full md:w-1/2 bg-black/40 backdrop-blur-xl rounded-sm p-4 md:p-8 flex flex-col justify-between">
                        <div>
                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2">{producto.titulo}</h4>
@@ -627,7 +620,6 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => (
-                    // 👇 TARJETA MODIFICADA (reutilizada de categoría) 👇
                     <div key={producto.id} className="group relative bg-transparent shadow-2xl rounded-sm flex flex-col md:flex-row">
                       <div className="w-full md:w-1/2 aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain grayscale opacity-90 group-hover:opacity-100 transition-all duration-700" />
@@ -734,7 +726,6 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* VISTA FANTASMA PDF */}
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
