@@ -49,7 +49,7 @@ export default function App() {
 
   useEffect(() => {
     fetchProductos();
-    fetchConfiguracion(); // LLAMADA A LA NUEVA TABLA AL CARGAR LA PÁGINA
+    fetchConfiguracion();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -105,12 +105,36 @@ export default function App() {
     );
   };
 
-  // FUNCIÓN ACTUALIZADA PARA GUARDAR DIRECTAMENTE EN SUPABASE
+  // FUNCIÓN CON LÓGICA EN CASCADA (PADRE E HIJOS)
   const toggleMenuVisibility = async (itemName) => {
-    const newHidden = hiddenItems.includes(itemName) 
-      ? hiddenItems.filter(i => i !== itemName) 
-      : [...hiddenItems, itemName];
-    
+    let newHidden = [...hiddenItems];
+    const isCurrentlyHidden = hiddenItems.includes(itemName);
+
+    // Verificar si es un menú principal
+    const isMainMenu = Object.keys(estructuraCatalogo).includes(itemName) || itemName === 'Obsequios';
+
+    if (isMainMenu) {
+      let itemsToToggle = [itemName];
+      if (estructuraCatalogo[itemName]) {
+        itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
+      }
+
+      if (isCurrentlyHidden) {
+        // Mostrar: Quitamos el menú y todos sus submenús de la lista de ocultos
+        newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
+      } else {
+        // Ocultar: Agregamos el menú y todos sus submenús a la lista de ocultos
+        newHidden = [...new Set([...newHidden, ...itemsToToggle])];
+      }
+    } else {
+      // Es un submenú, lo ocultamos/mostramos individualmente
+      if (isCurrentlyHidden) {
+        newHidden = newHidden.filter(i => i !== itemName);
+      } else {
+        newHidden.push(itemName);
+      }
+    }
+
     setHiddenItems(newHidden); // Actualiza la pantalla del admin inmediatamente
     
     // Guarda el cambio a nivel mundial en la base de datos
@@ -325,7 +349,6 @@ export default function App() {
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   
-                  // SI EL USUARIO NO ES ADMIN Y EL MENÚ ESTÁ OCULTO, DESAPARECE COMPLETAMENTE
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
@@ -339,7 +362,6 @@ export default function App() {
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
                             
-                            // SI EL USUARIO NO ES ADMIN Y EL SUBMENÚ ESTÁ OCULTO, DESAPARECE COMPLETAMENTE
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
@@ -706,7 +728,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* MENÚ DE ADMINISTRACIÓN DE VISIBILIDAD (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500">Configuración de Menús</label>
@@ -716,7 +737,6 @@ export default function App() {
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
                         <div key={menu} className="bg-black/40 p-3 rounded-sm">
                           <div className="flex justify-between items-center">
-                            {/* ELIMINADA LA PALABRA OCULTO AQUÍ TAMBIÉN */}
                             <span className={`text-[10px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500 line-through' : 'text-white'}`}>{menu}</span>
                             <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-1 cursor-pointer">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
@@ -725,7 +745,6 @@ export default function App() {
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
                             <div key={sub} className="flex justify-between items-center pl-6 mt-2 pt-2 border-t border-white/5">
-                              {/* ELIMINADA LA PALABRA OCULTO AQUÍ TAMBIÉN */}
                               <span className={`text-[9px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400 line-through' : 'text-gray-400'}`}>{sub}</span>
                               <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
@@ -738,7 +757,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* GENERACIÓN DE PDF (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
@@ -779,7 +797,6 @@ export default function App() {
                   </div>
                 )}
                 
-                {/* MENSAJE PARA EL CLIENTE */}
                 {userRole === 'cliente' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
