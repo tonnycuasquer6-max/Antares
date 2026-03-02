@@ -154,17 +154,18 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
-  // 👇 LÓGICA PARA RESTABLECER CONTRASEÑA 👇
+  // 👇 LÓGICA DE RESTABLECIMIENTO DE CONTRASEÑA 👇
   const solicitarCambioContrasena = async () => {
     if (!user || !user.email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: window.location.origin, 
-    });
-    if (error) {
-      alert('Hubo un error al procesar su solicitud de cambio de contraseña.');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin, 
+      });
+      if (error) throw error;
+      alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada para restablecer su contraseña.`);
+    } catch (error) {
+      alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
       console.error(error);
-    } else {
-      alert(`Se ha enviado un enlace seguro al correo ${user.email} para que pueda restablecer su contraseña.`);
     }
   };
 
@@ -492,26 +493,29 @@ export default function App() {
                  </div>
                )}
 
+               {/* 👇 FORMULARIO 100% LIMPIO, CRISTAL BORROSO, SIN BORDES NI CUADROS 👇 */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    
-                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none">×</button>
+                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
+                   {/* PREVISUALIZACIÓN DE IMAGEN FLOTANTE */}
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-                     <div className="mb-10 flex justify-center bg-transparent p-0">
+                     <div className="mb-12 flex justify-center bg-transparent p-0">
                        <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
+                   {/* INPUTS COMPLETAMENTE TRANSPARENTES Y CENTRADOS */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" />
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" />
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -521,14 +525,14 @@ export default function App() {
 
                      {nuevaPieza.subcategoria === 'Anillos' && (
                        <div className="md:col-span-2 flex flex-col items-center mt-4">
-                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Selecciona las tallas disponibles:</p>
-                         <div className="flex gap-4 md:gap-6 flex-wrap justify-center">
+                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-white mb-6 uppercase drop-shadow-md">Selecciona las tallas disponibles:</p>
+                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                            {tallasDisponibles.map(talla => (
                              <button
                                key={talla}
                                type="button"
                                onClick={() => toggleTalla(talla)}
-                               className={`text-[10px] md:text-xs tracking-[0.2em] cursor-pointer transition-colors border-none outline-none bg-transparent ${nuevaPieza.tallas.includes(talla) ? 'text-white font-bold drop-shadow-md' : 'text-gray-600 hover:text-gray-400'}`}
+                               className={`text-[12px] md:text-sm tracking-[0.2em] cursor-pointer transition-all duration-300 border-none outline-none bg-transparent ${nuevaPieza.tallas.includes(talla) ? 'text-white font-bold drop-shadow-lg scale-125' : 'text-gray-500 hover:text-white'}`}
                              >
                                {talla}
                              </button>
@@ -538,10 +542,10 @@ export default function App() {
                      )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-white hover:file:text-gray-300 cursor-pointer w-full md:w-auto" />
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
                      <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">
                        {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
@@ -567,8 +571,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
@@ -577,14 +581,7 @@ export default function App() {
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-2 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
-                       
-                       {producto.tallas && (
-                         <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
-                           Tallas: {producto.tallas.split(',').join(' - ')}
-                         </p>
-                       )}
-                       {!producto.tallas && <div className="mb-4"></div>}
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                        
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
@@ -772,7 +769,7 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 PERFIL MEJORADO, DISEÑO PREMIUM DE LUJO 👇 */}
+          {/* 👇 PERFIL PREMIUM ACTUALIZADO 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
@@ -780,19 +777,30 @@ export default function App() {
                 <h2 className="text-2xl md:text-3xl tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
                 <div className="w-12 h-px bg-amber-500/50 mb-12"></div>
 
-                {/* DATOS DEL USUARIO: NOMBRES Y APELLIDOS SEPARADOS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-16 text-center md:text-left">
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
-                      {user.user_metadata?.first_name || 'Tonny Alexander'}
-                    </p>
+                    {user.user_metadata?.first_name && user.user_metadata.first_name.trim().includes(' ') ? (
+                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                        {user.user_metadata.first_name}
+                      </p>
+                    ) : (
+                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => alert('Para actualizar su información, comuníquese con soporte o hágalo desde la configuración de su cuenta.')}>
+                        {user.user_metadata?.first_name ? `${user.user_metadata.first_name} (Falta segundo nombre - Actualizar)` : 'Por favor, actualice su información'}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
-                      {user.user_metadata?.last_name || 'Cuasquer Regalado'}
-                    </p>
+                    {user.user_metadata?.last_name && user.user_metadata.last_name.trim().includes(' ') ? (
+                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                        {user.user_metadata.last_name}
+                      </p>
+                    ) : (
+                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => alert('Para actualizar su información, comuníquese con soporte o hágalo desde la configuración de su cuenta.')}>
+                        {user.user_metadata?.last_name ? `${user.user_metadata.last_name} (Falta segundo apellido - Actualizar)` : 'Por favor, actualice su información'}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center md:items-start">
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
@@ -802,7 +810,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* BOTÓN CAMBIO DE CONTRASEÑA */}
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex justify-center">
                   <button 
                     onClick={solicitarCambioContrasena} 
