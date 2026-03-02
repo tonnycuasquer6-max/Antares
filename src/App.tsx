@@ -21,11 +21,7 @@ export default function App() {
   
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  
-  // AÑADIDO: 'tallas' AL ESTADO DEL FORMULARIO
-  const [nuevaPieza, setNuevaPieza] = useState({ 
-    titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' 
-  });
+  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
   
   const [productos, setProductos] = useState<any[]>([]);
   
@@ -158,6 +154,20 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
+  // 👇 LÓGICA PARA RESTABLECER CONTRASEÑA 👇
+  const solicitarCambioContrasena = async () => {
+    if (!user || !user.email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: window.location.origin, 
+    });
+    if (error) {
+      alert('Hubo un error al procesar su solicitud de cambio de contraseña.');
+      console.error(error);
+    } else {
+      alert(`Se ha enviado un enlace seguro al correo ${user.email} para que pueda restablecer su contraseña.`);
+    }
+  };
+
   const prepararEdicion = (producto) => {
     setNuevaPieza({
       titulo: producto.titulo,
@@ -179,7 +189,6 @@ export default function App() {
     setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
   };
 
-  // LOGICA PARA SELECCIONAR TALLAS
   const toggleTalla = (talla) => {
     setNuevaPieza(prev => {
       const nuevasTallas = prev.tallas.includes(talla)
@@ -483,21 +492,18 @@ export default function App() {
                  </div>
                )}
 
-               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: MÁXIMAMENTE LIMPIO, SIN BORDES, CRISTAL BORROSO 👇 */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
                    
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
-                   {/* PREVISUALIZACIÓN DE IMAGEN SIN CUADROS GRISES */}
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
                      <div className="mb-10 flex justify-center bg-transparent p-0">
                        <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
-                   {/* INPUTS COMPLETAMENTE TRANSPARENTES SIN LÍNEAS */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
                      <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
@@ -513,7 +519,6 @@ export default function App() {
                        </select>
                      )}
 
-                     {/* 👇 SELECTOR DE TALLAS SOLO PARA ANILLOS 👇 */}
                      {nuevaPieza.subcategoria === 'Anillos' && (
                        <div className="md:col-span-2 flex flex-col items-center mt-4">
                          <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Selecciona las tallas disponibles:</p>
@@ -572,9 +577,8 @@ export default function App() {
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-1 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-2 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                        
-                       {/* 👇 MOSTRAR TALLAS EN LA TARJETA DEL PRODUCTO 👇 */}
                        {producto.tallas && (
                          <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
                            Tallas: {producto.tallas.split(',').join(' - ')}
@@ -640,8 +644,7 @@ export default function App() {
                   <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-2 uppercase drop-shadow-md">
                     {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
-
-                  {/* 👇 MOSTRAR TALLAS EN EL MODAL 👇 */}
+                  
                   {productoSeleccionado.tallas && (
                     <p className="text-[10px] tracking-[0.2em] text-white mb-8 uppercase drop-shadow-md font-bold">
                       Tallas: {productoSeleccionado.tallas.split(',').join(' - ')}
@@ -769,41 +772,65 @@ export default function App() {
             </section>
           )}
 
+          {/* 👇 PERFIL MEJORADO, DISEÑO PREMIUM DE LUJO 👇 */}
           {user && activeView === 'perfil' && (
-            <section className="w-full max-w-3xl mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-10 text-center pb-2 md:pb-4">Mi Perfil</h2>
-              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 rounded-sm shadow-2xl border-none relative">
+            <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
+              <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                <h2 className="text-2xl md:text-3xl tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <div className="w-12 h-px bg-amber-500/50 mb-12"></div>
+
+                {/* DATOS DEL USUARIO: NOMBRES Y APELLIDOS SEPARADOS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-16 text-center md:text-left">
                   <div>
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Nombres</label>
-                    <p className="text-white text-base md:text-lg truncate uppercase">{user.user_metadata?.first_name || 'Tonny'}</p>
+                    <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.first_name || 'Tonny Alexander'}
+                    </p>
                   </div>
-                  <div className="overflow-hidden">
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 mb-1 md:mb-2">Email</label>
-                    <p className="text-white text-sm md:text-lg truncate" title={user.email}>{user.email}</p>
+                  <div>
+                    <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.last_name || 'Cuasquer Regalado'}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col items-center md:items-start">
+                    <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-xs md:text-sm tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                      {user.email}
+                    </p>
                   </div>
                 </div>
 
+                {/* BOTÓN CAMBIO DE CONTRASEÑA */}
+                <div className="w-full border-t border-white/10 pt-10 mb-12 flex justify-center">
+                  <button 
+                    onClick={solicitarCambioContrasena} 
+                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer"
+                  >
+                    Solicitar Cambio de Contraseña
+                  </button>
+                </div>
+
                 {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
-                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8">Oculta o muestra secciones en la página principal.</p>
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500 font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
                     
                     <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
-                        <div key={menu} className="bg-black/40 p-3 rounded-sm">
+                        <div key={menu} className="bg-black/40 p-4 border border-white/5">
                           <div className="flex justify-between items-center">
-                            <span className={`text-[10px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500 line-through' : 'text-white'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-1 cursor-pointer">
+                            <span className={`text-[10px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500 line-through' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
                             </button>
                           </div>
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
-                            <div key={sub} className="flex justify-between items-center pl-6 mt-2 pt-2 border-t border-white/5">
-                              <span className={`text-[9px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400 line-through' : 'text-gray-400'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer">
+                            <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
+                              <span className={`text-[9px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400 line-through' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
                               </button>
                             </div>
@@ -815,14 +842,14 @@ export default function App() {
                 )}
 
                 {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
-                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                     <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow">
+                            <button className="text-gray-300 group-hover:text-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -837,7 +864,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -846,7 +873,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-6 md:px-8 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm flex items-center justify-center gap-2">
+                      <button onClick={() => window.print()} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -855,8 +882,8 @@ export default function App() {
                 )}
                 
                 {userRole === 'cliente' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
+                  <div className="mb-4 pt-10 border-t border-white/10 mt-6 w-full">
+                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.3em] uppercase text-center py-4 font-light">Bienvenido a su espacio exclusivo en Antares.</p>
                   </div>
                 )}
 
