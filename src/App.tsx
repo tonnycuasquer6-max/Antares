@@ -21,7 +21,11 @@ export default function App() {
   
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', imagen: null, imagen_url: '' });
+  
+  // AÑADIDO: 'tallas' AL ESTADO DEL FORMULARIO
+  const [nuevaPieza, setNuevaPieza] = useState({ 
+    titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' 
+  });
   
   const [productos, setProductos] = useState<any[]>([]);
   
@@ -161,6 +165,7 @@ export default function App() {
       precio: producto.precio,
       disponibilidad: producto.disponibilidad || '',
       subcategoria: producto.subcategoria || '',
+      tallas: producto.tallas ? producto.tallas.split(',') : [],
       imagen: null, 
       imagen_url: producto.imagen_url
     });
@@ -171,7 +176,17 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', imagen: null, imagen_url: '' });
+    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
+  };
+
+  // LOGICA PARA SELECCIONAR TALLAS
+  const toggleTalla = (talla) => {
+    setNuevaPieza(prev => {
+      const nuevasTallas = prev.tallas.includes(talla)
+        ? prev.tallas.filter(t => t !== talla)
+        : [...prev.tallas, talla];
+      return { ...prev, tallas: nuevasTallas };
+    });
   };
 
   const toggleVendido = async (id, estadoActual) => {
@@ -203,6 +218,7 @@ export default function App() {
       categoria: activeCategory, 
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
       subcategoria: nuevaPieza.subcategoria || 'General',
+      tallas: nuevaPieza.tallas.length > 0 ? nuevaPieza.tallas.join(',') : null,
       imagen_url: imageUrl 
     };
 
@@ -250,6 +266,7 @@ export default function App() {
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
+  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
   const isAllSelected = (menuPrincipal) => {
     return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
@@ -337,7 +354,6 @@ export default function App() {
               <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
-                  
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
@@ -350,7 +366,6 @@ export default function App() {
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
-                            
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
@@ -449,19 +464,14 @@ export default function App() {
                  </ul>
                )}
 
-               {/* 👇 BOTÓN AÑADIR PIEZA ACTUALIZADO (INCLUYE AUTOSELECCIÓN) 👇 */}
                {userRole === 'admin' && !showInlineForm && (
                  <div 
                    onClick={() => { 
                      setEditandoId(null); 
                      setNuevaPieza({
-                       titulo: '', 
-                       descripcion: '', 
-                       precio: '', 
-                       disponibilidad: '', 
+                       titulo: '', descripcion: '', precio: '', disponibilidad: '', 
                        subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
-                       imagen: null, 
-                       imagen_url: '' 
+                       tallas: [], imagen: null, imagen_url: '' 
                      });
                      setShowInlineForm(true); 
                    }} 
@@ -473,41 +483,61 @@ export default function App() {
                  </div>
                )}
 
-               {/* 👇 FORMULARIO DE EDICIÓN / CREACIÓN MEJORADO Y LIMPIO 👇 */}
+               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: MÁXIMAMENTE LIMPIO, SIN BORDES, CRISTAL BORROSO 👇 */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
+                   
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
-                   {/* PREVISUALIZACIÓN DE FOTO EN VIVO */}
+                   {/* PREVISUALIZACIÓN DE IMAGEN SIN CUADROS GRISES */}
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-                     <div className="mb-10 flex justify-center bg-black/20 p-4">
+                     <div className="mb-10 flex justify-center bg-transparent p-0">
                        <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
-                   {/* CAMPOS LIMPIOS SIN LÍNEAS */}
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" required/>
+                   {/* INPUTS COMPLETAMENTE TRANSPARENTES SIN LÍNEAS */}
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" />
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500" />
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-black/40 text-gray-300 text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none appearance-none">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
                          ))}
                        </select>
                      )}
+
+                     {/* 👇 SELECTOR DE TALLAS SOLO PARA ANILLOS 👇 */}
+                     {nuevaPieza.subcategoria === 'Anillos' && (
+                       <div className="md:col-span-2 flex flex-col items-center mt-4">
+                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Selecciona las tallas disponibles:</p>
+                         <div className="flex gap-4 md:gap-6 flex-wrap justify-center">
+                           {tallasDisponibles.map(talla => (
+                             <button
+                               key={talla}
+                               type="button"
+                               onClick={() => toggleTalla(talla)}
+                               className={`text-[10px] md:text-xs tracking-[0.2em] cursor-pointer transition-colors border-none outline-none bg-transparent ${nuevaPieza.tallas.includes(talla) ? 'text-white font-bold drop-shadow-md' : 'text-gray-600 hover:text-gray-400'}`}
+                             >
+                               {talla}
+                             </button>
+                           ))}
+                         </div>
+                       </div>
+                     )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none mb-8 md:mb-10 resize-none placeholder-gray-400"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center"></textarea>
                    
-                   <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0 bg-black/20 p-4">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[10px] md:file:text-xs file:font-bold file:tracking-[0.2em] file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">
+                   <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-white hover:file:text-gray-300 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">
                        {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
                    </div>
@@ -542,7 +572,15 @@ export default function App() {
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-1 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       
+                       {/* 👇 MOSTRAR TALLAS EN LA TARJETA DEL PRODUCTO 👇 */}
+                       {producto.tallas && (
+                         <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
+                           Tallas: {producto.tallas.split(',').join(' - ')}
+                         </p>
+                       )}
+                       {!producto.tallas && <div className="mb-4"></div>}
                        
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
@@ -599,9 +637,17 @@ export default function App() {
                     ${productoSeleccionado.precio} USD
                   </p>
                   
-                  <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                  <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-2 uppercase drop-shadow-md">
                     {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
+
+                  {/* 👇 MOSTRAR TALLAS EN EL MODAL 👇 */}
+                  {productoSeleccionado.tallas && (
+                    <p className="text-[10px] tracking-[0.2em] text-white mb-8 uppercase drop-shadow-md font-bold">
+                      Tallas: {productoSeleccionado.tallas.split(',').join(' - ')}
+                    </p>
+                  )}
+                  {!productoSeleccionado.tallas && <div className="mb-8"></div>}
                   
                   <div className="w-12 h-px bg-white/30 mb-8"></div>
                   
