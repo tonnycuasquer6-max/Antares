@@ -28,7 +28,6 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  // ESTADO GLOBAL CONECTADO A SUPABASE PARA OCULTAR MENÚS
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
 
   const [carrito, setCarrito] = useState<any[]>([]);
@@ -105,12 +104,9 @@ export default function App() {
     );
   };
 
-  // FUNCIÓN CON LÓGICA EN CASCADA (PADRE E HIJOS)
   const toggleMenuVisibility = async (itemName) => {
     let newHidden = [...hiddenItems];
     const isCurrentlyHidden = hiddenItems.includes(itemName);
-
-    // Verificar si es un menú principal
     const isMainMenu = Object.keys(estructuraCatalogo).includes(itemName) || itemName === 'Obsequios';
 
     if (isMainMenu) {
@@ -120,14 +116,11 @@ export default function App() {
       }
 
       if (isCurrentlyHidden) {
-        // Mostrar: Quitamos el menú y todos sus submenús de la lista de ocultos
         newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
       } else {
-        // Ocultar: Agregamos el menú y todos sus submenús a la lista de ocultos
         newHidden = [...new Set([...newHidden, ...itemsToToggle])];
       }
     } else {
-      // Es un submenú, lo ocultamos/mostramos individualmente
       if (isCurrentlyHidden) {
         newHidden = newHidden.filter(i => i !== itemName);
       } else {
@@ -135,13 +128,9 @@ export default function App() {
       }
     }
 
-    setHiddenItems(newHidden); // Actualiza la pantalla del admin inmediatamente
-    
-    // Guarda el cambio a nivel mundial en la base de datos
+    setHiddenItems(newHidden); 
     const { error } = await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
-    if (error) {
-      console.error("Error guardando configuración:", error);
-    }
+    if (error) console.error("Error guardando configuración:", error);
   };
 
   const agregarAlCarrito = (producto) => {
@@ -460,31 +449,52 @@ export default function App() {
                  </ul>
                )}
 
+               {/* 👇 BOTÓN AÑADIR PIEZA ACTUALIZADO (INCLUYE AUTOSELECCIÓN) 👇 */}
                {userRole === 'admin' && !showInlineForm && (
-                 <div onClick={() => { setEditandoId(null); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0">
-                   <span className="text-amber-500 tracking-[0.2em] text-[10px] md:text-xs uppercase">+ Añadir nueva pieza a {activeCategory}</span>
+                 <div 
+                   onClick={() => { 
+                     setEditandoId(null); 
+                     setNuevaPieza({
+                       titulo: '', 
+                       descripcion: '', 
+                       precio: '', 
+                       disponibilidad: '', 
+                       subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
+                       imagen: null, 
+                       imagen_url: '' 
+                     });
+                     setShowInlineForm(true); 
+                   }} 
+                   className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0"
+                 >
+                   <span className="text-amber-500 tracking-[0.2em] text-[10px] md:text-xs uppercase">
+                     + Añadir nueva pieza a {activeCategory} {activeSubCategory !== 'Todo' ? `- ${activeSubCategory}` : ''}
+                   </span>
                  </div>
                )}
 
+               {/* 👇 FORMULARIO DE EDICIÓN / CREACIÓN MEJORADO Y LIMPIO 👇 */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-2xl p-6 md:p-10 shadow-2xl relative w-full rounded-sm">
-                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer bg-transparent border-none text-2xl md:text-xl outline-none">×</button>
-                   <h3 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-8 text-center">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
+                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none">×</button>
+                   <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
-                   {editandoId && nuevaPieza.imagen_url && (
-                     <div className="mb-8 flex justify-center">
-                       <img src={nuevaPieza.imagen_url} alt="Vista previa" className="h-32 md:h-40 w-auto object-contain" />
+                   {/* PREVISUALIZACIÓN DE FOTO EN VIVO */}
+                   {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
+                     <div className="mb-10 flex justify-center bg-black/20 p-4">
+                       <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
+                   {/* CAMPOS LIMPIOS SIN LÍNEAS */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" required/>
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK, O 'BAJO PEDIDO')" className="bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none" />
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none placeholder-gray-400" />
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 md:py-3 outline-none">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-black/40 text-gray-300 text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none appearance-none">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -493,10 +503,11 @@ export default function App() {
                      )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-2 outline-none mb-8 md:mb-10 resize-none"></textarea>
-                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[10px] md:file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto">
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-black/40 text-white text-[10px] md:text-xs tracking-[0.1em] p-4 outline-none border-none mb-8 md:mb-10 resize-none placeholder-gray-400"></textarea>
+                   
+                   <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0 bg-black/20 p-4">
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[10px] md:file:text-xs file:font-bold file:tracking-[0.2em] file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">
                        {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
                    </div>
@@ -521,8 +532,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
