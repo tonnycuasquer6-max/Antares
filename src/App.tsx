@@ -28,10 +28,8 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>(() => {
-    const saved = localStorage.getItem('antares_hidden_menus');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // ESTADO GLOBAL CONECTADO A SUPABASE PARA OCULTAR MENÚS
+  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
 
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
@@ -42,8 +40,17 @@ export default function App() {
     if (data) setProductos(data);
   };
 
+  const fetchConfiguracion = async () => {
+    const { data, error } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
+    if (data && data.menus_ocultos) {
+      setHiddenItems(data.menus_ocultos);
+    }
+  };
+
   useEffect(() => {
     fetchProductos();
+    fetchConfiguracion(); // LLAMADA A LA NUEVA TABLA AL CARGAR LA PÁGINA
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -98,12 +105,19 @@ export default function App() {
     );
   };
 
-  const toggleMenuVisibility = (itemName) => {
+  // FUNCIÓN ACTUALIZADA PARA GUARDAR DIRECTAMENTE EN SUPABASE
+  const toggleMenuVisibility = async (itemName) => {
     const newHidden = hiddenItems.includes(itemName) 
       ? hiddenItems.filter(i => i !== itemName) 
       : [...hiddenItems, itemName];
-    setHiddenItems(newHidden);
-    localStorage.setItem('antares_hidden_menus', JSON.stringify(newHidden));
+    
+    setHiddenItems(newHidden); // Actualiza la pantalla del admin inmediatamente
+    
+    // Guarda el cambio a nivel mundial en la base de datos
+    const { error } = await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
+    if (error) {
+      console.error("Error guardando configuración:", error);
+    }
   };
 
   const agregarAlCarrito = (producto) => {
@@ -316,7 +330,6 @@ export default function App() {
 
                   return (
                     <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
-                      {/* 👇 ELIMINADA LA PALABRA OCULTO, SÓLO QUEDA EL COLOR ROJO 👇 */}
                       <span className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                         {menu}
                         <div className={menuUnderlineClass}></div>
@@ -343,7 +356,6 @@ export default function App() {
                 
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
                   <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                    {/* 👇 ELIMINADA LA PALABRA OCULTO EN OBSEQUIOS 👇 */}
                     <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                       Obsequios
                       <div className={menuUnderlineClass}></div>
@@ -377,7 +389,7 @@ export default function App() {
                <section className="w-full text-center py-16 md:py-32 px-4">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
-                   Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detail.
+                   Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
 
@@ -487,8 +499,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
@@ -694,6 +706,7 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* MENÚ DE ADMINISTRACIÓN DE VISIBILIDAD (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500">Configuración de Menús</label>
@@ -703,6 +716,7 @@ export default function App() {
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
                         <div key={menu} className="bg-black/40 p-3 rounded-sm">
                           <div className="flex justify-between items-center">
+                            {/* ELIMINADA LA PALABRA OCULTO AQUÍ TAMBIÉN */}
                             <span className={`text-[10px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500 line-through' : 'text-white'}`}>{menu}</span>
                             <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-1 cursor-pointer">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
@@ -711,6 +725,7 @@ export default function App() {
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
                             <div key={sub} className="flex justify-between items-center pl-6 mt-2 pt-2 border-t border-white/5">
+                              {/* ELIMINADA LA PALABRA OCULTO AQUÍ TAMBIÉN */}
                               <span className={`text-[9px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400 line-through' : 'text-gray-400'}`}>{sub}</span>
                               <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
@@ -723,6 +738,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* GENERACIÓN DE PDF (SÓLO ADMIN) */}
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                     <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center">Catálogo PDF</label>
@@ -763,6 +779,7 @@ export default function App() {
                   </div>
                 )}
                 
+                {/* MENSAJE PARA EL CLIENTE */}
                 {userRole === 'cliente' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 md:mt-8">
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.2em] uppercase text-center py-4">Bienvenido a su perfil exclusivo de Antares.</p>
