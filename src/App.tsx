@@ -445,6 +445,7 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + (item.precio * (item.cantidad || 1)), 0);
+  const totalCarrito = subtotalCarrito; 
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
@@ -787,8 +788,8 @@ export default function App() {
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                        
                        <div 
-                         className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
-                         onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
+                         className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole !== 'admin' ? 'cursor-pointer' : ''}`}
+                         onClick={() => { if(userRole !== 'admin') setProductoSeleccionado(producto); }}
                        >
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          
@@ -846,7 +847,7 @@ export default function App() {
                          
                          <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
-                         {userRole === 'cliente' && !producto.vendido && (
+                         {userRole !== 'admin' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
@@ -927,7 +928,7 @@ export default function App() {
                          })}
                        </div>
 
-                       {!productoSeleccionado.vendido && (
+                       {userRole !== 'admin' && !productoSeleccionado.vendido && (
                          <div className="flex gap-4 mt-12 w-full justify-center">
                            <button 
                              onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
@@ -946,7 +947,7 @@ export default function App() {
                     <>
                       <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
                       <p className="text-[10px] md:text-xs text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
-                      {!productoSeleccionado.vendido ? (
+                      {userRole !== 'admin' && !productoSeleccionado.vendido ? (
                         <div className="flex gap-4 mt-auto w-full justify-center">
                           <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
                           <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
@@ -961,7 +962,7 @@ export default function App() {
             </div>
           )}
 
-          {userRole === 'cliente' && activeView === 'bag' && (
+          {user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
@@ -1015,7 +1016,7 @@ export default function App() {
             </section>
           )}
 
-          {userRole === 'cliente' && activeView === 'deseos' && (
+          {user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
@@ -1053,7 +1054,7 @@ export default function App() {
             </section>
           )}
 
-          {userRole === 'cliente' && activeView === 'pedidos' && (
+          {user && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
@@ -1308,7 +1309,7 @@ export default function App() {
                   </label>
 
                   <p className="text-gray-500 text-[7px] md:text-[8px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
-                    Al seleccionar &quot;Actualizar Perfil&quot;, acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
+                    Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
                   <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
