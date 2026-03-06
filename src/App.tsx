@@ -24,15 +24,18 @@ export default function App() {
   const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
   
   const [productos, setProductos] = useState<any[]>([]);
-  
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
-
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
-
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
+
+  // 👇 NUEVOS ESTADOS PARA EL FORMULARIO DE PERFIL DE LUJO 👇
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [perfilForm, setPerfilForm] = useState({
+    tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
+  });
 
   const fetchProductos = async () => {
     const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
@@ -41,9 +44,7 @@ export default function App() {
 
   const fetchConfiguracion = async () => {
     const { data, error } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
-    if (data && data.menus_ocultos) {
-      setHiddenItems(data.menus_ocultos);
-    }
+    if (data && data.menus_ocultos) setHiddenItems(data.menus_ocultos);
   };
 
   useEffect(() => {
@@ -51,24 +52,46 @@ export default function App() {
     fetchConfiguracion();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRole(session.user.id);
-      } else {
-        setUserRole('cliente');
-      }
+      handleUserSession(session?.user ?? null);
     });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setShowLoginModal(false); 
-        fetchUserRole(session.user.id);
-      } else {
-        setUserRole('cliente');
-      }
+      handleUserSession(session?.user ?? null);
     });
+
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleUserSession = (currentUser) => {
+    setUser(currentUser);
+    if (currentUser) {
+      setShowLoginModal(false);
+      fetchUserRole(currentUser.id);
+
+      // Cargar datos actuales al formulario
+      setPerfilForm({
+        tratamiento: currentUser.user_metadata?.tratamiento || '',
+        nombre: currentUser.user_metadata?.first_name || '',
+        apellidos: currentUser.user_metadata?.last_name || '',
+        dia: currentUser.user_metadata?.fecha_nacimiento?.split('-')[2] || '',
+        mes: currentUser.user_metadata?.fecha_nacimiento?.split('-')[1] || '',
+        anio: currentUser.user_metadata?.fecha_nacimiento?.split('-')[0] || '',
+        prefijo: currentUser.user_metadata?.telefono?.split(' ')[0] || '+593',
+        telefono: currentUser.user_metadata?.telefono?.split(' ')[1] || '',
+        newsletter: currentUser.user_metadata?.newsletter || false
+      });
+
+      // Si faltan datos clave, mostrar el modal automáticamente
+      if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) {
+        setShowCompleteProfile(true);
+      } else {
+        setShowCompleteProfile(false);
+      }
+    } else {
+      setUserRole('cliente');
+      setShowCompleteProfile(false);
+    }
+  };
 
   const fetchUserRole = async (userId) => {
     try {
@@ -90,6 +113,43 @@ export default function App() {
     setActiveView('home'); 
   };
 
+  // 👇 FUNCIÓN PARA GUARDAR EL PERFIL EN SUPABASE 👇
+  const handleGuardarPerfil = async (e) => {
+    e.preventDefault();
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        first_name: perfilForm.nombre,
+        last_name: perfilForm.apellidos,
+        tratamiento: perfilForm.tratamiento,
+        fecha_nacimiento: `${perfilForm.anio}-${perfilForm.mes}-${perfilForm.dia}`,
+        telefono: `${perfilForm.prefijo} ${perfilForm.telefono}`,
+        newsletter: perfilForm.newsletter
+      }
+    });
+
+    if (error) {
+      alert('Hubo un error al actualizar su información. Intente de nuevo.');
+      console.error(error);
+    } else {
+      setUser(data.user); // Actualiza el usuario en tiempo real
+      setShowCompleteProfile(false);
+    }
+  };
+
+  const solicitarCambioContrasena = async () => {
+    if (!user || !user.email) return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin, 
+      });
+      if (error) throw error;
+      alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada para restablecer su contraseña.`);
+    } catch (error) {
+      alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
+      console.error(error);
+    }
+  };
+
   const irACategoria = (nombreCategoria) => {
     setActiveCategory(nombreCategoria);
     setActiveSubCategory('Todo');
@@ -99,9 +159,7 @@ export default function App() {
   };
 
   const handleCheckbox = (categoria) => {
-    setCategoriasDescarga(prev => 
-      prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]
-    );
+    setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
   };
 
   const toggleMenuVisibility = async (itemName) => {
@@ -154,31 +212,11 @@ export default function App() {
     alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
   };
 
-  // 👇 LÓGICA DE RESTABLECIMIENTO DE CONTRASEÑA 👇
-  const solicitarCambioContrasena = async () => {
-    if (!user || !user.email) return;
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: window.location.origin, 
-      });
-      if (error) throw error;
-      alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada para restablecer su contraseña.`);
-    } catch (error) {
-      alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
-      console.error(error);
-    }
-  };
-
   const prepararEdicion = (producto) => {
     setNuevaPieza({
-      titulo: producto.titulo,
-      descripcion: producto.descripcion || '',
-      precio: producto.precio,
-      disponibilidad: producto.disponibilidad || '',
-      subcategoria: producto.subcategoria || '',
-      tallas: producto.tallas ? producto.tallas.split(',') : [],
-      imagen: null, 
-      imagen_url: producto.imagen_url
+      titulo: producto.titulo, descripcion: producto.descripcion || '', precio: producto.precio,
+      disponibilidad: producto.disponibilidad || '', subcategoria: producto.subcategoria || '',
+      tallas: producto.tallas ? producto.tallas.split(',') : [], imagen: null, imagen_url: producto.imagen_url
     });
     setEditandoId(producto.id);
     setShowInlineForm(true);
@@ -192,9 +230,7 @@ export default function App() {
 
   const toggleTalla = (talla) => {
     setNuevaPieza(prev => {
-      const nuevasTallas = prev.tallas.includes(talla)
-        ? prev.tallas.filter(t => t !== talla)
-        : [...prev.tallas, talla];
+      const nuevasTallas = prev.tallas.includes(talla) ? prev.tallas.filter(t => t !== talla) : [...prev.tallas, talla];
       return { ...prev, tallas: nuevasTallas };
     });
   };
@@ -222,13 +258,9 @@ export default function App() {
     }
 
     const payload = { 
-      titulo: nuevaPieza.titulo, 
-      descripcion: nuevaPieza.descripcion, 
-      precio: Number(nuevaPieza.precio), 
-      categoria: activeCategory, 
-      disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
-      subcategoria: nuevaPieza.subcategoria || 'General',
-      tallas: nuevaPieza.tallas.length > 0 ? nuevaPieza.tallas.join(',') : null,
+      titulo: nuevaPieza.titulo, descripcion: nuevaPieza.descripcion, precio: Number(nuevaPieza.precio), 
+      categoria: activeCategory, disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
+      subcategoria: nuevaPieza.subcategoria || 'General', tallas: nuevaPieza.tallas.length > 0 ? nuevaPieza.tallas.join(',') : null,
       imagen_url: imageUrl 
     };
 
@@ -298,9 +330,6 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
   const totalCarrito = subtotalCarrito; 
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
-  
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -310,18 +339,8 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;  
-          overflow: hidden;
-        }
-        @media print {
-          @page { margin: 0; }
-          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
-          .screen-only { display: none !important; }
-          .print-only { display: block !important; }
-        }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
@@ -336,13 +355,13 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
 
               <div className="group relative">
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
@@ -493,29 +512,27 @@ export default function App() {
                  </div>
                )}
 
-               {/* 👇 FORMULARIO 100% LIMPIO, CRISTAL BORROSO, SIN BORDES NI CUADROS 👇 */}
+               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: 100% LIMPIO Y SIN BORDES 👇 */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
-                   {/* PREVISUALIZACIÓN DE IMAGEN FLOTANTE */}
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
                      <div className="mb-12 flex justify-center bg-transparent p-0">
                        <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
-                   {/* INPUTS COMPLETAMENTE TRANSPARENTES Y CENTRADOS */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" />
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" />
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none border-b border-white/20">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -542,7 +559,7 @@ export default function App() {
                      )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center border-b border-white/20"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
@@ -571,8 +588,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
@@ -581,7 +598,14 @@ export default function App() {
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-2 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       
+                       {producto.tallas && (
+                         <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
+                           Tallas: {producto.tallas.split(',').join(' - ')}
+                         </p>
+                       )}
+                       {!producto.tallas && <div className="mb-4"></div>}
                        
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
@@ -641,7 +665,7 @@ export default function App() {
                   <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-2 uppercase drop-shadow-md">
                     {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
-                  
+
                   {productoSeleccionado.tallas && (
                     <p className="text-[10px] tracking-[0.2em] text-white mb-8 uppercase drop-shadow-md font-bold">
                       Tallas: {productoSeleccionado.tallas.split(',').join(' - ')}
@@ -769,7 +793,7 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 PERFIL PREMIUM ACTUALIZADO 👇 */}
+          {/* 👇 PERFIL PREMIUM Y LÓGICA DE ACTUALIZACIÓN 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
@@ -781,11 +805,11 @@ export default function App() {
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
                     {user.user_metadata?.first_name && user.user_metadata.first_name.trim().includes(' ') ? (
-                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light cursor-pointer" onClick={() => setShowCompleteProfile(true)}>
                         {user.user_metadata.first_name}
                       </p>
                     ) : (
-                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => alert('Para actualizar su información, comuníquese con soporte o hágalo desde la configuración de su cuenta.')}>
+                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => setShowCompleteProfile(true)}>
                         {user.user_metadata?.first_name ? `${user.user_metadata.first_name} (Falta segundo nombre - Actualizar)` : 'Por favor, actualice su información'}
                       </p>
                     )}
@@ -793,11 +817,11 @@ export default function App() {
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
                     {user.user_metadata?.last_name && user.user_metadata.last_name.trim().includes(' ') ? (
-                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light cursor-pointer" onClick={() => setShowCompleteProfile(true)}>
                         {user.user_metadata.last_name}
                       </p>
                     ) : (
-                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => alert('Para actualizar su información, comuníquese con soporte o hágalo desde la configuración de su cuenta.')}>
+                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => setShowCompleteProfile(true)}>
                         {user.user_metadata?.last_name ? `${user.user_metadata.last_name} (Falta segundo apellido - Actualizar)` : 'Por favor, actualice su información'}
                       </p>
                     )}
@@ -906,6 +930,94 @@ export default function App() {
       </div>
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
+
+      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL TIPO ANTARES 👇 */}
+      {showCompleteProfile && user && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+           <div className="bg-black/60 border border-white/10 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8">
+              
+              {/* Botón de cerrar (solo si el usuario ya tiene un nombre parcial, para no bloquearlo) */}
+              {(user.user_metadata?.first_name) && (
+                <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
+              )}
+
+              <h2 className="text-xl md:text-2xl tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+
+              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8">
+                  
+                  <select 
+                    value={perfilForm.tratamiento} 
+                    onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
+                    className="w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase"
+                    required
+                  >
+                    <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
+                    <option value="Sr." className="bg-black text-white">Sr.</option>
+                    <option value="Sra." className="bg-black text-white">Sra.</option>
+                    <option value="Srta." className="bg-black text-white">Srta.</option>
+                    <option value="Prefiero no decirlo" className="bg-black text-white">Prefiero no decirlo</option>
+                  </select>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <input 
+                      type="text" 
+                      value={perfilForm.nombre} 
+                      onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
+                      placeholder="DOS NOMBRES*" 
+                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      required
+                    />
+                    <input 
+                      type="text" 
+                      value={perfilForm.apellidos} 
+                      onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
+                      placeholder="DOS APELLIDOS*" 
+                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    <label className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <div className="grid grid-cols-3 gap-6">
+                      <input type="text" maxLength={2} value={perfilForm.dia} onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} placeholder="DD*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={2} value={perfilForm.mes} onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} placeholder="MM*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={4} value={perfilForm.anio} onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} placeholder="AAAA*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6 mt-2">
+                    <select value={perfilForm.prefijo} onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} className="w-24 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-3 outline-none cursor-pointer appearance-none">
+                      <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
+                      <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
+                      <option value="+1" className="bg-black text-white">🇺🇸 +1</option>
+                      <option value="+52" className="bg-black text-white">🇲🇽 +52</option>
+                      <option value="+57" className="bg-black text-white">🇨🇴 +57</option>
+                    </select>
+                    <input type="tel" value={perfilForm.telefono} onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} placeholder="MÓVIL" className="w-full flex-grow bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500" />
+                  </div>
+
+                  <label className="flex items-start gap-4 cursor-pointer mt-6 group">
+                    <div className={`w-5 h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                      {perfilForm.newsletter && <div className="w-3 h-3 bg-black"></div>}
+                    </div>
+                    <input type="checkbox" checked={perfilForm.newsletter} onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} className="hidden" />
+                    <span className="text-gray-400 text-[9px] md:text-[10px] tracking-[0.1em] leading-relaxed">
+                      Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
+                    </span>
+                  </label>
+
+                  <p className="text-gray-500 text-[8px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 border-t border-white/5 pt-6">
+                    Al seleccionar "Crear mi perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>, así como que desea crear su perfil de ANTARES.
+                  </p>
+
+                  <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                    Crear Mi Perfil
+                  </button>
+              </form>
+           </div>
+        </div>
+      )}
 
       <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
         <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
