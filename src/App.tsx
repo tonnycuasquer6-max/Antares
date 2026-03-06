@@ -37,9 +37,6 @@ export default function App() {
   
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
 
-  const [stars, setStars] = useState([]);
-  const [cartPulse, setCartPulse] = useState(false);
-
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [perfilForm, setPerfilForm] = useState({
     tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
@@ -47,6 +44,7 @@ export default function App() {
 
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
+  // Lógica de lectura de inventario segura
   const parseTallasseguro = (tallasData) => {
     if (!tallasData) return {};
     if (typeof tallasData === 'object') return tallasData;
@@ -122,8 +120,11 @@ export default function App() {
   const fetchUserRole = async (userId) => {
     try {
       const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
-      if (data && data.rol) setUserRole(data.rol);
-      else setUserRole('cliente');
+      if (data && data.rol) {
+        setUserRole(data.rol);
+      } else {
+        setUserRole('cliente');
+      }
     } catch (error) {
       console.error("Error al obtener rol:", error);
       setUserRole('cliente');
@@ -194,15 +195,22 @@ export default function App() {
       if (estructuraCatalogo[itemName]) {
         itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
       }
-      if (isCurrentlyHidden) newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
-      else newHidden = [...new Set([...newHidden, ...itemsToToggle])];
+      if (isCurrentlyHidden) {
+        newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
+      } else {
+        newHidden = [...new Set([...newHidden, ...itemsToToggle])];
+      }
     } else {
-      if (isCurrentlyHidden) newHidden = newHidden.filter(i => i !== itemName);
-      else newHidden.push(itemName);
+      if (isCurrentlyHidden) {
+        newHidden = newHidden.filter(i => i !== itemName);
+      } else {
+        newHidden.push(itemName);
+      }
     }
 
     setHiddenItems(newHidden); 
-    await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
+    const { error } = await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
+    if (error) console.error("Error guardando configuración:", error);
   };
 
   const handleSelectTalla = (e, productoId, talla) => {
@@ -218,29 +226,16 @@ export default function App() {
     });
   };
 
-  const triggerStarAnimation = (e) => {
-    if (!e || !e.currentTarget) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const id = Date.now();
-    const startX = rect.left + rect.width / 2;
-    const startY = rect.top + rect.height / 2;
-
-    setStars(prev => [...prev, { id, x: startX, y: startY, active: false }]);
-    setTimeout(() => { setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s)); }, 50);
-    setTimeout(() => {
-      setStars(prev => prev.filter(s => s.id !== id));
-      setCartPulse(true);
-      setTimeout(() => setCartPulse(false), 400); 
-    }, 700);
-  };
-
   const agregarAlCarrito = (producto, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     const isRing = producto.subcategoria === 'Anillos';
     const selectedSizes = tallasSeleccionadas[producto.id] || [];
 
     if (isRing && selectedSizes.length === 0) return;
-
-    triggerStarAnimation(e);
 
     setCarrito(prev => {
       let newCart = [...prev];
@@ -252,7 +247,9 @@ export default function App() {
           const index = newCart.findIndex(item => item.id === producto.id && item.tallaSeleccionada === talla);
           
           if (index > -1) {
-            if (newCart[index].cantidad < maxForTalla) newCart[index].cantidad += 1;
+            if (newCart[index].cantidad < maxForTalla) {
+              newCart[index].cantidad += 1;
+            }
           } else {
             newCart.push({ ...producto, tallaSeleccionada: talla, cantidad: 1, stockMaximo: maxForTalla });
           }
@@ -262,7 +259,9 @@ export default function App() {
         const index = newCart.findIndex(item => item.id === producto.id);
         
         if (index > -1) {
-          if (newCart[index].cantidad < stockMax) newCart[index].cantidad += 1;
+          if (newCart[index].cantidad < stockMax) {
+            newCart[index].cantidad += 1;
+          }
         } else {
           newCart.push({ ...producto, cantidad: 1, stockMaximo: stockMax });
         }
@@ -270,14 +269,16 @@ export default function App() {
       return newCart;
     });
 
-    if (isRing) setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
+    if (isRing) {
+      setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
+    }
     setProductoSeleccionado(null); 
   };
 
   const updateCantidad = (id, tallaSeleccionada, delta) => {
     setCarrito(prev => prev.map(item => {
       if (item.id === id && item.tallaSeleccionada === tallaSeleccionada) {
-        const nuevaCantidad = Math.max(1, Math.min(item.cantidad + delta, item.stockMaximo));
+        const nuevaCantidad = Math.max(1, Math.min((item.cantidad || 1) + delta, item.stockMaximo));
         return { ...item, cantidad: nuevaCantidad };
       }
       return item;
@@ -289,13 +290,20 @@ export default function App() {
     else setFavoritos([...favoritos, id]);
   };
 
-  const finalizarPedido = () => alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
+  const finalizarPedido = () => {
+    alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
+  };
 
   const prepararEdicion = (producto) => {
     setNuevaPieza({
-      titulo: producto.titulo, descripcion: producto.descripcion || '', precio: producto.precio,
-      disponibilidad: producto.disponibilidad || '', subcategoria: producto.subcategoria || '',
-      tallas: parseTallasseguro(producto.tallas), imagen: null, imagen_url: producto.imagen_url
+      titulo: producto.titulo, 
+      descripcion: producto.descripcion || '', 
+      precio: producto.precio,
+      disponibilidad: producto.disponibilidad || '', 
+      subcategoria: producto.subcategoria || '',
+      tallas: parseTallasseguro(producto.tallas), 
+      imagen: null, 
+      imagen_url: producto.imagen_url
     });
     setEditandoId(producto.id);
     setShowInlineForm(true);
@@ -304,12 +312,16 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' });
+    setNuevaPieza({ 
+      titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
+    });
   };
 
   const toggleVendido = async (id, estadoActual) => {
     const { data, error } = await supabase.from('productos').update({ vendido: !estadoActual }).eq('id', id).select();
-    if (!error && data && data.length > 0) setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
+    if (!error && data && data.length > 0) {
+      setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
+    }
   };
 
   const handlePublicarLocal = async (e) => {
@@ -328,9 +340,13 @@ export default function App() {
     }
 
     const payload = { 
-      titulo: nuevaPieza.titulo, descripcion: nuevaPieza.descripcion, precio: Number(nuevaPieza.precio), 
-      categoria: activeCategory, disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
-      subcategoria: nuevaPieza.subcategoria || 'General', tallas: nuevaPieza.subcategoria === 'Anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
+      titulo: nuevaPieza.titulo, 
+      descripcion: nuevaPieza.descripcion, 
+      precio: Number(nuevaPieza.precio), 
+      categoria: activeCategory, 
+      disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
+      subcategoria: nuevaPieza.subcategoria || 'General', 
+      tallas: nuevaPieza.subcategoria === 'Anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
       imagen_url: imageUrl 
     };
 
@@ -378,7 +394,6 @@ export default function App() {
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
-  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
   const isAllSelected = (menuPrincipal) => {
     return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
@@ -386,10 +401,13 @@ export default function App() {
 
   const toggleAll = (menuPrincipal) => {
     const subs = estructuraCatalogo[menuPrincipal];
-    if (isAllSelected(menuPrincipal)) setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
-    else {
+    if (isAllSelected(menuPrincipal)) {
+      setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
+    } else {
       const newSelections = [...categoriasDescarga];
-      subs.forEach(sub => { if (!newSelections.includes(sub)) newSelections.push(sub); });
+      subs.forEach(sub => {
+        if (!newSelections.includes(sub)) newSelections.push(sub);
+      });
       setCategoriasDescarga(newSelections);
     }
   };
@@ -410,21 +428,6 @@ export default function App() {
         @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
-      {stars.map(star => (
-        <div
-          key={star.id}
-          className="fixed z-[9999] w-2 h-2 bg-white rounded-full pointer-events-none transition-all ease-in-out"
-          style={{
-            transitionDuration: '700ms',
-            left: star.active ? 'calc(100vw - 60px)' : star.x,
-            top: star.active ? '30px' : star.y,
-            opacity: star.active ? 0 : 1,
-            transform: star.active ? 'scale(0.1)' : 'scale(1)',
-            boxShadow: '0 0 20px 8px rgba(255, 255, 255, 0.8)'
-          }}
-        />
-      ))}
-
       <div className="screen-only flex flex-col flex-grow w-full">
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
@@ -436,7 +439,7 @@ export default function App() {
 
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
-              <button onClick={() => setActiveView('bag')} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-amber-300 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
+              <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
@@ -580,14 +583,9 @@ export default function App() {
                    onClick={() => { 
                      setEditandoId(null); 
                      setNuevaPieza({
-                       titulo: '', 
-                       descripcion: '', 
-                       precio: '', 
-                       disponibilidad: '', 
+                       titulo: '', descripcion: '', precio: '', disponibilidad: '', 
                        subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
-                       tallas: {}, 
-                       imagen: null, 
-                       imagen_url: '' 
+                       tallas: {}, imagen: null, imagen_url: '' 
                      });
                      setShowInlineForm(true); 
                    }} 
@@ -599,9 +597,9 @@ export default function App() {
                  </div>
                )}
 
-               {/* 👇 FORMULARIO DE ADMIN: CRISTAL BORROSO, SIN BORDES NI FONDOS GRISES 👇 */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
+                   
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
@@ -611,41 +609,16 @@ export default function App() {
                      </div>
                    )}
 
-                   {/* SIN BORDES NI LINEAS, SOLO CRISTAL */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-6 text-center items-center justify-items-center">
-                     <input 
-                       type="text" 
-                       value={nuevaPieza.titulo} 
-                       onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} 
-                       placeholder="TÍTULO DE LA OBRA" 
-                       className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
-                       required
-                     />
-                     <input 
-                       type="number" 
-                       value={nuevaPieza.precio} 
-                       onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} 
-                       placeholder="PRECIO (USD)" 
-                       className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
-                       required
-                     />
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required/>
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input 
-                         type="text" 
-                         value={nuevaPieza.disponibilidad} 
-                         onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} 
-                         placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" 
-                         className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
-                       />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select 
-                         value={nuevaPieza.subcategoria} 
-                         onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} 
-                         className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors"
-                       >
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -661,41 +634,18 @@ export default function App() {
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2">
                              <span className="text-white text-[10px] md:text-xs font-light">{talla}</span>
-                             <input
-                               type="number"
-                               min="0"
-                               value={nuevaPieza.tallas[talla] || ''}
-                               onChange={(e) => setNuevaPieza({
-                                 ...nuevaPieza,
-                                 tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }
-                               })}
-                               placeholder="0"
-                               className="w-12 md:w-16 bg-transparent text-white text-center text-[10px] py-2 outline-none border-none placeholder-gray-500 hover:bg-white/5 transition-colors"
-                             />
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} placeholder="0" className="w-12 md:w-16 bg-transparent text-white text-center text-[10px] py-2 outline-none border-none placeholder-gray-500 hover:bg-white/5 transition-colors" />
                            </div>
                          ))}
                        </div>
                      </div>
                    )}
 
-                   <textarea 
-                     value={nuevaPieza.descripcion} 
-                     onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} 
-                     placeholder="DESCRIPCIÓN EDITORIAL..." 
-                     rows="2" 
-                     className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"
-                   ></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input 
-                       type="file" 
-                       onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} 
-                       className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" 
-                     />
-                     <button 
-                       type="submit" 
-                       className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl"
-                     >
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">
                        {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
                    </div>
@@ -712,10 +662,7 @@ export default function App() {
                    return (
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                        
-                       <div 
-                         className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
-                         onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
-                       >
+                       <div className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          
                          {producto.vendido && (
@@ -732,7 +679,6 @@ export default function App() {
                          )}
                        </div>
                        
-                       {/* 👇 TODOS LOS PRODUCTOS CENTRADOS 👇 */}
                        <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
@@ -757,7 +703,7 @@ export default function App() {
                                          e.preventDefault(); e.stopPropagation(); 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500/50 cursor-not-allowed'}`}
                                      >
                                        <span>{talla}</span>
                                      </button>
@@ -810,7 +756,6 @@ export default function App() {
                   <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
                 </div>
                 
-                {/* 👇 MODAL INFO: SIEMPRE CENTRADA 👇 */}
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
                   <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
                   <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
@@ -843,7 +788,7 @@ export default function App() {
                                    e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[10px] md:text-sm tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[10px] md:text-sm tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500/50 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
@@ -921,7 +866,6 @@ export default function App() {
                             className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}
                           >+</button>
                         </div>
-
                       </div>
                       <span className="text-xs md:text-sm tracking-[0.1em] text-white whitespace-nowrap">${item.precio * (item.cantidad || 1)} USD</span>
                     </div>
@@ -965,7 +909,7 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center`}>
+                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
@@ -993,7 +937,6 @@ export default function App() {
             </section>
           )}
 
-          {/* PERFIL SIN BORDES GRISES NI LÍNEAS */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
@@ -1125,7 +1068,6 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* FORMULARIO DE PERFIL FLOTANTE: SIN LÍNEAS GRISES NI BORDES */}
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
            <div className="bg-white/5 backdrop-blur-3xl border border-none p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
