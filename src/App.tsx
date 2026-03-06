@@ -21,7 +21,9 @@ export default function App() {
   
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
+  
+  // Tallas ahora es un objeto para guardar stock por talla: { "6": 2, "7": 0, "8": 1 }
+  const [nuevaPieza, setNuevaPieza] = useState({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' });
   
   const [productos, setProductos] = useState<any[]>([]);
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
@@ -31,14 +33,30 @@ export default function App() {
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
-
-  // 👇 NUEVO ESTADO: Rastrea la talla seleccionada por el cliente para cada producto 👇
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
 
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [perfilForm, setPerfilForm] = useState({
     tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
   });
+
+  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
+
+  // Traductor seguro para leer las tallas de la base de datos (incluso las viejas)
+  const parseTallas = (tallasStr) => {
+    if (!tallasStr) return {};
+    try {
+      const parsed = JSON.parse(tallasStr);
+      if (typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+    // Si es formato viejo (ej: "8,9,10")
+    if (typeof tallasStr === 'string') {
+      const obj = {};
+      tallasStr.split(',').forEach(t => { obj[t.trim()] = 1; });
+      return obj;
+    }
+    return {};
+  };
 
   const fetchProductos = async () => {
     const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
@@ -54,13 +72,8 @@ export default function App() {
     fetchProductos();
     fetchConfiguracion();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleUserSession(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleUserSession(session?.user ?? null);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => handleUserSession(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => handleUserSession(session?.user ?? null));
 
     return () => subscription.unsubscribe();
   }, []);
@@ -70,7 +83,6 @@ export default function App() {
     if (currentUser) {
       setShowLoginModal(false);
       fetchUserRole(currentUser.id);
-
       setPerfilForm({
         tratamiento: currentUser.user_metadata?.tratamiento || '',
         nombre: currentUser.user_metadata?.first_name || '',
@@ -82,12 +94,8 @@ export default function App() {
         telefono: currentUser.user_metadata?.telefono?.split(' ')[1] || '',
         newsletter: currentUser.user_metadata?.newsletter || false
       });
-
-      if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) {
-        setShowCompleteProfile(true);
-      } else {
-        setShowCompleteProfile(false);
-      }
+      if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) setShowCompleteProfile(true);
+      else setShowCompleteProfile(false);
     } else {
       setUserRole('cliente');
       setShowCompleteProfile(false);
@@ -115,21 +123,13 @@ export default function App() {
     e.preventDefault();
     const { data, error } = await supabase.auth.updateUser({
       data: {
-        first_name: perfilForm.nombre,
-        last_name: perfilForm.apellidos,
-        tratamiento: perfilForm.tratamiento,
+        first_name: perfilForm.nombre, last_name: perfilForm.apellidos, tratamiento: perfilForm.tratamiento,
         fecha_nacimiento: `${perfilForm.anio}-${perfilForm.mes}-${perfilForm.dia}`,
-        telefono: `${perfilForm.prefijo} ${perfilForm.telefono}`,
-        newsletter: perfilForm.newsletter
+        telefono: `${perfilForm.prefijo} ${perfilForm.telefono}`, newsletter: perfilForm.newsletter
       }
     });
-    if (error) {
-      alert('Hubo un error al actualizar su información.');
-      console.error(error);
-    } else {
-      setUser(data.user); 
-      setShowCompleteProfile(false);
-    }
+    if (error) alert('Hubo un error al actualizar su información.');
+    else { setUser(data.user); setShowCompleteProfile(false); }
   };
 
   const solicitarCambioContrasena = async () => {
@@ -140,7 +140,6 @@ export default function App() {
       alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email} para restablecer su contraseña.`);
     } catch (error) {
       alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
-      console.error(error);
     }
   };
 
@@ -152,9 +151,7 @@ export default function App() {
     setEditandoId(null);
   };
 
-  const handleCheckbox = (categoria) => {
-    setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
-  };
+  const handleCheckbox = (categoria) => setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
 
   const toggleMenuVisibility = async (itemName) => {
     let newHidden = [...hiddenItems];
@@ -174,40 +171,24 @@ export default function App() {
     await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
   };
 
-  // 👇 MANEJO DE TALLAS DEL CLIENTE 👇
   const handleSelectTalla = (e, productoId, talla) => {
     e.stopPropagation();
     setTallasSeleccionadas(prev => ({ ...prev, [productoId]: talla }));
   };
 
-  // 👇 AGREGAR AL CARRITO CON VALIDACIÓN DE TALLA 👇
   const agregarAlCarrito = (producto) => {
     let productoParaCarrito = { ...producto };
-
     if (producto.subcategoria === 'Anillos') {
       const talla = tallasSeleccionadas[producto.id];
-      if (!talla) {
-        alert(`Por favor, selecciona una talla para "${producto.titulo}" antes de añadirlo al bolso.`);
-        return;
-      }
+      if (!talla) return alert(`Por favor, seleccione una talla para "${producto.titulo}".`);
       productoParaCarrito.tallaSeleccionada = talla;
-      
-      // Evita duplicar el mismo anillo EN LA MISMA TALLA
-      if (carrito.some(item => item.id === producto.id && item.tallaSeleccionada === talla)) {
-        alert(`"${producto.titulo}" en talla ${talla} ya está en tu bolso.`);
-        return;
-      }
+      if (carrito.some(item => item.id === producto.id && item.tallaSeleccionada === talla)) return alert(`"${producto.titulo}" en talla ${talla} ya está en su bolso.`);
     } else {
-      // Para collares, pulseras, etc.
-      if (carrito.some(item => item.id === producto.id)) {
-        alert(`"${producto.titulo}" ya está en tu bolso.`);
-        return;
-      }
+      if (carrito.some(item => item.id === producto.id)) return alert(`"${producto.titulo}" ya está en su bolso.`);
     }
-
     setCarrito([...carrito, productoParaCarrito]);
     alert(`"${producto.titulo}" se añadió a tu bolso.`);
-    setProductoSeleccionado(null); // Cierra el modal si estaba abierto
+    setProductoSeleccionado(null); 
   };
 
   const toggleFavorito = (id) => {
@@ -215,13 +196,13 @@ export default function App() {
     else setFavoritos([...favoritos, id]);
   };
 
-  const finalizarPedido = () => alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
+  const finalizarPedido = () => alert('Esta función aún no está configurada.');
 
   const prepararEdicion = (producto) => {
     setNuevaPieza({
       titulo: producto.titulo, descripcion: producto.descripcion || '', precio: producto.precio,
       disponibilidad: producto.disponibilidad || '', subcategoria: producto.subcategoria || '',
-      tallas: producto.tallas ? producto.tallas.split(',') : [], imagen: null, imagen_url: producto.imagen_url
+      tallas: parseTallas(producto.tallas), imagen: null, imagen_url: producto.imagen_url
     });
     setEditandoId(producto.id);
     setShowInlineForm(true);
@@ -230,14 +211,7 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
-  };
-
-  const toggleTallaAdmin = (talla) => {
-    setNuevaPieza(prev => {
-      const nuevasTallas = prev.tallas.includes(talla) ? prev.tallas.filter(t => t !== talla) : [...prev.tallas, talla];
-      return { ...prev, tallas: nuevasTallas };
-    });
+    setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' });
   };
 
   const toggleVendido = async (id, estadoActual) => {
@@ -263,7 +237,8 @@ export default function App() {
     const payload = { 
       titulo: nuevaPieza.titulo, descripcion: nuevaPieza.descripcion, precio: Number(nuevaPieza.precio), 
       categoria: activeCategory, disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
-      subcategoria: nuevaPieza.subcategoria || 'General', tallas: nuevaPieza.tallas.length > 0 ? nuevaPieza.tallas.join(',') : null,
+      subcategoria: nuevaPieza.subcategoria || 'General', 
+      tallas: nuevaPieza.subcategoria === 'Anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
       imagen_url: imageUrl 
     };
 
@@ -292,16 +267,7 @@ export default function App() {
     }
   };
 
-  if (!areSupabaseCredentialsSet) {
-    return (
-      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
-        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none w-full mx-4">
-          <h2 className="text-xl md:text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
-          <p className="text-gray-400 text-sm md:text-base">Verifica tus credenciales de Supabase en los Secrets.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!areSupabaseCredentialsSet) return null;
 
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
@@ -309,9 +275,6 @@ export default function App() {
     'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
     'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
-
-  const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
-  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
   const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
@@ -332,8 +295,7 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
-      
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black w-full overflow-x-hidden">
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
@@ -343,20 +305,17 @@ export default function App() {
 
       <div className="screen-only flex flex-col flex-grow w-full">
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
-          
           {user && activeView !== 'home' && (
             <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
               <span className="text-xs md:text-sm font-light relative -top-[1px]">&lt;</span> Volver
             </button>
           )}
-
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
-
               <div className="group relative">
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
@@ -373,32 +332,23 @@ export default function App() {
               </div>
             </div>
           )}
-
           <img src={LOGO_URL} alt="ANTARES" onClick={() => setActiveView('home')} className="h-16 md:h-32 w-auto mt-[10px] md:mt-[4px] z-[100] cursor-pointer" />
-
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
               <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
-
                   return (
                     <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
-                      <span className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
-                        {menu}
-                        <div className={menuUnderlineClass}></div>
-                      </span>
+                      <span className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>{menu}<div className={menuUnderlineClass}></div></span>
                       <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
                             if (userRole !== 'admin' && isSubHidden) return null;
-                            
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
-                                {sub}
-                              </span>
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>{sub}</span>
                             );
                           })}
                         </div>
@@ -406,13 +356,9 @@ export default function App() {
                     </li>
                   );
                 })}
-                
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
                   <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                    <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
-                      Obsequios
-                      <div className={menuUnderlineClass}></div>
-                    </span>
+                    <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>Obsequios<div className={menuUnderlineClass}></div></span>
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
@@ -425,18 +371,16 @@ export default function App() {
               </ul>
             </nav>
           )}
-
           {!user && (
             <div className="w-full flex justify-center mt-4 mb-4">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="30" width="30" className="md:w-[35px] md:h-[35px]"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="30" width="30"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
             </div>
           )}
         </header>
 
         <main className="flex-grow flex flex-col items-center w-full px-4 md:px-0">
-          
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
                <section className="w-full text-center py-16 md:py-32 px-4">
@@ -445,28 +389,26 @@ export default function App() {
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
-
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista."
                  </p>
                </section>
-
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia.</p>
                    </div>
                  </div>
                </section>
@@ -480,40 +422,20 @@ export default function App() {
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                  <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
                    {subcategoriasJoyeria.map(sub => (
-                     <li 
-                       key={sub}
-                       onClick={() => setActiveSubCategory(sub)}
-                       className={`text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}
-                     >
-                       {sub}
-                     </li>
+                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>{sub}</li>
                    ))}
                  </ul>
                )}
 
                {userRole === 'admin' && !showInlineForm && (
-                 <div 
-                   onClick={() => { 
-                     setEditandoId(null); 
-                     setNuevaPieza({
-                       titulo: '', descripcion: '', precio: '', disponibilidad: '', 
-                       subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
-                       tallas: [], imagen: null, imagen_url: '' 
-                     });
-                     setShowInlineForm(true); 
-                   }} 
-                   className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0"
-                 >
-                   <span className="text-amber-500 tracking-[0.2em] text-[10px] md:text-xs uppercase">
-                     + Añadir nueva pieza a {activeCategory} {activeSubCategory !== 'Todo' ? `- ${activeSubCategory}` : ''}
-                   </span>
+                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0">
+                   <span className="text-amber-500 tracking-[0.2em] text-[10px] md:text-xs uppercase">+ Añadir nueva pieza a {activeCategory} {activeSubCategory !== 'Todo' ? `- ${activeSubCategory}` : ''}</span>
                  </div>
                )}
 
-               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: 100% LIMPIO Y SIN BORDES 👇 */}
+               {/* FORMULARIO DE ADMIN: LIMPIO Y CRISTALINO */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
-                   
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
@@ -523,41 +445,51 @@ export default function App() {
                      </div>
                    )}
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-6">
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" />
+                     {/* El input general desaparece si es Anillo para no confundir al Admin */}
+                     {nuevaPieza.subcategoria !== 'Anillos' && (
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" />
+                     )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none border-b border-white/10">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
                          ))}
                        </select>
                      )}
-
-                     {nuevaPieza.subcategoria === 'Anillos' && (
-                       <div className="md:col-span-2 flex flex-col items-center mt-4">
-                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-white mb-6 uppercase drop-shadow-md">Selecciona las tallas disponibles:</p>
-                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
-                           {tallasDisponibles.map(talla => (
-                             <button
-                               key={talla}
-                               type="button"
-                               onClick={() => toggleTallaAdmin(talla)}
-                               className={`text-[12px] md:text-sm tracking-[0.2em] cursor-pointer transition-all duration-300 border-none outline-none bg-transparent ${nuevaPieza.tallas.includes(talla) ? 'text-white font-bold drop-shadow-lg scale-125' : 'text-gray-500 hover:text-white'}`}
-                             >
-                               {talla}
-                             </button>
-                           ))}
-                         </div>
-                       </div>
-                     )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center"></textarea>
+                   {/* 👇 NUEVO GESTOR DE INVENTARIO POR TALLA PARA EL ADMIN 👇 */}
+                   {nuevaPieza.subcategoria === 'Anillos' && (
+                     <div className="w-full flex flex-col items-center mt-2 mb-10 pb-8 border-b border-white/10">
+                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+                         {tallasDisponibles.map(talla => (
+                           <div key={talla} className="flex flex-col items-center gap-2">
+                             <span className="text-white text-[10px] md:text-xs font-light">{talla}</span>
+                             <input
+                               type="number"
+                               min="0"
+                               value={nuevaPieza.tallas[talla] || ''}
+                               onChange={(e) => setNuevaPieza({
+                                 ...nuevaPieza,
+                                 tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }
+                               })}
+                               placeholder="0"
+                               className="w-12 md:w-16 bg-white/5 text-white text-center text-[10px] py-2 outline-none border border-white/10 placeholder-gray-600 transition-colors focus:border-white/30"
+                             />
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center border-b border-white/10"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
@@ -569,67 +501,63 @@ export default function App() {
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).map(producto => (
+                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).map(producto => {
+                   const tallasObj = parseTallas(producto.tallas);
+                   const isRing = producto.subcategoria === 'Anillos';
+
+                   return (
                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                      
-                     <div 
-                       className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`}
-                       onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}
-                     >
+                     <div className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
-                       
                        {producto.vendido && (
                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
                            <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                          </div>
                        )}
-
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
                      
-                     {/* 👇 DISEÑO CENTRADO PARA ANILLOS 👇 */}
-                     <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${producto.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
+                     <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${isRing ? 'items-center text-center' : ''}`}>
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       {!isRing && (
+                         <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       )}
                        
-                       {/* 👇 SELECTOR DE TALLAS PARA CLIENTES EN LA TARJETA 👇 */}
-                       {producto.subcategoria === 'Anillos' && (
-                         <div className="flex flex-col items-center w-full mb-6 mt-2">
-                           <div className="flex flex-wrap justify-center gap-2">
+                       {/* 👇 TALLAS Y STOCK DEBAJO DE LAS TALLAS PARA CLIENTES 👇 */}
+                       {isRing && (
+                         <div className="flex flex-col items-center w-full mb-6 mt-4">
+                           <div className="flex flex-wrap justify-center gap-3 md:gap-4">
                              {tallasDisponibles.map(talla => {
-                               const isAvailable = producto.tallas && producto.tallas.split(',').includes(talla);
+                               const stock = parseInt(tallasObj[talla] || 0);
+                               const isAvailable = stock > 0;
                                const isSelected = tallasSeleccionadas[producto.id] === talla;
                                
-                               if (isAvailable) {
-                                 return (
+                               return (
+                                 <div key={talla} className="flex flex-col items-center gap-1.5">
                                    <button 
-                                     key={talla}
-                                     onClick={(e) => handleSelectTalla(e, producto.id, talla)}
-                                     className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-[8px] md:text-[10px] tracking-[0.1em] transition-all duration-300 border outline-none cursor-pointer ${isSelected ? 'bg-white text-black border-white font-bold' : 'bg-transparent text-white border-white/30 hover:border-white'}`}
+                                     onClick={(e) => isAvailable && handleSelectTalla(e, producto.id, talla)}
+                                     className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 bg-red-500/5 text-red-500/50 cursor-not-allowed'}`}
                                    >
-                                     {talla}
+                                     <span className={!isAvailable ? 'line-through' : ''}>{talla}</span>
                                    </button>
-                                 );
-                               } else {
-                                 return (
-                                   <div key={talla} title="Agotada" className="w-6 h-6 md:w-8 md:h-8 flex flex-col items-center justify-center border border-red-500/20 bg-red-500/5 text-red-500/70 cursor-not-allowed">
-                                     <span className="text-[7px] md:text-[9px] line-through leading-none">{talla}</span>
-                                     <span className="text-[4px] md:text-[5px] mt-[1px] leading-none">0 disp.</span>
-                                   </div>
-                                 );
-                               }
+                                   <span className={`text-[6px] md:text-[7px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     {stock} disp.
+                                   </span>
+                                 </div>
+                               );
                              })}
                            </div>
                          </div>
                        )}
-
+                       
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                        {userRole === 'cliente' && !producto.vendido && (
@@ -644,7 +572,8 @@ export default function App() {
                        )}
                      </div>
                    </div>
-                 ))}
+                   );
+                 })}
                  
                  {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).length === 0 && (
                     <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
@@ -653,71 +582,48 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA PARA TALLAS 👇 */}
           {productoSeleccionado && (
-            <div 
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in"
-              onClick={() => setProductoSeleccionado(null)}
-            >
-              <div 
-                className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent"
-                onClick={e => e.stopPropagation()} 
-              >
-                <button 
-                  onClick={() => setProductoSeleccionado(null)} 
-                  className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none"
-                >
-                  ×
-                </button>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
+              <div className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setProductoSeleccionado(null)} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
                 
                 <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
-                  <img 
-                    src={productoSeleccionado.imagen_url} 
-                    alt={productoSeleccionado.titulo} 
-                    className="w-full h-full object-cover block m-0 p-0" 
-                  />
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
                 </div>
                 
-                {/* Info centrada si es anillo */}
                 <div className={`w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0 ${productoSeleccionado.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
-                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">
-                    {productoSeleccionado.titulo}
-                  </h2>
-                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">
-                    ${productoSeleccionado.precio} USD
-                  </p>
+                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
+                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
                   
-                  <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-2 uppercase drop-shadow-md">
-                    {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
-                  </p>
+                  {productoSeleccionado.subcategoria !== 'Anillos' && (
+                    <p className="text-[10px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                      {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
+                    </p>
+                  )}
 
-                  {/* SELECTOR DE TALLAS EN EL MODAL */}
+                  {/* 👇 TALLAS EN EL MODAL 👇 */}
                   {productoSeleccionado.subcategoria === 'Anillos' && (
-                     <div className="flex flex-col items-center w-full mb-8 mt-4">
-                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Seleccione su talla</p>
-                       <div className="flex flex-wrap justify-center gap-3">
+                     <div className="flex flex-col items-center w-full mb-10 mt-2">
+                       <div className="flex flex-wrap justify-center gap-4">
                          {tallasDisponibles.map(talla => {
-                           const isAvailable = productoSeleccionado.tallas && productoSeleccionado.tallas.split(',').includes(talla);
+                           const tallasObj = parseTallas(productoSeleccionado.tallas);
+                           const stock = parseInt(tallasObj[talla] || 0);
+                           const isAvailable = stock > 0;
                            const isSelected = tallasSeleccionadas[productoSeleccionado.id] === talla;
                            
-                           if (isAvailable) {
-                             return (
+                           return (
+                             <div key={talla} className="flex flex-col items-center gap-2">
                                <button 
-                                 key={talla}
-                                 onClick={(e) => handleSelectTalla(e, productoSeleccionado.id, talla)}
-                                 className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none cursor-pointer ${isSelected ? 'bg-white text-black border-white font-bold scale-110' : 'bg-transparent text-white border-white/30 hover:border-white'}`}
+                                 onClick={(e) => isAvailable && handleSelectTalla(e, productoSeleccionado.id, talla)}
+                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[10px] md:text-sm tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 bg-red-500/5 text-red-500/50 cursor-not-allowed'}`}
                                >
-                                 {talla}
+                                 <span className={!isAvailable ? 'line-through' : ''}>{talla}</span>
                                </button>
-                             );
-                           } else {
-                             return (
-                               <div key={talla} title="Agotada" className="w-8 h-8 md:w-10 md:h-10 flex flex-col items-center justify-center border border-red-500/20 bg-red-500/5 text-red-500/70 cursor-not-allowed">
-                                 <span className="text-[9px] md:text-[10px] line-through leading-none">{talla}</span>
-                                 <span className="text-[5px] md:text-[6px] mt-[2px] leading-none">0 disp.</span>
-                               </div>
-                             );
-                           }
+                               <span className={`text-[7px] md:text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                 {stock} disp.
+                               </span>
+                             </div>
+                           );
                          })}
                        </div>
                      </div>
@@ -725,29 +631,15 @@ export default function App() {
                   
                   <div className="w-12 h-px bg-white/30 mb-8"></div>
                   
-                  <p className="text-[10px] md:text-xs text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">
-                    {productoSeleccionado.descripcion}
-                  </p>
+                  <p className="text-[10px] md:text-xs text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
                   
                   {!productoSeleccionado.vendido ? (
                     <div className="flex gap-4 mt-auto w-full">
-                      <button 
-                        onClick={() => agregarAlCarrito(productoSeleccionado)} 
-                        className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none"
-                      >
-                        Añadir al Bolso
-                      </button>
-                      <button 
-                        onClick={() => toggleFavorito(productoSeleccionado.id)} 
-                        className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center"
-                      >
-                        {favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}
-                      </button>
+                      <button onClick={() => agregarAlCarrito(productoSeleccionado)} className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
+                      <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                     </div>
                   ) : (
-                    <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full">
-                       <span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span>
-                    </div>
+                    <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span></div>
                   )}
                 </div>
               </div>
@@ -770,7 +662,6 @@ export default function App() {
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                         <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
-                        {/* MUESTRA LA TALLA EN EL CARRITO */}
                         <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">
                           {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                         </p>
@@ -817,13 +708,6 @@ export default function App() {
                       <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${producto.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
-                        
-                        {producto.subcategoria === 'Anillos' && (
-                          <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
-                            Tallas: {producto.tallas ? producto.tallas.split(',').join(' - ') : 'BAJO PEDIDO'}
-                          </p>
-                        )}
-
                         <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full">
                           {!producto.vendido && (
@@ -853,7 +737,6 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 PERFIL SIN COLORES EXTRAÑOS Y CON BOTONES LIMPIOS 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
@@ -883,16 +766,10 @@ export default function App() {
                 </div>
 
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
-                  <button 
-                    onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
+                  <button onClick={() => setShowCompleteProfile(true)} className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent">
                     Editar Información
                   </button>
-                  <button 
-                    onClick={solicitarCambioContrasena} 
-                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
+                  <button onClick={solicitarCambioContrasena} className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent">
                     Cambiar Contraseña
                   </button>
                 </div>
@@ -959,7 +836,7 @@ export default function App() {
                     </div>
                     <div className="flex justify-center">
                       <button onClick={() => window.print()} className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
-                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
                     </div>
@@ -985,7 +862,7 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL: TOTALMENTE LIMPIO Y SIN LÍNEAS 👇 */}
+      {/* FORMULARIO DE PERFIL FLOTANTE */}
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
            <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-sm">
@@ -998,12 +875,7 @@ export default function App() {
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
-                  <select 
-                    value={perfilForm.tratamiento} 
-                    onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase text-center"
-                    required
-                  >
+                  <select value={perfilForm.tratamiento} onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase text-center" required>
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
                     <option value="Sr." className="bg-black text-white">Sr.</option>
                     <option value="Sra." className="bg-black text-white">Sra.</option>
@@ -1012,22 +884,8 @@ export default function App() {
                   </select>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <input 
-                      type="text" 
-                      value={perfilForm.nombre} 
-                      onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
-                      placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" 
-                      required
-                    />
-                    <input 
-                      type="text" 
-                      value={perfilForm.apellidos} 
-                      onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
-                      placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" 
-                      required
-                    />
+                    <input type="text" value={perfilForm.nombre} onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} placeholder="DOS NOMBRES*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" required/>
+                    <input type="text" value={perfilForm.apellidos} onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} placeholder="DOS APELLIDOS*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" required/>
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
@@ -1061,7 +919,7 @@ export default function App() {
                   </label>
 
                   <p className="text-gray-500 text-[7px] md:text-[8px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
-                    Al seleccionar "Crear mi perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>, así como que desea crear su perfil de ANTARES.
+                    Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
                   <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
