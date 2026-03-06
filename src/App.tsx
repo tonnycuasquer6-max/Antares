@@ -22,7 +22,6 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   
-  // Tallas ahora es un objeto para inventario: { "6": 2, "7": 0 }
   const [nuevaPieza, setNuevaPieza] = useState({ 
     titulo: '', 
     descripcion: '', 
@@ -43,7 +42,6 @@ export default function App() {
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
   
-  // Rastrea qué talla eligió el cliente
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
 
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
@@ -61,7 +59,6 @@ export default function App() {
 
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
-  // 👇 LÓGICA ANTIFALLOS: Evita que la pantalla se ponga negra al leer tallas 👇
   const parseTallasseguro = (tallasData) => {
     if (!tallasData) return {};
     if (typeof tallasData === 'object') return tallasData;
@@ -69,7 +66,6 @@ export default function App() {
       const parsed = JSON.parse(tallasData);
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) return parsed;
     } catch (e) {}
-    // Si viene del formato viejo separado por comas
     if (typeof tallasData === 'string') {
       const obj = {};
       tallasData.split(',').forEach(t => { 
@@ -238,28 +234,51 @@ export default function App() {
     setTallasSeleccionadas(prev => ({ ...prev, [productoId]: talla }));
   };
 
+  // 👇 LÓGICA DE CARRITO ACTUALIZADA: Sin ventanas emergentes, agrupa cantidades y permite varias tallas 👇
   const agregarAlCarrito = (producto) => {
     let productoParaCarrito = { ...producto };
+    let stockMax = 1;
     
     if (producto.subcategoria === 'Anillos') {
       const talla = tallasSeleccionadas[producto.id];
       if (!talla) {
-        return alert(`Por favor, seleccione una talla disponible para "${producto.titulo}".`);
+        return; // Retorno silencioso si no ha elegido talla
       }
       productoParaCarrito.tallaSeleccionada = talla;
-      
-      if (carrito.some(item => item.id === producto.id && item.tallaSeleccionada === talla)) {
-        return alert(`"${producto.titulo}" en talla ${talla} ya está en su bolso.`);
-      }
+      const tallasObj = parseTallasseguro(producto.tallas);
+      stockMax = parseInt(tallasObj[talla] || 0);
     } else {
-      if (carrito.some(item => item.id === producto.id)) {
-        return alert(`"${producto.titulo}" ya está en su bolso.`);
-      }
+      stockMax = parseInt(producto.disponibilidad) || 99; // 99 si no está especificado como número (ej. "Bajo pedido")
     }
 
-    setCarrito([...carrito, productoParaCarrito]);
-    alert(`"${producto.titulo}" se añadió a tu bolso.`);
-    setProductoSeleccionado(null); 
+    setCarrito(prev => {
+      const index = prev.findIndex(item => item.id === producto.id && item.tallaSeleccionada === productoParaCarrito.tallaSeleccionada);
+      
+      if (index > -1) {
+        // Si ya está en el carrito, aumentamos la cantidad solo si hay stock
+        const newCart = [...prev];
+        if (newCart[index].cantidad < stockMax) {
+          newCart[index].cantidad += 1;
+        }
+        return newCart;
+      } else {
+        // Artículo nuevo
+        return [...prev, { ...productoParaCarrito, cantidad: 1, stockMaximo: stockMax }];
+      }
+    });
+    
+    setProductoSeleccionado(null); // Cierra el modal (cristal) al agregar
+  };
+
+  // 👇 FUNCIÓN PARA SUMAR Y RESTAR CANTIDADES EN EL BOLSO 👇
+  const updateCantidad = (id, tallaSeleccionada, delta) => {
+    setCarrito(prev => prev.map(item => {
+      if (item.id === id && item.tallaSeleccionada === tallaSeleccionada) {
+        const nuevaCantidad = Math.max(1, Math.min(item.cantidad + delta, item.stockMaximo));
+        return { ...item, cantidad: nuevaCantidad };
+      }
+      return item;
+    }));
   };
 
   const toggleFavorito = (id) => {
@@ -399,7 +418,8 @@ export default function App() {
     }
   };
 
-  const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
+  // 👇 SUBTOTAL MULTIPLICANDO POR CANTIDAD 👇
+  const subtotalCarrito = carrito.reduce((sum, item) => sum + (item.precio * (item.cantidad || 1)), 0);
   const totalCarrito = subtotalCarrito; 
 
   const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
@@ -468,7 +488,6 @@ export default function App() {
               <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
-                  
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
@@ -481,7 +500,6 @@ export default function App() {
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
-                            
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
@@ -518,7 +536,7 @@ export default function App() {
           {!user && (
             <div className="w-full flex justify-center mt-4 mb-4">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="30" width="30" className="md:w-[35px] md:h-[35px]"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="30" width="30"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
             </div>
           )}
@@ -604,7 +622,7 @@ export default function App() {
                  </div>
                )}
 
-               {/* FORMULARIO DE ADMINISTRACIÓN COMPLETAMENTE DESPLEGADO */}
+               {/* FORMULARIO DE ADMINISTRACIÓN COMPLETAMENTE DESPLEGADO Y CON ESPACIOS */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    
@@ -639,6 +657,7 @@ export default function App() {
                        className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center" 
                        required
                      />
+                     
                      <input 
                        type="number" 
                        value={nuevaPieza.precio} 
@@ -750,6 +769,7 @@ export default function App() {
                          )}
                        </div>
                        
+                       {/* 👇 DISEÑO CENTRADO PARA ANILLOS 👇 */}
                        <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${isRing ? 'items-center text-center' : ''}`}>
                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
@@ -778,7 +798,8 @@ export default function App() {
                                        }}
                                        className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 bg-red-500/5 text-red-500/50 cursor-not-allowed'}`}
                                      >
-                                       <span className={!isAvailable ? 'line-through' : ''}>{talla}</span>
+                                       {/* 👇 ELIMINADA LA RAYA (LINE-THROUGH) EN TALLAS AGOTADAS 👇 */}
+                                       <span>{talla}</span>
                                      </button>
                                      <span className={`text-[6px] md:text-[7px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock} disp.
@@ -856,7 +877,8 @@ export default function App() {
                                  }}
                                  className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[10px] md:text-sm tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 bg-red-500/5 text-red-500/50 cursor-not-allowed'}`}
                                >
-                                 <span className={!isAvailable ? 'line-through' : ''}>{talla}</span>
+                                 {/* 👇 ELIMINADA LA RAYA (LINE-THROUGH) EN TALLAS AGOTADAS 👇 */}
+                                 <span>{talla}</span>
                                </button>
                                <span className={`text-[7px] md:text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                  {stock} disp.
@@ -874,8 +896,18 @@ export default function App() {
                   
                   {!productoSeleccionado.vendido ? (
                     <div className="flex gap-4 mt-auto w-full">
-                      <button onClick={() => agregarAlCarrito(productoSeleccionado)} className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
-                      <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                      <button 
+                        onClick={() => agregarAlCarrito(productoSeleccionado)} 
+                        className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none"
+                      >
+                        Añadir al Bolso
+                      </button>
+                      <button 
+                        onClick={() => toggleFavorito(productoSeleccionado.id)} 
+                        className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center"
+                      >
+                        {favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}
+                      </button>
                     </div>
                   ) : (
                     <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span></div>
@@ -901,11 +933,27 @@ export default function App() {
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                         <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
-                        <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">
+                        <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
                           {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                         </p>
+                        
+                        {/* 👇 SELECTOR DE CANTIDAD EN EL BOLSO 👇 */}
+                        <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                          <button 
+                            onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} 
+                            className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none"
+                          >-</button>
+                          <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                          <button 
+                            onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} 
+                            disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)}
+                            className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}
+                          >+</button>
+                        </div>
+
                       </div>
-                      <span className="text-xs md:text-sm tracking-[0.1em] text-white whitespace-nowrap">${item.precio} USD</span>
+                      {/* 👇 PRECIO TOTAL POR LÍNEA 👇 */}
+                      <span className="text-xs md:text-sm tracking-[0.1em] text-white whitespace-nowrap">${item.precio * (item.cantidad || 1)} USD</span>
                     </div>
                   ))}
                   
@@ -980,6 +1028,7 @@ export default function App() {
             </section>
           )}
 
+          {/* PERFIL SIN COLORES EXTRAÑOS Y CON BOTONES LIMPIOS */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
