@@ -365,13 +365,13 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
 
               <div className="group relative">
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
@@ -535,13 +535,13 @@ export default function App() {
                    )}
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" required/>
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" required/>
                      
-                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center border-b border-white/20" />
+                     <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center" />
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none border-b border-white/20">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -568,7 +568,7 @@ export default function App() {
                      )}
                    </div>
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center border-b border-white/20"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-400 text-center"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
@@ -802,6 +802,7 @@ export default function App() {
             </section>
           )}
 
+          {/* 👇 VISTA DE PERFIL: LIMPIA, SIN COLORES EXTRAÑOS 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
@@ -809,30 +810,18 @@ export default function App() {
                 <h2 className="text-2xl md:text-3xl tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
                 <div className="w-12 h-px bg-amber-500/50 mb-12"></div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-16 text-center md:text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-left">
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    {user.user_metadata?.first_name && user.user_metadata.first_name.trim().includes(' ') ? (
-                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light cursor-pointer" onClick={() => setShowCompleteProfile(true)}>
-                        {user.user_metadata.first_name}
-                      </p>
-                    ) : (
-                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => setShowCompleteProfile(true)}>
-                        {user.user_metadata?.first_name ? `${user.user_metadata.first_name} (Falta segundo nombre - Actualizar)` : 'Por favor, actualice su información'}
-                      </p>
-                    )}
+                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    {user.user_metadata?.last_name && user.user_metadata.last_name.trim().includes(' ') ? (
-                      <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light cursor-pointer" onClick={() => setShowCompleteProfile(true)}>
-                        {user.user_metadata.last_name}
-                      </p>
-                    ) : (
-                      <p className="text-amber-500 text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer hover:text-amber-400 transition-colors" onClick={() => setShowCompleteProfile(true)}>
-                        {user.user_metadata?.last_name ? `${user.user_metadata.last_name} (Falta segundo apellido - Actualizar)` : 'Por favor, actualice su información'}
-                      </p>
-                    )}
+                    <p className="text-white text-xs md:text-sm tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
+                    </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center md:items-start">
                     <label className="block text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
@@ -842,12 +831,18 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="w-full border-t border-white/10 pt-10 mb-12 flex justify-center">
+                <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
+                  <button 
+                    onClick={() => setShowCompleteProfile(true)} 
+                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer"
+                  >
+                    Editar Información
+                  </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
                     className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer"
                   >
-                    Solicitar Cambio de Contraseña
+                    Cambiar Contraseña
                   </button>
                 </div>
 
@@ -939,7 +934,7 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL: SIN BORDES NI LÍNEAS 👇 */}
+      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL: TOTALMENTE LIMPIO Y SIN LÍNEAS 👇 */}
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
            <div className="bg-black/60 border border-white/5 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8">
@@ -953,7 +948,6 @@ export default function App() {
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8">
                   
-                  {/* Select y inputs SIN border-b */}
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
@@ -1021,7 +1015,7 @@ export default function App() {
                   </p>
 
                   <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
-                    Crear Mi Perfil
+                    Actualizar Perfil
                   </button>
               </form>
            </div>
