@@ -31,7 +31,7 @@ export default function App() {
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
 
-  // 👇 NUEVOS ESTADOS PARA EL FORMULARIO DE PERFIL DE LUJO 👇
+  // ESTADOS PARA EL FORMULARIO DE PERFIL DE LUJO
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [perfilForm, setPerfilForm] = useState({
     tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
@@ -68,7 +68,6 @@ export default function App() {
       setShowLoginModal(false);
       fetchUserRole(currentUser.id);
 
-      // Cargar datos actuales al formulario
       setPerfilForm({
         tratamiento: currentUser.user_metadata?.tratamiento || '',
         nombre: currentUser.user_metadata?.first_name || '',
@@ -81,7 +80,6 @@ export default function App() {
         newsletter: currentUser.user_metadata?.newsletter || false
       });
 
-      // Si faltan datos clave, mostrar el modal automáticamente
       if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) {
         setShowCompleteProfile(true);
       } else {
@@ -113,7 +111,6 @@ export default function App() {
     setActiveView('home'); 
   };
 
-  // 👇 FUNCIÓN PARA GUARDAR EL PERFIL EN SUPABASE 👇
   const handleGuardarPerfil = async (e) => {
     e.preventDefault();
     const { data, error } = await supabase.auth.updateUser({
@@ -131,7 +128,7 @@ export default function App() {
       alert('Hubo un error al actualizar su información. Intente de nuevo.');
       console.error(error);
     } else {
-      setUser(data.user); // Actualiza el usuario en tiempo real
+      setUser(data.user); 
       setShowCompleteProfile(false);
     }
   };
@@ -330,6 +327,9 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
   const totalCarrito = subtotalCarrito; 
 
+  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
+  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
+  
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -339,8 +339,18 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;  
+          overflow: hidden;
+        }
+        @media print {
+          @page { margin: 0; }
+          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+          .screen-only { display: none !important; }
+          .print-only { display: block !important; }
+        }
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
@@ -512,7 +522,6 @@ export default function App() {
                  </div>
                )}
 
-               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: 100% LIMPIO Y SIN BORDES 👇 */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    
@@ -588,8 +597,8 @@ export default function App() {
 
                        {userRole === 'admin' && (
                          <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-amber-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                           <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" className="md:w-4 md:h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                          </div>
                        )}
                      </div>
@@ -793,7 +802,6 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 PERFIL PREMIUM Y LÓGICA DE ACTUALIZACIÓN 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
@@ -931,12 +939,12 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL TIPO ANTARES 👇 */}
+      {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL: SIN BORDES NI LÍNEAS 👇 */}
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-           <div className="bg-black/60 border border-white/10 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8">
+           <div className="bg-black/60 border border-white/5 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8">
               
-              {/* Botón de cerrar (solo si el usuario ya tiene un nombre parcial, para no bloquearlo) */}
+              {/* Botón de cerrar */}
               {(user.user_metadata?.first_name) && (
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
@@ -945,10 +953,11 @@ export default function App() {
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8">
                   
+                  {/* Select y inputs SIN border-b */}
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase"
+                    className="w-full bg-transparent border-none text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase"
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -964,7 +973,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
                       required
                     />
                     <input 
@@ -972,7 +981,7 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
                       required
                     />
                   </div>
@@ -980,21 +989,21 @@ export default function App() {
                   <div className="flex flex-col gap-4">
                     <label className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="grid grid-cols-3 gap-6">
-                      <input type="text" maxLength={2} value={perfilForm.dia} onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} placeholder="DD*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
-                      <input type="text" maxLength={2} value={perfilForm.mes} onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} placeholder="MM*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
-                      <input type="text" maxLength={4} value={perfilForm.anio} onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} placeholder="AAAA*" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={2} value={perfilForm.dia} onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} placeholder="DD*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={2} value={perfilForm.mes} onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} placeholder="MM*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={4} value={perfilForm.anio} onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} placeholder="AAAA*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
                     </div>
                   </div>
 
                   <div className="flex gap-6 mt-2">
-                    <select value={perfilForm.prefijo} onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} className="w-24 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.1em] py-3 outline-none cursor-pointer appearance-none">
+                    <select value={perfilForm.prefijo} onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} className="w-24 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.1em] py-3 outline-none cursor-pointer appearance-none">
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
                       <option value="+1" className="bg-black text-white">🇺🇸 +1</option>
                       <option value="+52" className="bg-black text-white">🇲🇽 +52</option>
                       <option value="+57" className="bg-black text-white">🇨🇴 +57</option>
                     </select>
-                    <input type="tel" value={perfilForm.telefono} onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} placeholder="MÓVIL" className="w-full flex-grow bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500" />
+                    <input type="tel" value={perfilForm.telefono} onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} placeholder="MÓVIL" className="w-full flex-grow bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500" />
                   </div>
 
                   <label className="flex items-start gap-4 cursor-pointer mt-6 group">
