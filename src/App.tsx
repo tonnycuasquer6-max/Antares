@@ -27,11 +27,14 @@ export default function App() {
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  
   const [carrito, setCarrito] = useState<any[]>([]);
   const [favoritos, setFavoritos] = useState<number[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
 
-  // ESTADOS PARA EL FORMULARIO DE PERFIL DE LUJO
+  // 👇 NUEVO ESTADO: Rastrea la talla seleccionada por el cliente para cada producto 👇
+  const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
+
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [perfilForm, setPerfilForm] = useState({
     tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
@@ -94,11 +97,8 @@ export default function App() {
   const fetchUserRole = async (userId) => {
     try {
       const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
-      if (data && data.rol) {
-        setUserRole(data.rol);
-      } else {
-        setUserRole('cliente');
-      }
+      if (data && data.rol) setUserRole(data.rol);
+      else setUserRole('cliente');
     } catch (error) {
       console.error("Error al obtener rol:", error);
       setUserRole('cliente');
@@ -123,9 +123,8 @@ export default function App() {
         newsletter: perfilForm.newsletter
       }
     });
-
     if (error) {
-      alert('Hubo un error al actualizar su información. Intente de nuevo.');
+      alert('Hubo un error al actualizar su información.');
       console.error(error);
     } else {
       setUser(data.user); 
@@ -136,11 +135,9 @@ export default function App() {
   const solicitarCambioContrasena = async () => {
     if (!user || !user.email) return;
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: window.location.origin, 
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
       if (error) throw error;
-      alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada para restablecer su contraseña.`);
+      alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email} para restablecer su contraseña.`);
     } catch (error) {
       alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
       console.error(error);
@@ -166,48 +163,59 @@ export default function App() {
 
     if (isMainMenu) {
       let itemsToToggle = [itemName];
-      if (estructuraCatalogo[itemName]) {
-        itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
-      }
-
-      if (isCurrentlyHidden) {
-        newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
-      } else {
-        newHidden = [...new Set([...newHidden, ...itemsToToggle])];
-      }
+      if (estructuraCatalogo[itemName]) itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
+      if (isCurrentlyHidden) newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
+      else newHidden = [...new Set([...newHidden, ...itemsToToggle])];
     } else {
-      if (isCurrentlyHidden) {
-        newHidden = newHidden.filter(i => i !== itemName);
-      } else {
-        newHidden.push(itemName);
-      }
+      if (isCurrentlyHidden) newHidden = newHidden.filter(i => i !== itemName);
+      else newHidden.push(itemName);
     }
-
     setHiddenItems(newHidden); 
-    const { error } = await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
-    if (error) console.error("Error guardando configuración:", error);
+    await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
   };
 
+  // 👇 MANEJO DE TALLAS DEL CLIENTE 👇
+  const handleSelectTalla = (e, productoId, talla) => {
+    e.stopPropagation();
+    setTallasSeleccionadas(prev => ({ ...prev, [productoId]: talla }));
+  };
+
+  // 👇 AGREGAR AL CARRITO CON VALIDACIÓN DE TALLA 👇
   const agregarAlCarrito = (producto) => {
-    if (carrito.some(item => item.id === producto.id)) {
-      alert(`"${producto.titulo}" ya está en tu bolso.`);
-      return;
+    let productoParaCarrito = { ...producto };
+
+    if (producto.subcategoria === 'Anillos') {
+      const talla = tallasSeleccionadas[producto.id];
+      if (!talla) {
+        alert(`Por favor, selecciona una talla para "${producto.titulo}" antes de añadirlo al bolso.`);
+        return;
+      }
+      productoParaCarrito.tallaSeleccionada = talla;
+      
+      // Evita duplicar el mismo anillo EN LA MISMA TALLA
+      if (carrito.some(item => item.id === producto.id && item.tallaSeleccionada === talla)) {
+        alert(`"${producto.titulo}" en talla ${talla} ya está en tu bolso.`);
+        return;
+      }
+    } else {
+      // Para collares, pulseras, etc.
+      if (carrito.some(item => item.id === producto.id)) {
+        alert(`"${producto.titulo}" ya está en tu bolso.`);
+        return;
+      }
     }
-    setCarrito([...carrito, producto]);
+
+    setCarrito([...carrito, productoParaCarrito]);
     alert(`"${producto.titulo}" se añadió a tu bolso.`);
+    setProductoSeleccionado(null); // Cierra el modal si estaba abierto
   };
 
   const toggleFavorito = (id) => {
-    if (favoritos.includes(id)) {
-      setFavoritos(favoritos.filter(favId => favId !== id));
-    } else {
-      setFavoritos([...favoritos, id]);
-    }
+    if (favoritos.includes(id)) setFavoritos(favoritos.filter(favId => favId !== id));
+    else setFavoritos([...favoritos, id]);
   };
 
-  const finalizarPedido = () => {
-    alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
-  };
+  const finalizarPedido = () => alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
 
   const prepararEdicion = (producto) => {
     setNuevaPieza({
@@ -225,7 +233,7 @@ export default function App() {
     setNuevaPieza({ titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: [], imagen: null, imagen_url: '' });
   };
 
-  const toggleTalla = (talla) => {
+  const toggleTallaAdmin = (talla) => {
     setNuevaPieza(prev => {
       const nuevasTallas = prev.tallas.includes(talla) ? prev.tallas.filter(t => t !== talla) : [...prev.tallas, talla];
       return { ...prev, tallas: nuevasTallas };
@@ -234,9 +242,7 @@ export default function App() {
 
   const toggleVendido = async (id, estadoActual) => {
     const { data, error } = await supabase.from('productos').update({ vendido: !estadoActual }).eq('id', id).select();
-    if (!error && data && data.length > 0) {
-      setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
-    }
+    if (!error && data && data.length > 0) setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
   };
 
   const handlePublicarLocal = async (e) => {
@@ -307,19 +313,14 @@ export default function App() {
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
-  const isAllSelected = (menuPrincipal) => {
-    return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
-  };
+  const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
   const toggleAll = (menuPrincipal) => {
     const subs = estructuraCatalogo[menuPrincipal];
-    if (isAllSelected(menuPrincipal)) {
-      setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
-    } else {
+    if (isAllSelected(menuPrincipal)) setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
+    else {
       const newSelections = [...categoriasDescarga];
-      subs.forEach(sub => {
-        if (!newSelections.includes(sub)) newSelections.push(sub);
-      });
+      subs.forEach(sub => { if (!newSelections.includes(sub)) newSelections.push(sub); });
       setCategoriasDescarga(newSelections);
     }
   };
@@ -327,9 +328,6 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.precio, 0);
   const totalCarrito = subtotalCarrito; 
 
-  const puenteInvisibleMenuUsuario = "absolute top-full right-0 pt-4 hidden group-hover:block z-[100]";
-  const puenteInvisibleMenuPrincipal = "absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]";
-  
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
@@ -339,18 +337,8 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;  
-          overflow: hidden;
-        }
-        @media print {
-          @page { margin: 0; }
-          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
-          .screen-only { display: none !important; }
-          .print-only { display: block !important; }
-        }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
       <div className="screen-only flex flex-col flex-grow w-full">
@@ -365,13 +353,13 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               <button onClick={() => setActiveView('bag')} className="text-white hover:text-gray-400 transition-colors relative cursor-pointer bg-transparent border-none outline-none">
-                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                 <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
               </button>
 
               <div className="group relative">
                 <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22" className="md:w-6 md:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
@@ -522,6 +510,7 @@ export default function App() {
                  </div>
                )}
 
+               {/* 👇 FORMULARIO DE ADMINISTRACIÓN: 100% LIMPIO Y SIN BORDES 👇 */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/10 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border-none">
                    
@@ -557,7 +546,7 @@ export default function App() {
                              <button
                                key={talla}
                                type="button"
-                               onClick={() => toggleTalla(talla)}
+                               onClick={() => toggleTallaAdmin(talla)}
                                className={`text-[12px] md:text-sm tracking-[0.2em] cursor-pointer transition-all duration-300 border-none outline-none bg-transparent ${nuevaPieza.tallas.includes(talla) ? 'text-white font-bold drop-shadow-lg scale-125' : 'text-gray-500 hover:text-white'}`}
                              >
                                {talla}
@@ -603,23 +592,48 @@ export default function App() {
                        )}
                      </div>
                      
-                     <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
+                     {/* 👇 DISEÑO CENTRADO PARA ANILLOS 👇 */}
+                     <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${producto.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
                        <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                        
-                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-2 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                       <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                        
-                       {producto.tallas && (
-                         <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
-                           Tallas: {producto.tallas.split(',').join(' - ')}
-                         </p>
+                       {/* 👇 SELECTOR DE TALLAS PARA CLIENTES EN LA TARJETA 👇 */}
+                       {producto.subcategoria === 'Anillos' && (
+                         <div className="flex flex-col items-center w-full mb-6 mt-2">
+                           <div className="flex flex-wrap justify-center gap-2">
+                             {tallasDisponibles.map(talla => {
+                               const isAvailable = producto.tallas && producto.tallas.split(',').includes(talla);
+                               const isSelected = tallasSeleccionadas[producto.id] === talla;
+                               
+                               if (isAvailable) {
+                                 return (
+                                   <button 
+                                     key={talla}
+                                     onClick={(e) => handleSelectTalla(e, producto.id, talla)}
+                                     className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-[8px] md:text-[10px] tracking-[0.1em] transition-all duration-300 border outline-none cursor-pointer ${isSelected ? 'bg-white text-black border-white font-bold' : 'bg-transparent text-white border-white/30 hover:border-white'}`}
+                                   >
+                                     {talla}
+                                   </button>
+                                 );
+                               } else {
+                                 return (
+                                   <div key={talla} title="Agotada" className="w-6 h-6 md:w-8 md:h-8 flex flex-col items-center justify-center border border-red-500/20 bg-red-500/5 text-red-500/70 cursor-not-allowed">
+                                     <span className="text-[7px] md:text-[9px] line-through leading-none">{talla}</span>
+                                     <span className="text-[4px] md:text-[5px] mt-[1px] leading-none">0 disp.</span>
+                                   </div>
+                                 );
+                               }
+                             })}
+                           </div>
+                         </div>
                        )}
-                       {!producto.tallas && <div className="mb-4"></div>}
-                       
+
                        <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                        {userRole === 'cliente' && !producto.vendido && (
-                         <div className="flex gap-2 mt-auto">
+                         <div className="flex gap-2 mt-auto w-full">
                             <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm">Comprar</button>
                             <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                          </div>
@@ -639,6 +653,7 @@ export default function App() {
             </section>
           )}
 
+          {/* 👇 VENTANA EMERGENTE (MODAL) CORREGIDA PARA TALLAS 👇 */}
           {productoSeleccionado && (
             <div 
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in"
@@ -663,7 +678,8 @@ export default function App() {
                   />
                 </div>
                 
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
+                {/* Info centrada si es anillo */}
+                <div className={`w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0 ${productoSeleccionado.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
                   <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">
                     {productoSeleccionado.titulo}
                   </h2>
@@ -675,12 +691,37 @@ export default function App() {
                     {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                   </p>
 
-                  {productoSeleccionado.tallas && (
-                    <p className="text-[10px] tracking-[0.2em] text-white mb-8 uppercase drop-shadow-md font-bold">
-                      Tallas: {productoSeleccionado.tallas.split(',').join(' - ')}
-                    </p>
+                  {/* SELECTOR DE TALLAS EN EL MODAL */}
+                  {productoSeleccionado.subcategoria === 'Anillos' && (
+                     <div className="flex flex-col items-center w-full mb-8 mt-4">
+                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Seleccione su talla</p>
+                       <div className="flex flex-wrap justify-center gap-3">
+                         {tallasDisponibles.map(talla => {
+                           const isAvailable = productoSeleccionado.tallas && productoSeleccionado.tallas.split(',').includes(talla);
+                           const isSelected = tallasSeleccionadas[productoSeleccionado.id] === talla;
+                           
+                           if (isAvailable) {
+                             return (
+                               <button 
+                                 key={talla}
+                                 onClick={(e) => handleSelectTalla(e, productoSeleccionado.id, talla)}
+                                 className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none cursor-pointer ${isSelected ? 'bg-white text-black border-white font-bold scale-110' : 'bg-transparent text-white border-white/30 hover:border-white'}`}
+                               >
+                                 {talla}
+                               </button>
+                             );
+                           } else {
+                             return (
+                               <div key={talla} title="Agotada" className="w-8 h-8 md:w-10 md:h-10 flex flex-col items-center justify-center border border-red-500/20 bg-red-500/5 text-red-500/70 cursor-not-allowed">
+                                 <span className="text-[9px] md:text-[10px] line-through leading-none">{talla}</span>
+                                 <span className="text-[5px] md:text-[6px] mt-[2px] leading-none">0 disp.</span>
+                               </div>
+                             );
+                           }
+                         })}
+                       </div>
+                     </div>
                   )}
-                  {!productoSeleccionado.tallas && <div className="mb-8"></div>}
                   
                   <div className="w-12 h-px bg-white/30 mb-8"></div>
                   
@@ -689,9 +730,9 @@ export default function App() {
                   </p>
                   
                   {!productoSeleccionado.vendido ? (
-                    <div className="flex gap-4 mt-auto">
+                    <div className="flex gap-4 mt-auto w-full">
                       <button 
-                        onClick={() => { agregarAlCarrito(productoSeleccionado); setProductoSeleccionado(null); }} 
+                        onClick={() => agregarAlCarrito(productoSeleccionado)} 
                         className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none"
                       >
                         Añadir al Bolso
@@ -704,7 +745,7 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-auto py-4 text-center border border-white/20 bg-black/20">
+                    <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full">
                        <span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span>
                     </div>
                   )}
@@ -724,12 +765,15 @@ export default function App() {
                   <h3 className="text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                   
                   {carrito.map(item => (
-                    <div key={item.id} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
-                      <button onClick={() => setCarrito(carrito.filter(p => p.id !== item.id))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                    <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
+                      <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                         <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
-                        <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">{item.categoria}</p>
+                        {/* MUESTRA LA TALLA EN EL CARRITO */}
+                        <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1">
+                          {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
+                        </p>
                       </div>
                       <span className="text-xs md:text-sm tracking-[0.1em] text-white whitespace-nowrap">${item.precio} USD</span>
                     </div>
@@ -770,11 +814,18 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow">
+                      <div className={`bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow ${producto.subcategoria === 'Anillos' ? 'items-center text-center' : ''}`}>
                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        
+                        {producto.subcategoria === 'Anillos' && (
+                          <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-white mb-4 uppercase drop-shadow-md">
+                            Tallas: {producto.tallas ? producto.tallas.split(',').join(' - ') : 'BAJO PEDIDO'}
+                          </p>
+                        )}
+
                         <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
-                        <div className="flex gap-2 mt-auto">
+                        <div className="flex gap-2 mt-auto w-full">
                           {!producto.vendido && (
                             <button onClick={(e) => { e.stopPropagation(); agregarAlCarrito(producto); }} className="flex-grow py-2.5 md:py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer border-none outline-none rounded-sm">
                               Comprar
@@ -802,13 +853,13 @@ export default function App() {
             </section>
           )}
 
-          {/* 👇 VISTA DE PERFIL: LIMPIA, SIN COLORES EXTRAÑOS 👇 */}
+          {/* 👇 PERFIL SIN COLORES EXTRAÑOS Y CON BOTONES LIMPIOS 👇 */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-white/5 flex flex-col items-center">
                 
                 <h2 className="text-2xl md:text-3xl tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
-                <div className="w-12 h-px bg-amber-500/50 mb-12"></div>
+                <div className="w-12 h-px bg-white/20 mb-12"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-left">
                   <div>
@@ -834,13 +885,13 @@ export default function App() {
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer"
+                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer"
+                    className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -848,7 +899,7 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center text-amber-500 font-light">Configuración de Menús</label>
+                    <label className="block text-xs md:text-sm tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
                     <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
                     
                     <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
@@ -937,21 +988,20 @@ export default function App() {
       {/* 👇 MODAL FLOTANTE DE ACTUALIZACIÓN DE PERFIL: TOTALMENTE LIMPIO Y SIN LÍNEAS 👇 */}
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-           <div className="bg-black/60 border border-white/5 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8">
+           <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-sm">
               
-              {/* Botón de cerrar */}
               {(user.user_metadata?.first_name) && (
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
 
               <h2 className="text-xl md:text-2xl tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
 
-              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8">
+              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="w-full bg-transparent border-none text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase"
+                    className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none cursor-pointer appearance-none uppercase text-center"
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -967,7 +1017,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" 
                       required
                     />
                     <input 
@@ -975,42 +1025,42 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase" 
+                      className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center" 
                       required
                     />
                   </div>
 
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-6 items-center">
                     <label className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
-                    <div className="grid grid-cols-3 gap-6">
-                      <input type="text" maxLength={2} value={perfilForm.dia} onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} placeholder="DD*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
-                      <input type="text" maxLength={2} value={perfilForm.mes} onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} placeholder="MM*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
-                      <input type="text" maxLength={4} value={perfilForm.anio} onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} placeholder="AAAA*" className="w-full bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" required/>
+                    <div className="flex justify-center gap-8 w-full">
+                      <input type="text" maxLength={2} value={perfilForm.dia} onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} placeholder="DD" className="w-16 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={2} value={perfilForm.mes} onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} placeholder="MM" className="w-16 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center" required/>
+                      <input type="text" maxLength={4} value={perfilForm.anio} onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} placeholder="AAAA" className="w-24 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center" required/>
                     </div>
                   </div>
 
-                  <div className="flex gap-6 mt-2">
-                    <select value={perfilForm.prefijo} onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} className="w-24 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.1em] py-3 outline-none cursor-pointer appearance-none">
+                  <div className="flex justify-center gap-6 mt-4">
+                    <select value={perfilForm.prefijo} onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} className="w-24 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.1em] py-3 outline-none cursor-pointer appearance-none text-center">
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
                       <option value="+1" className="bg-black text-white">🇺🇸 +1</option>
                       <option value="+52" className="bg-black text-white">🇲🇽 +52</option>
                       <option value="+57" className="bg-black text-white">🇨🇴 +57</option>
                     </select>
-                    <input type="tel" value={perfilForm.telefono} onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} placeholder="MÓVIL" className="w-full flex-grow bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500" />
+                    <input type="tel" value={perfilForm.telefono} onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} placeholder="MÓVIL" className="w-48 bg-transparent border-none text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center" />
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer mt-6 group">
+                  <label className="flex items-start gap-4 cursor-pointer mt-8 group justify-center px-4">
                     <div className={`w-5 h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
                       {perfilForm.newsletter && <div className="w-3 h-3 bg-black"></div>}
                     </div>
                     <input type="checkbox" checked={perfilForm.newsletter} onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} className="hidden" />
-                    <span className="text-gray-400 text-[9px] md:text-[10px] tracking-[0.1em] leading-relaxed">
+                    <span className="text-gray-400 text-[8px] md:text-[9px] tracking-[0.1em] leading-relaxed max-w-md text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[8px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 border-t border-white/5 pt-6">
+                  <p className="text-gray-500 text-[7px] md:text-[8px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Crear mi perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>, así como que desea crear su perfil de ANTARES.
                   </p>
 
