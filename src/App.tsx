@@ -12,7 +12,7 @@ const FONDO_HEADER_URL = "/fondo-header.png";
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState('cliente'); 
   
   const [activeView, setActiveView] = useState('home');
@@ -20,25 +20,24 @@ export default function App() {
   const [activeSubCategory, setActiveSubCategory] = useState('Todo');
   
   const [showInlineForm, setShowInlineForm] = useState(false);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [editandoId, setEditandoId] = useState(null);
   
   const [nuevaPieza, setNuevaPieza] = useState({ 
     titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
   });
   
-  const [productos, setProductos] = useState<any[]>([]);
-  const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
-  const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [productos, setProductos] = useState([]);
+  const [categoriasDescarga, setCategoriasDescarga] = useState([]);
+  const [menuPdfExpandido, setMenuPdfExpandido] = useState(null);
+  const [hiddenItems, setHiddenItems] = useState([]);
   
-  const [carrito, setCarrito] = useState<any[]>([]);
-  const [favoritos, setFavoritos] = useState<number[]>([]);
-  const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
+  const [carrito, setCarrito] = useState([]);
+  const [favoritos, setFavoritos] = useState([]);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   
-  // AHORA LAS TALLAS SELECCIONADAS SON UN ARRAY PARA PERMITIR MÚLTIPLES
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
 
-  // ESTADOS PARA LA ANIMACIÓN DE ESTRELLA Y LATIDO DEL CARRITO
+  // Animación Estrella Fugaz
   const [stars, setStars] = useState([]);
   const [cartPulse, setCartPulse] = useState(false);
 
@@ -207,52 +206,41 @@ export default function App() {
     await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
   };
 
-  // 👇 LÓGICA DE SELECCIÓN MÚLTIPLE DE TALLAS 👇
   const handleSelectTalla = (e, productoId, talla) => {
     e.preventDefault();
     e.stopPropagation();
     setTallasSeleccionadas(prev => {
       const currentSelected = prev[productoId] || [];
       if (currentSelected.includes(talla)) {
-        return { ...prev, [productoId]: currentSelected.filter(t => t !== talla) }; // Desmarcar
+        return { ...prev, [productoId]: currentSelected.filter(t => t !== talla) };
       } else {
-        return { ...prev, [productoId]: [...currentSelected, talla] }; // Sumar nueva talla
+        return { ...prev, [productoId]: [...currentSelected, talla] };
       }
     });
   };
 
-  // 👇 LÓGICA DE ANIMACIÓN ESTRELLA FUGAZ 👇
   const triggerStarAnimation = (e) => {
-    if (!e) return;
+    if (!e || !e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const id = Date.now();
     const startX = rect.left + rect.width / 2;
     const startY = rect.top + rect.height / 2;
 
     setStars(prev => [...prev, { id, x: startX, y: startY, active: false }]);
-
-    // Inicia el viaje a los 50ms
-    setTimeout(() => {
-      setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s));
-    }, 50);
-
-    // Borra la estrella y palpita el carrito al llegar
+    setTimeout(() => { setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s)); }, 50);
     setTimeout(() => {
       setStars(prev => prev.filter(s => s.id !== id));
       setCartPulse(true);
-      setTimeout(() => setCartPulse(false), 400); // Duración del latido
+      setTimeout(() => setCartPulse(false), 400); 
     }, 700);
   };
 
-  // 👇 AGREGAR AL CARRITO: SOPORTA MÚLTIPLES TALLAS Y LIMITA STOCK, SIN ALERTAS 👇
   const agregarAlCarrito = (producto, e) => {
     const isRing = producto.subcategoria === 'Anillos';
     const selectedSizes = tallasSeleccionadas[producto.id] || [];
 
-    // Si es anillo y no eligió ninguna talla, no hace nada (lo bloqueamos visualmente en el botón)
     if (isRing && selectedSizes.length === 0) return;
 
-    // Dispara la estrella mágica!
     triggerStarAnimation(e);
 
     setCarrito(prev => {
@@ -260,18 +248,13 @@ export default function App() {
       
       if (isRing) {
         const tallasObj = parseTallasseguro(producto.tallas);
-        // Recorre todas las tallas que haya seleccionado
         selectedSizes.forEach(talla => {
           const maxForTalla = parseInt(tallasObj[talla] || 0);
           const index = newCart.findIndex(item => item.id === producto.id && item.tallaSeleccionada === talla);
           
           if (index > -1) {
-            // Ya está en el carrito, sumamos 1 solo si el stock lo permite
-            if (newCart[index].cantidad < maxForTalla) {
-              newCart[index].cantidad += 1;
-            }
+            if (newCart[index].cantidad < maxForTalla) newCart[index].cantidad += 1;
           } else {
-            // Talla nueva en el carrito
             newCart.push({ ...producto, tallaSeleccionada: talla, cantidad: 1, stockMaximo: maxForTalla });
           }
         });
@@ -280,9 +263,7 @@ export default function App() {
         const index = newCart.findIndex(item => item.id === producto.id);
         
         if (index > -1) {
-          if (newCart[index].cantidad < stockMax) {
-            newCart[index].cantidad += 1;
-          }
+          if (newCart[index].cantidad < stockMax) newCart[index].cantidad += 1;
         } else {
           newCart.push({ ...producto, cantidad: 1, stockMaximo: stockMax });
         }
@@ -290,10 +271,7 @@ export default function App() {
       return newCart;
     });
 
-    // Limpiamos las selecciones para que pueda seguir comprando limpio
-    if (isRing) {
-      setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
-    }
+    if (isRing) setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
     setProductoSeleccionado(null); 
   };
 
@@ -401,7 +379,6 @@ export default function App() {
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
-  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
 
   const isAllSelected = (menuPrincipal) => {
     return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
@@ -423,6 +400,11 @@ export default function App() {
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
+  // Variables seguras para el Modal
+  const modalTallasObj = productoSeleccionado ? parseTallasseguro(productoSeleccionado.tallas) : {};
+  const modalSelectedSizes = productoSeleccionado ? (tallasSeleccionadas[productoSeleccionado.id] || []) : [];
+  const modalCanBuy = productoSeleccionado && (productoSeleccionado.subcategoria !== 'Anillos' || modalSelectedSizes.length > 0);
+
   return (
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
       
@@ -433,11 +415,10 @@ export default function App() {
         @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
-      {/* RENDER DE LAS ESTRELLAS ANIMADAS */}
       {stars.map(star => (
         <div
           key={star.id}
-          className="fixed z-[9999] w-3 h-3 bg-white rounded-full pointer-events-none transition-all ease-in-out"
+          className="fixed z-[9999] w-2 h-2 bg-white rounded-full pointer-events-none transition-all ease-in-out"
           style={{
             transitionDuration: '700ms',
             left: star.active ? 'calc(100vw - 60px)' : star.x,
@@ -630,16 +611,16 @@ export default function App() {
                      </div>
                    )}
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center" required/>
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center" required/>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-6">
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" required/>
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" required/>
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center" />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center border-b border-white/10" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none border-b border-white/10">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                            <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
@@ -649,8 +630,8 @@ export default function App() {
                    </div>
 
                    {nuevaPieza.subcategoria === 'Anillos' && (
-                     <div className="w-full flex flex-col items-center mt-2 mb-10 pb-8">
-                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-white mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                     <div className="w-full flex flex-col items-center mt-2 mb-10 pb-8 border-b border-white/10">
+                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                        <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2">
@@ -662,7 +643,7 @@ export default function App() {
                      </div>
                    )}
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center border-b border-white/10"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[9px] md:file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
@@ -682,6 +663,7 @@ export default function App() {
 
                    return (
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                       
                        <div className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          {producto.vendido && (
@@ -705,7 +687,7 @@ export default function App() {
                            <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                          )}
 
-                         {/* SELECCIÓN MÚLTIPLE PARA CLIENTES */}
+                         {/* SELECCIÓN MÚLTIPLE PARA CLIENTES SIN TACHADOS EN ROJO */}
                          {isRing && (
                            <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
                              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
@@ -785,19 +767,20 @@ export default function App() {
                     </p>
                   )}
 
+                  {/* 👇 TALLAS EN EL MODAL 👇 */}
                   {productoSeleccionado.subcategoria === 'Anillos' && (() => {
-                     const tallasObj = parseTallasseguro(productoSeleccionado.tallas);
-                     const selectedSizes = tallasSeleccionadas[productoSeleccionado.id] || [];
-                     const canBuy = selectedSizes.length > 0;
+                     const modalTallasObj = parseTallasseguro(productoSeleccionado.tallas);
+                     const modalSelectedSizes = tallasSeleccionadas[productoSeleccionado.id] || [];
+                     const modalCanBuy = modalSelectedSizes.length > 0;
 
                      return (
                      <div className="flex flex-col items-center w-full mb-10 mt-2">
                        <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
                        <div className="flex flex-wrap justify-center gap-4">
                          {tallasDisponibles.map(talla => {
-                           const stock = parseInt(tallasObj[talla] || 0);
+                           const stock = parseInt(modalTallasObj[talla] || 0);
                            const isAvailable = stock > 0;
-                           const isSelected = selectedSizes.includes(talla);
+                           const isSelected = modalSelectedSizes.includes(talla);
                            
                            return (
                              <div key={talla} className="flex flex-col items-center gap-2">
@@ -822,10 +805,10 @@ export default function App() {
                        {!productoSeleccionado.vendido && (
                          <div className="flex gap-4 mt-12 w-full">
                            <button 
-                             onClick={(e) => { if(canBuy) agregarAlCarrito(productoSeleccionado, e); }} 
-                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${canBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                             onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
+                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                            >
-                             {canBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
+                             {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
                            <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                          </div>
@@ -873,6 +856,7 @@ export default function App() {
                           {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                         </p>
                         
+                        {/* CANTIDAD EN EL BOLSO */}
                         <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                           <button 
                             onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} 
