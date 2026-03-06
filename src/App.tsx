@@ -22,8 +22,9 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   
+  // SE AÑADIÓ 'costo' AL ESTADO
   const [nuevaPieza, setNuevaPieza] = useState({ 
-    titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
+    titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
   });
   
   const [productos, setProductos] = useState([]);
@@ -53,9 +54,7 @@ export default function App() {
     try {
       const parsed = JSON.parse(tallasData);
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      // Ignorar errores de parseo y continuar
-    }
+    } catch (e) {}
     if (typeof tallasData === 'string') {
       const obj = {};
       tallasData.split(',').forEach(t => { 
@@ -233,7 +232,8 @@ export default function App() {
   };
 
   const triggerStarAnimation = (e) => {
-    if (!e) return;
+    if (!e || !e.currentTarget) return;
+    const rect = e.currentTarget.getBoundingClientRect();
     const id = Date.now();
     const startX = e.clientX;
     const startY = e.clientY;
@@ -328,6 +328,7 @@ export default function App() {
     setNuevaPieza({
       titulo: producto.titulo, 
       descripcion: producto.descripcion || '', 
+      costo: producto.costo || '', // NUEVO
       precio: producto.precio,
       disponibilidad: producto.disponibilidad || '', 
       subcategoria: producto.subcategoria || '',
@@ -343,7 +344,7 @@ export default function App() {
     setShowInlineForm(false);
     setEditandoId(null);
     setNuevaPieza({ 
-      titulo: '', descripcion: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
+      titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
     });
   };
 
@@ -372,6 +373,7 @@ export default function App() {
     const payload = { 
       titulo: nuevaPieza.titulo, 
       descripcion: nuevaPieza.descripcion, 
+      costo: Number(nuevaPieza.costo) || 0, // NUEVO EN LA BD
       precio: Number(nuevaPieza.precio), 
       categoria: activeCategory, 
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
@@ -445,7 +447,6 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + (item.precio * (item.cantidad || 1)), 0);
-  const totalCarrito = subtotalCarrito; 
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
@@ -456,18 +457,8 @@ export default function App() {
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;  
-          overflow: hidden;
-        }
-        @media print {
-          @page { margin: 0; }
-          body { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
-          .screen-only { display: none !important; }
-          .print-only { display: block !important; }
-        }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
       {stars.map(star => (
@@ -513,6 +504,12 @@ export default function App() {
                     <button onClick={() => setActiveView('perfil')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                     <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
                     <button onClick={() => setActiveView('deseos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                    
+                    {/* 👇 NUEVO BOTÓN DE INVENTARIO SOLO PARA ADMIN 👇 */}
+                    {userRole === 'admin' && (
+                      <button onClick={() => setActiveView('inventario')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-amber-500 hover:text-amber-400 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mb-5">Inventario / Finanzas</button>
+                    )}
+
                     <hr className="border-white/10 my-4" />
                     <button onClick={handleLogout} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
                   </div>
@@ -620,6 +617,63 @@ export default function App() {
             </div>
           )}
 
+          {/* 👇 NUEVA VISTA DE INVENTARIO Y FINANZAS (SÓLO ADMIN) 👇 */}
+          {userRole === 'admin' && activeView === 'inventario' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">Inventario y Finanzas</h2>
+               
+               <div className="bg-black/30 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
+                 <div className="min-w-[800px]">
+                   {/* Headers */}
+                   <div className="grid grid-cols-6 gap-4 text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold">
+                     <div className="col-span-2">Pieza</div>
+                     <div className="text-center">Costo Unit.</div>
+                     <div className="text-center">Precio Venta</div>
+                     <div className="text-center">Ganancia Neta</div>
+                     <div className="text-center">Margen Real</div>
+                   </div>
+
+                   {/* Filas */}
+                   {productos.map(p => {
+                     const costo = p.costo || 0;
+                     const precio = p.precio || 0;
+                     const ganancia = precio - costo;
+                     const margen = costo > 0 ? Math.round((ganancia / costo) * 100) : 100;
+                     
+                     let stockDisplay = '';
+                     if (p.subcategoria === 'Anillos') {
+                       const tallasObj = parseTallasseguro(p.tallas);
+                       const totalStock = Object.values(tallasObj).reduce((acc, curr) => acc + parseInt(curr || 0), 0);
+                       stockDisplay = `${totalStock} disp. (Varias tallas)`;
+                     } else {
+                       stockDisplay = p.disponibilidad || 'Bajo Pedido';
+                     }
+
+                     return (
+                       <div key={p.id} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center hover:bg-white/5 transition-colors">
+                         <div className="col-span-2 flex items-center gap-4">
+                           <img src={p.imagen_url} alt={p.titulo} className="w-10 h-10 object-cover bg-black" />
+                           <div className="flex flex-col">
+                             <span className="uppercase">{p.titulo}</span>
+                             <span className="text-[8px] text-gray-500 uppercase mt-1">{p.categoria} | {stockDisplay}</span>
+                           </div>
+                         </div>
+                         <div className="text-center text-gray-400">${costo.toFixed(2)}</div>
+                         <div className="text-center font-bold">${precio.toFixed(2)}</div>
+                         <div className="text-center text-green-400">+${ganancia.toFixed(2)}</div>
+                         <div className="text-center text-amber-500">{margen}%</div>
+                       </div>
+                     );
+                   })}
+
+                   {productos.length === 0 && (
+                     <p className="text-center text-gray-500 text-[10px] uppercase py-8 tracking-[0.2em]">No hay piezas registradas.</p>
+                   )}
+                 </div>
+               </div>
+            </section>
+          )}
+
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
@@ -645,6 +699,7 @@ export default function App() {
                      setNuevaPieza({
                        titulo: '', 
                        descripcion: '', 
+                       costo: '', // INICIALIZA EL COSTO
                        precio: '', 
                        disponibilidad: '', 
                        subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
@@ -662,6 +717,7 @@ export default function App() {
                  </div>
                )}
 
+               {/* FORMULARIO DE ADMIN: CON CAMPO DE COSTO Y CALCULADORA */}
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-black/30 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border border-white/5">
                    
@@ -687,7 +743,7 @@ export default function App() {
                      </div>
                    )}
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-10 text-center items-center justify-items-center">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-4 text-center items-center justify-items-center">
                      <input 
                        type="text" 
                        value={nuevaPieza.titulo} 
@@ -696,11 +752,24 @@ export default function App() {
                        className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
                        required
                      />
+                     
+                     {/* 👇 NUEVO CAMPO DE COSTO DE PRODUCCIÓN 👇 */}
+                     <div className="w-full relative">
+                       <input 
+                         type="number" 
+                         value={nuevaPieza.costo} 
+                         onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} 
+                         placeholder="COSTO DE FABRICACIÓN (USD)" 
+                         className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
+                       />
+                     </div>
+
+                     {/* CAMPO DE PRECIO FINAL DE VENTA */}
                      <input 
                        type="number" 
                        value={nuevaPieza.precio} 
                        onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} 
-                       placeholder="PRECIO (USD)" 
+                       placeholder="PRECIO VENTA FINAL (USD)" 
                        className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
                        required
                      />
@@ -728,6 +797,21 @@ export default function App() {
                        </select>
                      )}
                    </div>
+
+                   {/* 👇 CALCULADORA DE PRECIOS AUTOMÁTICA 👇 */}
+                   {nuevaPieza.costo > 0 && (
+                     <div className="w-full flex justify-center mb-10">
+                       <div className="flex gap-4 md:gap-8 text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 uppercase border border-white/5 px-6 py-3 bg-white/5">
+                          <span>100%: ${(nuevaPieza.costo * 2).toFixed(2)}</span>
+                          <span>|</span>
+                          <span>75%: ${(nuevaPieza.costo * 1.75).toFixed(2)}</span>
+                          <span>|</span>
+                          <span>50%: ${(nuevaPieza.costo * 1.5).toFixed(2)}</span>
+                          <span>|</span>
+                          <span>25%: ${(nuevaPieza.costo * 1.25).toFixed(2)}</span>
+                       </div>
+                     </div>
+                   )}
 
                    {nuevaPieza.subcategoria === 'Anillos' && (
                      <div className="w-full flex flex-col items-center mt-2 mb-10 pb-8 border-none">
@@ -787,10 +871,7 @@ export default function App() {
                    return (
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                        
-                       <div 
-                         className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole !== 'admin' ? 'cursor-pointer' : ''}`}
-                         onClick={() => { if(userRole !== 'admin') setProductoSeleccionado(producto); }}
-                       >
+                       <div className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          
                          {producto.vendido && (
@@ -847,7 +928,7 @@ export default function App() {
                          
                          <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
-                         {userRole !== 'admin' && !producto.vendido && (
+                         {userRole === 'cliente' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
