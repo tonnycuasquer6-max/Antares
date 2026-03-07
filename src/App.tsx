@@ -987,8 +987,8 @@ export default function App() {
                          )}
                          {userRole === 'admin' && (
                            <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-                             <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                             <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                             <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                             <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                            </div>
                          )}
                        </div>
@@ -1318,7 +1318,7 @@ export default function App() {
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
             </section>
           )}
@@ -1601,17 +1601,26 @@ export default function App() {
                         )}
                       </div>
                       <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
-                      <p className="text-[10px] tracking-[0.1em] mb-4" style={{ color: '#aaaaaa' }}>${p.precio} USD</p>
+                      {/* 👇 CAMBIO: Precio más grande 👇 */}
+                      <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', tracking: '[0.1em]', marginBottom: '16px' }}>${p.precio} USD</p>
                       
-                      {/* 👇 SE AÑADIÓ LA DISPONIBILIDAD Y LAS TALLAS EN EL PDF 👇 */}
+                      {/* 👇 CAMBIO: Tallas y Disponibilidad con formato y tamaños solicitados 👇 */}
                       {p.subcategoria === 'Anillos' ? (
-                        <div className="flex gap-2 justify-center mb-4 flex-wrap">
+                        <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
                            {Object.entries(parseTallasseguro(p.tallas)).filter(([_, q]) => parseInt(q) > 0).map(([t, q]) => (
-                             <span key={t} style={{ color: '#888888', fontSize: '8px', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 4px' }}>T:{t}</span>
+                             <div key={t} className="flex flex-col items-center border p-2 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.3)', minWidth: '40px' }}>
+                               {/* Número de talla (13pt) */}
+                               <span style={{ color: '#ffffff', fontSize: '13pt', fontWeight: 'bold' }}>{t}</span>
+                               {/* Número de disponibilidad (12pt) */}
+                               <span style={{ color: '#aaaaaa', fontSize: '12pt' }}>{q}</span>
+                             </div>
                            ))}
                         </div>
                       ) : (
-                        <p style={{ color: '#888888', fontSize: '8px', marginBottom: '16px' }}>DISP: {p.disponibilidad || 'Bajo pedido'}</p>
+                        // No dice "DISP", solo el número/texto a 12pt
+                        <p style={{ color: '#aaaaaa', fontSize: '12pt', marginBottom: '16px', textTransform: 'uppercase' }}>
+                          {p.disponibilidad ? p.disponibilidad : 'Bajo pedido'}
+                        </p>
                       )}
 
                       <p className="text-[10px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
