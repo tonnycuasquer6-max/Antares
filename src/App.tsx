@@ -107,7 +107,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (userRole === 'admin' && activeView === 'pedidos') {
+    if (userRole === 'admin' && (activeView === 'pedidos' || activeView === 'inventario')) {
       fetchPedidosAdmin();
     }
   }, [userRole, activeView]);
@@ -527,14 +527,23 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden text-[1.1rem]">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; font-size: 1.02em; }
+        @font-face { font-family: 'TimesNumbers'; src: local('Times New Roman'), local('Times'); unicode-range: U+0030-0039; }
+        body { font-family: 'TimesNumbers', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
         select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
+        
+        @media print { 
+          @page { margin: 0; size: auto; }
+          html, body { background-color: #000000 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .screen-only { display: none !important; } 
+          .print-only { display: block !important; background-color: #000000 !important; min-height: 100vh; } 
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
       `}</style>
 
       {stars.map(star => (
@@ -547,7 +556,7 @@ export default function App() {
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
-            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
+            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] md:text-[14px] tracking-[0.2em] uppercase">
               Volver
             </button>
           )}
@@ -558,7 +567,7 @@ export default function App() {
               {userRole !== 'admin' && (
                 <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                  <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
+                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] md:text-[11px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
 
@@ -568,22 +577,22 @@ export default function App() {
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                    <button onClick={() => setActiveView('perfil')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Gestionar Pedidos</button>
-                        <button onClick={() => setActiveView('inventario')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold">Inventario / Finanzas</button>
+                        <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Gestionar Pedidos</button>
+                        <button onClick={() => setActiveView('inventario')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold">Inventario / Finanzas</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
-                        <button onClick={() => setActiveView('deseos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                        <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
+                        <button onClick={() => setActiveView('deseos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
                       </>
                     )}
 
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={handleLogout} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -594,7 +603,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -612,7 +621,7 @@ export default function App() {
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[12px] transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
                                 {sub}
                               </span>
                             );
@@ -632,7 +641,7 @@ export default function App() {
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
+                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12px]">$ {p}.00 USD</span>
                         ))}
                       </div>
                     </div>
@@ -657,32 +666,32 @@ export default function App() {
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
                <section className="w-full text-center py-16 md:py-32 px-4">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
-                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
+                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] max-w-2xl mx-auto leading-loose px-4">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
 
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
                    "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
 
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
                    </div>
                  </div>
                </section>
@@ -751,34 +760,51 @@ export default function App() {
                 <div className="min-w-[800px]">
                   <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
                     <div className="col-span-2 text-left">Pieza Vendida</div>
-                    <div>Cant. Vendida</div>
-                    <div>Inv. Recuperada</div>
-                    <div>Venta Total</div>
-                    <div>Ganancia Neta Real</div>
+                    <div>Talla</div>
+                    <div>Costo</div>
+                    <div>Precio Venta</div>
+                    <div>Ganancia Neta</div>
                   </div>
-                  {productos.filter(p => p.vendidos && p.vendidos > 0).map((item) => {
-                    const costo = parseFloat(item.costo) || 0;
-                    const precio = parseFloat(item.precio) || 0;
-                    const cantidadVendida = parseInt(item.vendidos) || 0;
-                    const inversionRecuperada = costo * cantidadVendida;
-                    const ventaTotal = precio * cantidadVendida;
-                    const gananciaNeta = ventaTotal - inversionRecuperada;
+                  {(() => {
+                    const ventasDesglosadas = [];
+                    listaPedidos.filter(ped => ped.estado === 'Completado').forEach(ped => {
+                      const items = JSON.parse(ped.productos || '[]');
+                      items.forEach(item => {
+                        const qty = parseInt(item.cantidad) || 1;
+                        for (let i = 0; i < qty; i++) {
+                          ventasDesglosadas.push({
+                            id: item.id,
+                            titulo: item.titulo,
+                            categoria: item.categoria,
+                            subcategoria: item.subcategoria,
+                            imagen_url: item.imagen_url,
+                            talla_especifica: item.tallaSeleccionada || 'N/A',
+                            costo: parseFloat(item.costo) || 0,
+                            precio: parseFloat(item.precio) || 0
+                          });
+                        }
+                      });
+                    });
 
-                    return (
-                      <div key={`sold-${item.id}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
-                        <div className="col-span-2 flex items-center gap-4 text-left">
-                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
-                          <div className="flex flex-col truncate">
-                            <span className="uppercase truncate text-gray-300">{item.titulo}</span>
+                    return ventasDesglosadas.map((item, idx) => {
+                      const ganancia = item.precio - item.costo;
+                      return (
+                        <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                          <div className="col-span-2 flex items-center gap-4 text-left">
+                            <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
+                            <div className="flex flex-col truncate">
+                              <span className="uppercase truncate text-gray-300">{item.titulo}</span>
+                              <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                            </div>
                           </div>
+                          <div className="text-white font-bold">{item.talla_especifica}</div>
+                          <div className="text-gray-400">${item.costo.toFixed(2)}</div>
+                          <div className="text-white font-bold">${item.precio.toFixed(2)}</div>
+                          <div className="text-green-400 font-bold">+${ganancia.toFixed(2)}</div>
                         </div>
-                        <div className="text-white font-bold">{cantidadVendida}</div>
-                        <div className="text-gray-400">${inversionRecuperada.toFixed(2)}</div>
-                        <div className="text-white font-bold">${ventaTotal.toFixed(2)}</div>
-                        <div className="text-green-400 font-bold">+${gananciaNeta.toFixed(2)}</div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </section>
@@ -862,12 +888,12 @@ export default function App() {
 
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
+               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                  <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
                    {subcategoriasJoyeria.map(sub => (
-                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
+                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[12px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
                        {sub}
                      </li>
                    ))}
@@ -958,7 +984,7 @@ export default function App() {
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          {producto.vendido && (
                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
                            </div>
                          )}
                          {userRole === 'admin' && (
@@ -974,7 +1000,7 @@ export default function App() {
                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                          
                          {!isRing && (
-                           <p className="text-[8px] md:text-[9px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                           <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                          )}
 
                          {isRing && (
@@ -992,11 +1018,11 @@ export default function App() {
                                        onClick={(e) => { 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] md:text-xs tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
                                        <span>{talla}</span>
                                      </button>
-                                     <span className={`text-[6px] md:text-[7px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     <span className={`text-[6px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock} disp.
                                      </span>
                                    </div>
@@ -1006,22 +1032,22 @@ export default function App() {
                            </div>
                          )}
                          
-                         <p className="text-[9px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                         <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                          {userRole === 'cliente' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                                className={`flex-grow py-3 text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                                className={`flex-grow py-3 text-[8px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                               >
                                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                            </div>
                          )}
 
                          {userRole === 'admin' && (
-                           <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} className={`w-full py-2.5 mt-auto text-[8px] md:text-[9px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                           <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
                          )}
                        </div>
                      </div>
@@ -1029,7 +1055,7 @@ export default function App() {
                  })}
                  
                  {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).length === 0 && (
-                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
+                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
                  )}
                </div>
             </section>
@@ -1047,7 +1073,7 @@ export default function App() {
                   <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
-                    <p className="text-[10px] md:text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                    <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
                       {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
                     </p>
                   )}
@@ -1059,7 +1085,7 @@ export default function App() {
 
                      return (
                      <div className="flex flex-col items-center w-full mb-10 mt-2">
-                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
+                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
                        <div className="flex flex-wrap justify-center gap-4">
                          {tallasDisponibles.map(talla => {
                            const stock = parseInt(modalTallasObj[talla] || 0);
@@ -1074,11 +1100,11 @@ export default function App() {
                                    e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[10px] md:text-sm tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-10 h-10 flex items-center justify-center text-[10px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
-                               <span className={`text-[7px] md:text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                               <span className={`text-[7px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                  {stock} disp.
                                </span>
                              </div>
@@ -1090,11 +1116,11 @@ export default function App() {
                          <div className="flex gap-4 mt-12 w-full justify-center">
                            <button 
                              onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
-                             className={`flex-grow text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                            >
                              {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
-                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                          </div>
                        )}
                      </div>
@@ -1104,15 +1130,15 @@ export default function App() {
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <>
                       <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
-                      <p className="text-[10px] md:text-xs text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
+                      <p className="text-[10px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
                       
                       {userRole === 'cliente' && !productoSeleccionado.vendido ? (
                         <div className="flex gap-4 mt-auto w-full justify-center">
-                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[8px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                         </div>
                       ) : userRole === 'cliente' && (
-                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[10px] md:text-[12px] font-bold uppercase">Pieza Agotada</span></div>
+                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[8px] font-bold uppercase">Pieza Agotada</span></div>
                       )}
                     </>
                   )}
@@ -1123,40 +1149,40 @@ export default function App() {
 
           {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
                 <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
                   
                   {checkoutPaso === 1 && (
                     <>
-                      <h3 className="text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                       {carrito.map(item => (
                         <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                           <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                           <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
                           <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                            <h4 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
-                            <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
+                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
                               {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                             </p>
                             <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
-                              <span className="text-[10px] md:text-[12px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
                             </div>
                           </div>
-                          <span className="text-[10px] md:text-[12px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
                         </div>
                       ))}
                       
                       <div className="mt-8 border-t border-white/10 pt-6">
-                        <label className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
                         <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] md:text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] md:text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
                         </div>
 
                         {envioConfig.tipo === 'domicilio' && (
@@ -1167,7 +1193,7 @@ export default function App() {
                                 setEnvioConfig({...envioConfig, sectorNombre: selected.nombre, sectorPrecio: selected.precio});
                               }}
                               value={envioConfig.sectorNombre}
-                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] md:text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
+                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
                             >
                               {sectoresQuito.map(sector => (
                                 <option key={sector.nombre} value={sector.nombre} className="bg-black text-white">{sector.nombre} - ${sector.precio.toFixed(2)} USD</option>
@@ -1178,23 +1204,23 @@ export default function App() {
                               placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
                               value={envioConfig.linkMaps}
                               onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] md:text-[10px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
                               required
                             />
-                            <p className="text-[8px] md:text-[10px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                            <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
                           </div>
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] md:text-[12px] tracking-[0.1em] uppercase">
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
                         <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                        <p className="text-[12px] md:text-[16px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
                       </div>
                       
                       <div className="flex justify-center mt-10 md:mt-16">
-                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
                           {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
                         </button>
                       </div>
@@ -1203,15 +1229,15 @@ export default function App() {
 
                   {checkoutPaso === 2 && (
                     <div className="flex flex-col items-center animate-fade-in">
-                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
-                      <h3 className="text-[10px] md:text-[12px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
-                      <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
+                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
                         Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
                       </p>
 
                       <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
-                        <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-300 font-light space-y-4">
+                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
+                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
                           <div>
                             <strong>Banco Pichincha / DeUna</strong><br/>
                             Ahorros: 2205567890<br/>
@@ -1228,19 +1254,19 @@ export default function App() {
                       </div>
 
                       <div className="w-full max-w-md flex flex-col items-center gap-6">
-                         <label className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
                          <input 
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] md:text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
+                           className="text-[10px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
                          />
                       </div>
 
                       <button 
                         onClick={enviarPedidoWhatsApp} 
                         disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                        className={`mt-12 text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
                       >
                         {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
                       </button>
@@ -1254,10 +1280,10 @@ export default function App() {
 
           {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
               {favoritos.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
@@ -1267,17 +1293,17 @@ export default function App() {
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] md:text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                            <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                           </div>
                         )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                        <h4 className="text-[10px] md:text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
-                        <span className="text-[10px] md:text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                        <span className="text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[8px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[12px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
                           </button>
                         </div>
@@ -1291,10 +1317,10 @@ export default function App() {
 
           {user && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
             </section>
           )}
@@ -1303,25 +1329,25 @@ export default function App() {
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
                 
-                <h2 className="text-[12px] md:text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
                 <div className="w-12 h-px bg-white/20 mb-12"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[12px] md:text-[14px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[12px] md:text-[14px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
-                    <label className="block text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[12px] md:text-[14px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1330,13 +1356,13 @@ export default function App() {
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -1344,23 +1370,23 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
                     
                     <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
                         <div key={menu} className="bg-transparent p-4 border border-none">
                           <div className="flex justify-between items-center">
-                            <span className={`text-[10px] md:text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
+                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
                             </button>
                           </div>
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
                             <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
-                              <span className={`text-[8px] md:text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
                               </button>
                             </div>
@@ -1373,13 +1399,13 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                     <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[10px] md:text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -1394,7 +1420,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1403,7 +1429,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1415,7 +1441,7 @@ export default function App() {
           )}
         </main>
         
-        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[8px] md:text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
+        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
@@ -1430,14 +1456,14 @@ export default function App() {
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
 
-              <h2 className="text-[12px] md:text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+              <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="appearance-none w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
+                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -1453,7 +1479,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                     <input 
@@ -1461,13 +1487,13 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="flex justify-center gap-8 w-full">
                       <input 
                         type="text" 
@@ -1475,7 +1501,7 @@ export default function App() {
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1484,7 +1510,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1493,7 +1519,7 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-24 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                     </div>
@@ -1503,7 +1529,7 @@ export default function App() {
                     <select 
                       value={perfilForm.prefijo} 
                       onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} 
-                      className="appearance-none w-24 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
                     >
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
@@ -1516,7 +1542,7 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                      className="w-48 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                     />
                   </div>
 
@@ -1530,16 +1556,16 @@ export default function App() {
                       onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
                       className="hidden" 
                     />
-                    <span className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                    <span className="text-gray-400 text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-white text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                  <button type="submit" className="mt-8 bg-white text-black text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
                     Actualizar Perfil
                   </button>
               </form>
@@ -1547,9 +1573,10 @@ export default function App() {
         </div>
       )}
 
-      <div className="hidden print-only bg-black text-white w-full min-h-screen font-serif pb-20">
-        <header className="w-full flex flex-col items-center bg-cover bg-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
-          <img src={LOGO_URL} alt="ANTARES" className={`h-24 w-auto object-contain z-10`} />
+      {/* 👇 SOLUCIÓN 2: CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO 👇 */}
+      <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
+          <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
         </header>
 
         {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
@@ -1557,30 +1584,32 @@ export default function App() {
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
 
           return (
-            <div key={cat} className="mb-24 page-break-after px-10">
-              <h3 className="text-xl tracking-[0.3em] uppercase text-gray-500 mb-2 text-center">{parentMenu}</h3>
-              <h2 className="text-4xl tracking-[0.2em] uppercase text-white mb-16 text-center">{cat}</h2>
+            <div key={cat} className="mb-24 page-break-after px-10" style={{ backgroundColor: '#000000' }}>
+              <h3 className="text-xl tracking-[0.3em] uppercase mb-2 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
+              <h2 className="text-4xl tracking-[0.2em] uppercase mb-16 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
               
               {piezasDeCategoria.length > 0 ? (
                 <div className="grid grid-cols-2 gap-12">
                   {piezasDeCategoria.map(p => (
-                    <div key={p.id} className="flex flex-col items-center text-center relative border border-white/5 p-4 rounded-sm">
-                      <div className="relative w-full mb-6 flex items-center justify-center h-80 bg-zinc-900/10">
+                    <div key={p.id} className="flex flex-col items-center text-center relative border p-4 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: '#000000' }}>
+                      <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
+                        
+                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
                         {p.vendido && (
-                          <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
                           </div>
                         )}
                       </div>
-                      <h3 className="text-sm tracking-[0.2em] uppercase text-white mb-2 break-words uppercase">{p.titulo}</h3>
-                      <p className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-400 mb-4">${p.precio} USD</p>
-                      <p className="text-[10px] md:text-[12px] leading-relaxed text-gray-500 px-4 line-clamp-2 uppercase">{p.descripcion}</p>
+                      <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
+                      <p className="text-[12px] tracking-[0.1em] mb-4" style={{ color: '#aaaaaa' }}>${p.precio} USD</p>
+                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600 text-center tracking-[0.2em] text-[10px] md:text-[12px] uppercase">Colección en desarrollo</p>
+                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
               )}
             </div>
           )
