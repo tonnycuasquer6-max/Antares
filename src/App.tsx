@@ -23,7 +23,7 @@ export default function App() {
   const [editandoId, setEditandoId] = useState(null);
   
   const [nuevaPieza, setNuevaPieza] = useState({ 
-    titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
+    titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
   
   const [productos, setProductos] = useState([]);
@@ -52,6 +52,11 @@ export default function App() {
 
   const [listaPedidos, setListaPedidos] = useState([]);
   const [pedidoExpandido, setPedidoExpandido] = useState(null);
+
+  // FILTROS ACERO FINO
+  const [filtroColor, setFiltroColor] = useState('Todo');
+  const [filtroTalla, setFiltroTalla] = useState('Todo');
+  const [ordenPrecio, setOrdenPrecio] = useState('');
 
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
@@ -181,6 +186,9 @@ export default function App() {
     setActiveView('categoria');
     setShowInlineForm(false);
     setEditandoId(null);
+    setFiltroColor('Todo');
+    setFiltroTalla('Todo');
+    setOrdenPrecio('');
   };
 
   const handleCheckbox = (categoria) => setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
@@ -384,7 +392,7 @@ export default function App() {
     setNuevaPieza({
       titulo: producto.titulo, descripcion: producto.descripcion || '', costo: producto.costo || '', 
       precio: producto.precio, disponibilidad: producto.disponibilidad || '', subcategoria: producto.subcategoria || '',
-      tallas: parseTallasseguro(producto.tallas), imagen: null, imagen_url: producto.imagen_url
+      tallas: parseTallasseguro(producto.tallas), color: producto.color || '', imagen: null, imagen_url: producto.imagen_url
     });
     setEditandoId(producto.id);
     setShowInlineForm(true);
@@ -393,7 +401,7 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' });
+    setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' });
   };
 
   const handleToggleVendidoAdmin = async (e, producto) => {
@@ -477,6 +485,7 @@ export default function App() {
       categoria: activeCategory, 
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
       subcategoria: nuevaPieza.subcategoria || 'General', 
+      color: nuevaPieza.color || '',
       tallas: nuevaPieza.subcategoria === 'Anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
       imagen_url: imageUrl 
     };
@@ -526,13 +535,37 @@ export default function App() {
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
+  // LÓGICA DEL BUSCADOR DE ACERO FINO
+  let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
+
+  if (activeCategory === 'Acero Fino') {
+    if (filtroColor !== 'Todo') {
+      productosMostrar = productosMostrar.filter(p => p.color === filtroColor);
+    }
+    if (filtroTalla !== 'Todo') {
+      productosMostrar = productosMostrar.filter(p => {
+        if (p.subcategoria !== 'Anillos') return false;
+        const tallasObj = parseTallasseguro(p.tallas);
+        return parseInt(tallasObj[filtroTalla] || 0) > 0;
+      });
+    }
+    if (ordenPrecio === 'Asc') {
+      productosMostrar = productosMostrar.sort((a,b) => a.precio - b.precio);
+    } else if (ordenPrecio === 'Desc') {
+      productosMostrar = productosMostrar.sort((a,b) => b.precio - a.precio);
+    }
+  }
+
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden text-[1.1rem]">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
-        select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; font-size: 1.02em; }
+        @font-face { font-family: 'TimesNumbers'; src: local('Times New Roman'), local('Times'); unicode-range: U+0030-0039; }
+        body { font-family: 'TimesNumbers', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+        select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none; }
+        select::-ms-expand { display: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         @media print { 
@@ -554,7 +587,7 @@ export default function App() {
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
-            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
+            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] md:text-[14px] tracking-[0.2em] uppercase">
               Volver
             </button>
           )}
@@ -565,7 +598,7 @@ export default function App() {
               {userRole !== 'admin' && (
                 <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                  <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
+                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] md:text-[11px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
 
@@ -575,22 +608,22 @@ export default function App() {
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                    <button onClick={() => setActiveView('perfil')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Gestionar Pedidos</button>
-                        <button onClick={() => setActiveView('inventario')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold">Inventario / Finanzas</button>
+                        <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Gestionar Pedidos</button>
+                        <button onClick={() => setActiveView('inventario')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold">Inventario / Finanzas</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
-                        <button onClick={() => setActiveView('deseos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                        <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
+                        <button onClick={() => setActiveView('deseos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
                       </>
                     )}
 
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={handleLogout} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -601,7 +634,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -619,7 +652,7 @@ export default function App() {
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[12px] transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
                                 {sub}
                               </span>
                             );
@@ -639,7 +672,7 @@ export default function App() {
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
+                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12px]">$ {p}.00 USD</span>
                         ))}
                       </div>
                     </div>
@@ -664,47 +697,46 @@ export default function App() {
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
                <section className="w-full text-center py-16 md:py-32 px-4">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
-                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
+                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] max-w-2xl mx-auto leading-loose px-4">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
 
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                   &quot;Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección.&quot;
                  </p>
                </section>
 
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
-                     <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
                    </div>
                  </div>
                </section>
             </div>
           )}
 
-          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
               
               <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
-                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
+                <h3 className="text-[12px] tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
                 <div className="min-w-[800px]">
-                  <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                  <div className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
                     <div className="col-span-2 text-left">Pieza</div>
                     <div>Talla</div>
                     <div>Stock</div>
@@ -734,12 +766,12 @@ export default function App() {
                     const ganancia = !isNaN(stockNum) ? (precio - costo) * stockNum : 0;
                     
                     return (
-                      <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                      <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
                         <div className="col-span-2 flex items-center gap-4 text-left">
                           <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
                           <div className="flex flex-col truncate">
                             <span className="uppercase truncate">{item.titulo}</span>
-                            <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                            <span className="text-[10px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
                           </div>
                         </div>
                         <div className="text-white font-bold">{item.talla_especifica}</div>
@@ -754,9 +786,9 @@ export default function App() {
               </div>
 
               <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
-                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
+                <h3 className="text-[12px] tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
                 <div className="min-w-[800px]">
-                  <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                  <div className="grid grid-cols-6 gap-4 text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
                     <div className="col-span-2 text-left">Pieza Vendida</div>
                     <div>Talla</div>
                     <div>Costo</div>
@@ -787,12 +819,12 @@ export default function App() {
                     return ventasDesglosadas.map((item, idx) => {
                       const ganancia = item.precio - item.costo;
                       return (
-                        <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                        <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
                           <div className="col-span-2 flex items-center gap-4 text-left">
                             <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
                             <div className="flex flex-col truncate">
                               <span className="uppercase truncate text-gray-300">{item.titulo}</span>
-                              <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                              <span className="text-[10px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
                             </div>
                           </div>
                           <div className="text-white font-bold">{item.talla_especifica}</div>
@@ -808,77 +840,118 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA GESTIÓN DE PEDIDOS Y CLIENTE */}
           {activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
                 {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
               </h2>
               
               {userRole === 'admin' ? (
                 <div className="flex flex-col gap-6">
-                  {listaPedidos.map(pedido => (
-                    <div key={pedido.id} className="bg-black/30 backdrop-blur-xl p-6 shadow-2xl rounded-sm border border-white/5">
-                      <div className="flex justify-between items-start mb-4 border-b border-white/5 pb-4 cursor-pointer" onClick={() => setPedidoExpandido(pedidoExpandido === pedido.id ? null : pedido.id)}>
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-lg rounded-full uppercase">
-                            {pedido.cliente_nombre.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="text-white text-[10px] md:text-xs tracking-[0.1em] uppercase font-bold">{pedido.cliente_nombre}</p>
-                            <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.1em] mt-1">📞 {pedido.cliente_telefono}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-[8px] md:text-[10px] px-3 py-1 font-bold uppercase tracking-[0.1em] ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
-                            {pedido.estado}
-                          </span>
-                        </div>
-                      </div>
+                  {(() => {
+                    const groupedOrdersByMonth = listaPedidos.reduce((acc, pedido) => {
+                      let dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
+                      const month = dateObj.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+                      if (!acc[month]) acc[month] = [];
+                      acc[month].push(pedido);
+                      return acc;
+                    }, {});
+
+                    return Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
+                      const sortedMonthPedidos = [...monthPedidos].sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+                      const userGroups = {};
                       
-                      <div className="mb-4">
-                        {pedidoExpandido === pedido.id && (
-                          <div className="bg-black/20 p-4 border border-white/5 space-y-2 mt-4">
-                            {JSON.parse(pedido.productos).map((prod, i) => (
-                              <div key={i} className="flex justify-between text-[10px] text-gray-300">
-                                <span>{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
-                                <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
-                              </div>
-                            ))}
-                            <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[10px] font-bold text-white">
-                              <span>Envío:</span>
-                              <span>${parseFloat(pedido.total_envio).toFixed(2)}</span>
-                            </div>
-                            {pedido.link_maps && (
-                              <div className="pt-2 text-[10px] text-blue-400">
-                                <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
-                              </div>
-                            )}
+                      sortedMonthPedidos.forEach(ped => {
+                        const clientKey = `${ped.cliente_nombre}|${ped.cliente_telefono}`;
+                        if(!userGroups[clientKey]) userGroups[clientKey] = [];
+                        userGroups[clientKey].push({...ped, orderNumber: (userGroups[clientKey].length + 1).toString().padStart(3, '0')});
+                      });
+
+                      return (
+                        <div key={month} className="mb-12">
+                          <h3 className="text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
+                          <div className="flex flex-col gap-6">
+                            {Object.entries(userGroups).map(([clientKey, clientPedidos]) => {
+                               const [nombre, telefono] = clientKey.split('|');
+                               const expandKey = `${month}-${clientKey}`;
+                               const isExpanded = pedidoExpandido === expandKey;
+                               
+                               return (
+                                 <div key={clientKey} className="bg-black/30 backdrop-blur-xl p-6 shadow-2xl rounded-sm border border-white/5">
+                                     <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
+                                        <div className="flex items-center gap-4">
+                                           <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-lg rounded-full uppercase">{nombre.charAt(0)}</div>
+                                           <div>
+                                             <p className="text-white text-[12px] tracking-[0.1em] uppercase font-bold">{nombre}</p>
+                                             <p className="text-gray-400 text-[10px] tracking-[0.1em] mt-1">📞 {telefono}</p>
+                                           </div>
+                                        </div>
+                                        <div className="text-right text-gray-400 text-[10px] tracking-[0.2em] uppercase">
+                                           {clientPedidos.length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
+                                        </div>
+                                     </div>
+
+                                     {isExpanded && (
+                                        <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
+                                           {[...clientPedidos].reverse().map(pedido => (
+                                              <div key={pedido.id} className="bg-black/20 p-4 border border-white/5">
+                                                 <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+                                                    <span className="text-white font-bold text-[12px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
+                                                    <span className={`text-[10px] px-3 py-1 font-bold uppercase tracking-[0.1em] ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
+                                                      {pedido.estado}
+                                                    </span>
+                                                 </div>
+                                                 
+                                                 <div className="space-y-2 mb-4">
+                                                   {JSON.parse(pedido.productos).map((prod, i) => (
+                                                     <div key={i} className="flex justify-between text-[12px] text-gray-300">
+                                                       <span>{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
+                                                       <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
+                                                     </div>
+                                                   ))}
+                                                   <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[12px] font-bold text-white">
+                                                     <span>Envío:</span>
+                                                     <span>${parseFloat(pedido.total_envio).toFixed(2)}</span>
+                                                   </div>
+                                                 </div>
+
+                                                 {pedido.link_maps && (
+                                                   <div className="pt-2 text-[12px] text-blue-400 mb-2">
+                                                     <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
+                                                   </div>
+                                                 )}
+
+                                                 {pedido.comprobante_url && (
+                                                   <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[12px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
+                                                 )}
+
+                                                 {pedido.estado === 'En progreso' && (
+                                                   <div className="flex gap-4 mt-4 pt-4 border-t border-white/5">
+                                                     <button onClick={() => completarPedido(pedido)} className="flex-grow py-3 bg-white text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
+                                                       Completar (Descuenta Stock)
+                                                     </button>
+                                                     <button onClick={() => cancelarPedido(pedido.id)} className="py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
+                                                       Cancelar
+                                                     </button>
+                                                   </div>
+                                                 )}
+                                              </div>
+                                           ))}
+                                        </div>
+                                     )}
+                                 </div>
+                               )
+                            })}
                           </div>
-                        )}
-                      </div>
-
-                      {pedido.comprobante_url && (
-                        <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[10px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
-                      )}
-
-                      {pedido.estado === 'En progreso' && (
-                        <div className="flex gap-4 mt-6">
-                          <button onClick={() => completarPedido(pedido)} className="flex-grow py-3 bg-white text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
-                            Completar (Descuenta Stock)
-                          </button>
-                          <button onClick={() => cancelarPedido(pedido.id)} className="py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
-                            Cancelar
-                          </button>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                  {listaPedidos.length === 0 && <p className="text-gray-500 text-center text-[10px] uppercase">No hay pedidos registrados.</p>}
+                      )
+                    });
+                  })()}
+                  {listaPedidos.length === 0 && <p className="text-gray-500 text-center text-[12px] uppercase">No hay pedidos registrados.</p>}
                 </div>
               ) : (
                 <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
                 </div>
               )}
             </section>
@@ -886,28 +959,49 @@ export default function App() {
 
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
+               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
+                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-6 border-b border-white/10 pb-6">
                    {subcategoriasJoyeria.map(sub => (
-                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[9px] md:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
+                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[12px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
                        {sub}
                      </li>
                    ))}
                  </ul>
                )}
 
+               {/* 👇 FILTROS DE BÚSQUEDA Y ORDENAMIENTO (SOLUCIÓN 2) 👇 */}
+               {activeCategory === 'Acero Fino' && (
+                 <div className="flex flex-wrap justify-center gap-4 mb-10 w-full max-w-3xl mx-auto">
+                    <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[12px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                       <option value="Todo" className="bg-black text-gray-500">Todos los Colores</option>
+                       <option value="Silver" className="bg-black text-white">Silver</option>
+                       <option value="Gold" className="bg-black text-white">Gold</option>
+                       <option value="Black" className="bg-black text-white">Black</option>
+                    </select>
+                    <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[12px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                       <option value="Todo" className="bg-black text-gray-500">Todas las Tallas</option>
+                       {tallasDisponibles.map(t => <option key={t} value={t} className="bg-black text-white">Talla {t}</option>)}
+                    </select>
+                    <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[12px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                       <option value="" className="bg-black text-gray-500">Ordenar Precio</option>
+                       <option value="Asc" className="bg-black text-white">Menor a Mayor</option>
+                       <option value="Desc" className="bg-black text-white">Mayor a Menor</option>
+                    </select>
+                 </div>
+               )}
+
                {userRole === 'admin' && !showInlineForm && (
-                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0">
-                   <span className="text-white tracking-[0.2em] text-[10px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
+                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, color: '', imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0">
+                   <span className="text-white tracking-[0.2em] text-[12px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
                  </div>
                )}
 
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-black/30 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border border-white/5">
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
-                   <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+                   <h3 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
                      <div className="mb-12 flex justify-center bg-transparent p-0">
@@ -916,30 +1010,42 @@ export default function App() {
                    )}
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-4 text-center items-center justify-items-center">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required />
-                     <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
+                     
+                     <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white/70 text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center transition-colors focus:bg-white/10" />
+                     
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="appearance-none w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[12px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center transition-colors focus:bg-white/10">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (<option key={sub} value={sub} className="bg-black text-white">{sub}</option>))}
+                       </select>
+                     )}
+
+                     {/* 👇 SOLUCIÓN 1: SELECTOR DE COLOR OCULTO AL CLIENTE 👇 */}
+                     {activeCategory === 'Acero Fino' && (
+                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="appearance-none w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[12px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center transition-colors focus:bg-white/10">
+                         <option value="" className="bg-black text-gray-500">COLOR (OPCIONAL)</option>
+                         <option value="Silver" className="bg-black text-white">SILVER</option>
+                         <option value="Gold" className="bg-black text-white">GOLD</option>
+                         <option value="Black" className="bg-black text-white">BLACK</option>
                        </select>
                      )}
                    </div>
 
                    {nuevaPieza.costo > 0 && (
                      <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 border-b border-white/5 mt-6">
-                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
+                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[10px] tracking-[0.2em] text-gray-300 uppercase">
                           {[100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
-                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-white/5 border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                             );
                           })}
                        </div>
@@ -948,29 +1054,30 @@ export default function App() {
 
                    {nuevaPieza.subcategoria === 'Anillos' && (
                      <div className="w-full flex flex-col items-center mt-4 mb-10 pb-8">
-                       <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                       <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                        <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2">
-                             <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} placeholder="0" className="w-12 md:w-16 bg-transparent text-white text-center text-[10px] md:text-xs py-2 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50" />
+                             <span className="text-white text-[14px] font-light">{talla}</span>
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} placeholder="0" className="w-12 md:w-16 bg-white/5 rounded-sm text-white text-center text-[12px] py-2 outline-none border-none placeholder-gray-500 transition-colors focus:bg-white/10" />
                            </div>
                          ))}
                        </div>
                      </div>
                    )}
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center transition-colors focus:bg-white/10"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
                    </div>
                  </form>
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).map(producto => {
+                 {/* APLICACIÓN DEL FILTRO ANTES DEL MAP */}
+                 {productosMostrar.map(producto => {
                    const tallasObj = parseTallasseguro(producto.tallas);
                    const isRing = producto.subcategoria === 'Anillos';
                    const selectedSizes = tallasSeleccionadas[producto.id] || [];
@@ -978,11 +1085,12 @@ export default function App() {
 
                    return (
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
-                       <div className={`overflow-hidden aspect-[3/4] md:aspect-auto relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
+                       {/* 👇 SOLUCIÓN 3: FOTOS CUADRADAS 1:1 (aspect-square) 👇 */}
+                       <div className={`overflow-hidden aspect-square relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          {producto.vendido && (
                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                             <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
                            </div>
                          )}
                          {userRole === 'admin' && (
@@ -994,11 +1102,11 @@ export default function App() {
                        </div>
                        
                        <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
-                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+                         <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                         <span className="text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                          
                          {!isRing && (
-                           <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                           <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
                          )}
 
                          {isRing && (
@@ -1016,11 +1124,11 @@ export default function App() {
                                        onClick={(e) => { 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[16px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
                                        <span>{talla}</span>
                                      </button>
-                                     <span className={`text-[15px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock}
                                      </span>
                                    </div>
@@ -1030,17 +1138,17 @@ export default function App() {
                            </div>
                          )}
                          
-                         <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                         <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                          {userRole === 'cliente' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                                className={`flex-grow py-3 text-[8px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                                className={`flex-grow py-3 text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                               >
                                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                            </div>
                          )}
 
@@ -1052,7 +1160,7 @@ export default function App() {
                    );
                  })}
                  
-                 {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).length === 0 && (
+                 {productosMostrar.length === 0 && (
                     <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
                  )}
                </div>
@@ -1072,7 +1180,7 @@ export default function App() {
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
-                      {productoSeleccionado.disponibilidad ? `Disponibilidad: ${productoSeleccionado.disponibilidad}` : 'Bajo Pedido'}
+                      {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
                     </p>
                   )}
 
@@ -1098,11 +1206,11 @@ export default function App() {
                                    e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 flex items-center justify-center text-[16px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
-                               <span className={`text-[15px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                               <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                  {stock}
                                </span>
                              </div>
@@ -1118,7 +1226,7 @@ export default function App() {
                            >
                              {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
-                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                          </div>
                        )}
                      </div>
@@ -1128,15 +1236,15 @@ export default function App() {
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <>
                       <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
-                      <p className="text-[10px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
+                      <p className="text-[12px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
                       
                       {userRole === 'cliente' && !productoSeleccionado.vendido ? (
                         <div className="flex gap-4 mt-auto w-full justify-center">
-                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[8px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                         </div>
                       ) : userRole === 'cliente' && (
-                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[8px] font-bold uppercase">Pieza Agotada</span></div>
+                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[10px] font-bold uppercase">Pieza Agotada</span></div>
                       )}
                     </>
                   )}
@@ -1150,37 +1258,37 @@ export default function App() {
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
                 <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
                   
                   {checkoutPaso === 1 && (
                     <>
-                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                       {carrito.map(item => (
                         <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                           <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                           <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
                           <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
-                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                            <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
+                            <p className="text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
                               {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                             </p>
                             <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
-                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <span className="text-[12px] text-white w-4 text-center">{item.cantidad || 1}</span>
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
                             </div>
                           </div>
-                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                          <span className="text-[12px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
                         </div>
                       ))}
                       
                       <div className="mt-8 border-t border-white/10 pt-6">
-                        <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
                         <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
                         </div>
 
                         {envioConfig.tipo === 'domicilio' && (
@@ -1191,7 +1299,7 @@ export default function App() {
                                 setEnvioConfig({...envioConfig, sectorNombre: selected.nombre, sectorPrecio: selected.precio});
                               }}
                               value={envioConfig.sectorNombre}
-                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
+                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
                             >
                               {sectoresQuito.map(sector => (
                                 <option key={sector.nombre} value={sector.nombre} className="bg-black text-white">{sector.nombre} - ${sector.precio.toFixed(2)} USD</option>
@@ -1202,23 +1310,23 @@ export default function App() {
                               placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
                               value={envioConfig.linkMaps}
                               onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
                               required
                             />
-                            <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                            <p className="text-[10px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
                           </div>
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[12px] tracking-[0.1em] uppercase">
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
                         <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                        <p className="text-[14px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
                       </div>
                       
                       <div className="flex justify-center mt-10 md:mt-16">
-                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                        <button onClick={handleContinuarCheckout} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
                           {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
                         </button>
                       </div>
@@ -1227,15 +1335,15 @@ export default function App() {
 
                   {checkoutPaso === 2 && (
                     <div className="flex flex-col items-center animate-fade-in">
-                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
-                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
-                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[12px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
+                      <p className="text-[10px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
                         Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
                       </p>
 
                       <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
-                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
+                        <p className="text-[10px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
+                        <div className="text-[12px] tracking-[0.1em] text-gray-300 font-light space-y-4">
                           <div>
                             <strong>Banco Pichincha / DeUna</strong><br/>
                             Ahorros: 2205567890<br/>
@@ -1252,19 +1360,19 @@ export default function App() {
                       </div>
 
                       <div className="w-full max-w-md flex flex-col items-center gap-6">
-                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <label className="text-[10px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
                          <input 
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
+                           className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
                          />
                       </div>
 
                       <button 
                         onClick={enviarPedidoWhatsApp} 
                         disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                        className={`mt-12 text-[12px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
                       >
                         {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
                       </button>
@@ -1281,27 +1389,27 @@ export default function App() {
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
               {favoritos.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
                     return (
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
-                      <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                      <div className="overflow-hidden aspect-square relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                            <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                           </div>
                         )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
-                        <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                        <span className="text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
                           </button>
                         </div>
@@ -1318,7 +1426,7 @@ export default function App() {
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
             </section>
           )}
@@ -1332,20 +1440,20 @@ export default function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-[14px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-[14px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[14px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1354,13 +1462,13 @@ export default function App() {
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -1571,7 +1679,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 👇 SOLUCIÓN 2: CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO 👇 */}
+      {/* CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO Y TALLAS ESTILO FOTO 2 */}
       <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
           <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
@@ -1593,7 +1701,6 @@ export default function App() {
                       <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         
-                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
                         {p.vendido && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                             <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
@@ -1603,15 +1710,28 @@ export default function App() {
                       <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
                       <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
                       
-                      {/* 👇 CAMBIO: Tallas y Disponibilidad con formato y tamaños solicitados 👇 */}
                       {p.subcategoria === 'Anillos' ? (
                         <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
-                           {Object.entries(parseTallasseguro(p.tallas)).filter(([_, q]) => parseInt(q) > 0).map(([t, q]) => (
-                             <div key={t} className="flex flex-col items-center border p-2 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.3)', minWidth: '40px' }}>
-                               <span style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold' }}>{t}</span>
-                               <span style={{ color: '#aaaaaa', fontSize: '15px' }}>{q}</span>
-                             </div>
-                           ))}
+                           {tallasDisponibles.map(t => {
+                             const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
+                             const isAvailable = stock > 0;
+                             return (
+                               <div key={t} className="flex flex-col items-center gap-1">
+                                 <div style={{
+                                   border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.3)' : 'rgba(255,0,0,0.2)'}`,
+                                   color: isAvailable ? '#ffffff' : '#ff0000',
+                                   width: '40px', height: '40px',
+                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                   fontSize: '16px', fontWeight: 'bold'
+                                 }}>
+                                   {t}
+                                 </div>
+                                 <span style={{ fontSize: '15px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                   {stock}
+                                 </span>
+                               </div>
+                             );
+                           })}
                         </div>
                       ) : (
                         <p style={{ color: '#aaaaaa', fontSize: '15px', marginBottom: '16px', textTransform: 'uppercase' }}>
@@ -1619,12 +1739,12 @@ export default function App() {
                         </p>
                       )}
 
-                      <p className="text-[10px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
+                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center tracking-[0.2em] text-[10px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
+                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
               )}
             </div>
           )
