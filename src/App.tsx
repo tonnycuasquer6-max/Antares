@@ -22,7 +22,6 @@ export default function App() {
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   
-  // SOLUCIÓN: Se añadió 'costo' al estado del formulario
   const [nuevaPieza, setNuevaPieza] = useState({ 
     titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
   });
@@ -54,7 +53,9 @@ export default function App() {
     try {
       const parsed = JSON.parse(tallasData);
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) return parsed;
-    } catch (e) {}
+    } catch (e) {
+      // Ignorar errores de parseo y continuar
+    }
     if (typeof tallasData === 'string') {
       const obj = {};
       tallasData.split(',').forEach(t => { 
@@ -234,9 +235,9 @@ export default function App() {
   const triggerStarAnimation = (e) => {
     if (!e || !e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
+    const startX = rect.left + (rect.width / 2);
+    const startY = rect.top + (rect.height / 2);
     const id = Date.now();
-    const startX = e.clientX;
-    const startY = e.clientY;
 
     setStars(prev => [...prev, { id, x: startX, y: startY, active: false }]);
     
@@ -328,7 +329,7 @@ export default function App() {
     setNuevaPieza({
       titulo: producto.titulo, 
       descripcion: producto.descripcion || '', 
-      costo: producto.costo || '', // NUEVO
+      costo: producto.costo || '', 
       precio: producto.precio,
       disponibilidad: producto.disponibilidad || '', 
       subcategoria: producto.subcategoria || '',
@@ -373,7 +374,7 @@ export default function App() {
     const payload = { 
       titulo: nuevaPieza.titulo, 
       descripcion: nuevaPieza.descripcion, 
-      costo: Number(nuevaPieza.costo) || 0, // NUEVO EN LA BD
+      costo: Number(nuevaPieza.costo) || 0, 
       precio: Number(nuevaPieza.precio), 
       categoria: activeCategory, 
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
@@ -413,8 +414,8 @@ export default function App() {
     return (
       <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
         <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none w-full mx-4">
-          <h2 className="text-xl md:text-3xl text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
-          <p className="text-gray-400 text-sm md:text-base">Verifica tus credenciales de Supabase en los Secrets.</p>
+          <h2 className="text-[14px] text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
+          <p className="text-gray-400 text-[12px]">Verifica tus credenciales de Supabase en los Secrets.</p>
         </div>
       </div>
     );
@@ -446,25 +447,21 @@ export default function App() {
     }
   };
 
-  const subtotalCarrito = carrito.reduce((sum, item) => sum + (item.precio * (item.cantidad || 1)), 0);
+  const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    // SOLUCIÓN 6: Tipografía Times New Roman para números y aumento general de 2 puntos (+0.5rem en base)
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden text-[1.1rem]">
+    <div className="bg-black text-white min-h-screen flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; font-size: 1.02em; }
-        /* SOLUCIÓN 6: Forzar Times New Roman para números */
-        @font-face { font-family: 'TimesNumbers'; src: local('Times New Roman'), local('Times'); unicode-range: U+0030-0039; }
-        body { font-family: 'TimesNumbers', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+        * { -ms-overflow-style: none; scrollbar-width: none; font-family: "Times New Roman", Times, serif; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
+        select::-ms-expand { display: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
-        /* SOLUCIÓN 2: Quitar flechas de select nativo */
-        select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
       `}</style>
 
       {stars.map(star => (
@@ -486,21 +483,22 @@ export default function App() {
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
-            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] md:text-[14px] tracking-[0.2em] uppercase">
-              Volver {/* SOLUCIÓN 2: Quita flechas "<" */}
+            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] tracking-[0.2em] uppercase">
+              Volver
             </button>
           )}
 
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
-              {/* SOLUCIÓN 5: Bolso solo visible si userRole !== 'admin' */}
+              
+              {/* SOLUCION: EL BOLSO SOLO SE VE SI NO ES ADMIN */}
               {userRole !== 'admin' && (
                 <button 
                   onClick={() => setActiveView('bag')} 
-                  className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-amber-300 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
+                  className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
                 >
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] md:text-[11px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
+                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] font-bold px-[4px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
 
@@ -510,21 +508,21 @@ export default function App() {
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
-                    <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
+                    <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                    <button onClick={() => setActiveView('pedidos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
                     
-                    {/* SOLUCIÓN 5: Deseos solo visible si userRole !== 'admin' */}
+                    {/* SOLUCION: DESEOS SOLO PARA CLIENTE */}
                     {userRole !== 'admin' && (
-                      <button onClick={() => setActiveView('deseos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                      <button onClick={() => setActiveView('deseos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
                     )}
-                    
-                    {/* 👇 INVENTARIO Y SISTEMA CONTABLE SOLO PARA ADMIN 👇 */}
+
+                    {/* ADMIN: VER INVENTARIO */}
                     {userRole === 'admin' && (
-                      <button onClick={() => setActiveView('inventario')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mb-5 font-bold">Inventario / Contabilidad</button>
+                      <button onClick={() => setActiveView('inventario')} className="text-[10px] tracking-[0.2em] uppercase text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Inventario / Finanzas</button>
                     )}
 
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={handleLogout} className="text-[10px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -535,7 +533,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[12px] md:text-[16px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -553,7 +551,7 @@ export default function App() {
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[12px] md:text-[14px] transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
+                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[12px] transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
                                 {sub}
                               </span>
                             );
@@ -573,7 +571,7 @@ export default function App() {
                     <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12px] md:text-[14px]">$ {p}.00 USD</span>
+                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12px]">$ {p}.00 USD</span>
                         ))}
                       </div>
                     </div>
@@ -598,108 +596,99 @@ export default function App() {
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
                <section className="w-full text-center py-16 md:py-32 px-4">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
-                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] md:text-[14px] max-w-2xl mx-auto leading-loose px-4">
+                 <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] max-w-2xl mx-auto leading-loose px-4">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
 
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   &quot;Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección.&quot;
+                   &quot;Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista.&quot;
                  </p>
                </section>
 
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
-                 <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
+                 <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
-                     <p className="text-gray-400 text-[12px] md:text-[14px] tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
-                     <p className="text-gray-400 text-[12px] md:text-[14px] tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
                    </div>
                    <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
-                     <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
-                     <p className="text-gray-400 text-[12px] md:text-[14px] tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
+                     <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
+                     <p className="text-gray-400 text-[12px] tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
                    </div>
                  </div>
                </section>
             </div>
           )}
 
-          {/* 👇 NUEVA VISTA DE INVENTARIO Y SISTEMA CONTABLE DETALLADO (SÓLO ADMIN) 👇 */}
+          {/* 👇 VISTA DE INVENTARIO DESGLOSADO POR TALLAS (SOLO ADMIN) 👇 */}
           {userRole === 'admin' && activeView === 'inventario' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
-               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">Inventario y Sistema Contable</h2>
-               
-               <div className="bg-black/30 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
-                 <div className="min-w-[1000px]">
-                   {/* Headers */}
-                   <div className="grid grid-cols-9 gap-4 text-[10px] md:text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
-                     <div className="col-span-2 text-left">Pieza</div>
-                     <div>Talla</div>
-                     <div>Stock</div>
-                     <div>Costo Unit.</div>
-                     <div>Precio Venta</div>
-                     <div>Inversión Total</div>
-                     <div>Proyección Venta</div>
-                     <div>Ganancia Potencial</div>
-                   </div>
-
-                   {/* SOLUCIÓN 3: Filas desglosadas por talla */}
-                   {productos.reduce((acc, p) => {
-                     if (p.subcategoria === 'Anillos') {
-                       const tallasObj = parseTallasseguro(p.tallas);
-                       Object.entries(tallasObj).forEach(([talla, cantidad]) => {
-                         acc.push({ ...p, talla_especifica: talla, stock_especifico: cantidad });
-                       });
-                     } else {
-                       acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: parseInt(p.disponibilidad) || 0 });
-                     }
-                     return acc;
-                   }, []).map((item, index) => {
-                     const costo = item.costo || 0;
-                     const precio = item.precio || 0;
-                     const stock = item.stock_especifico || 0;
-                     
-                     const inversionTotal = costo * stock;
-                     const proyecciónVenta = precio * stock;
-                     const gananciaPotencial = proyecciónVenta - inversionTotal;
-
-                     return (
-                       <div key={`${item.id}-${item.talla_especifica}`} className="grid grid-cols-9 gap-4 text-[12px] md:text-[14px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center hover:bg-white/5 transition-colors text-center">
-                         <div className="col-span-2 flex items-center gap-4 text-left">
-                           <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
-                           <div className="flex flex-col truncate">
-                             <span className="uppercase truncate">{item.titulo}</span>
-                             <span className="text-[10px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
-                           </div>
-                         </div>
-                         <div className="text-white font-bold">{item.talla_especifica}</div>
-                         <div className={stock > 0 ? "text-white" : "text-red-500"}>{stock}</div>
-                         <div className="text-gray-400">${costo.toFixed(2)}</div>
-                         <div className="text-white font-bold">${precio.toFixed(2)}</div>
-                         <div className="text-gray-400">${inversionTotal.toFixed(2)}</div>
-                         <div className="text-white">${proyecciónVenta.toFixed(2)}</div>
-                         <div className="text-green-400 font-bold">+${gananciaPotencial.toFixed(2)}</div>
-                       </div>
-                     );
-                   })}
-
-                   {productos.length === 0 && (
-                     <p className="text-center text-gray-500 text-[12px] uppercase py-8 tracking-[0.2em]">No hay piezas registradas en el catálogo.</p>
-                   )}
-                 </div>
-               </div>
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">Inventario y Sistema Contable</h2>
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <div className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                    <div className="col-span-2 text-left">Pieza</div>
+                    <div>Talla</div>
+                    <div>Stock</div>
+                    <div>Costo</div>
+                    <div>Precio</div>
+                    <div>Ganancia</div>
+                  </div>
+                  {productos.reduce((acc, p) => {
+                    if (p.subcategoria === 'Anillos') {
+                      const tallasObj = parseTallasseguro(p.tallas);
+                      const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
+                      if (activeTallas.length === 0) {
+                        acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: 0 });
+                      } else {
+                        activeTallas.forEach(([talla, cantidad]) => {
+                          acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad) });
+                        });
+                      }
+                    } else {
+                      acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: parseInt(p.disponibilidad) || 0 });
+                    }
+                    return acc;
+                  }, []).map((item, idx) => {
+                    const costo = parseFloat(item.costo) || 0;
+                    const precio = parseFloat(item.precio) || 0;
+                    const ganancia = precio - costo;
+                    return (
+                      <div key={`${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center">
+                        <div className="col-span-2 flex items-center gap-4 text-left">
+                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
+                          <div className="flex flex-col truncate">
+                            <span className="uppercase truncate">{item.titulo}</span>
+                            <span className="text-[10px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                          </div>
+                        </div>
+                        <div className="text-white font-bold">{item.talla_especifica}</div>
+                        <div className={item.stock_especifico > 0 ? "text-white" : "text-red-500"}>{item.stock_especifico}</div>
+                        <div className="text-gray-400">${costo.toFixed(2)}</div>
+                        <div className="text-white font-bold">${precio.toFixed(2)}</div>
+                        <div className="text-white">+${ganancia.toFixed(2)}</div>
+                      </div>
+                    );
+                  })}
+                  {productos.length === 0 && (
+                    <p className="text-center text-gray-500 text-[12px] uppercase py-8 tracking-[0.2em]">No hay piezas registradas en el catálogo.</p>
+                  )}
+                </div>
+              </div>
             </section>
           )}
 
           {user && activeView === 'categoria' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-               <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
+               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                  <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-10 border-b border-white/10 pb-6">
@@ -707,7 +696,7 @@ export default function App() {
                      <li 
                        key={sub}
                        onClick={() => setActiveSubCategory(sub)}
-                       className={`text-[11px] md:text-[12px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}
+                       className={`text-[12px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}
                      >
                        {sub}
                      </li>
@@ -722,7 +711,7 @@ export default function App() {
                      setNuevaPieza({
                        titulo: '', 
                        descripcion: '', 
-                       costo: '', // NUEVO
+                       costo: '', 
                        precio: '', 
                        disponibilidad: '', 
                        subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
@@ -732,18 +721,17 @@ export default function App() {
                      });
                      setShowInlineForm(true); 
                    }} 
-                   className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-zinc-900/40 transition-colors cursor-pointer mx-2 md:mx-0"
+                   className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0"
                  >
-                   <span className="text-white tracking-[0.2em] text-[12px] md:text-[14px] uppercase font-bold">
+                   <span className="text-white tracking-[0.2em] text-[12px] uppercase">
                      + Añadir nueva pieza a {activeCategory} {activeSubCategory !== 'Todo' ? `- ${activeSubCategory}` : ''}
                    </span>
                  </div>
                )}
 
-               {/* FORMULARIO DE ADMIN: SOLUCIÓN 1, 2, 4, 6 INTEGRADAS */}
+               {/* FORMULARIO DE ADMIN DE CRISTAL SIN LINEAS NI FONDOS GRISES */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-black/30 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border border-white/5">
-                   
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
                    <button 
                      type="button" 
                      onClick={cerrarFormulario} 
@@ -752,7 +740,7 @@ export default function App() {
                      ×
                    </button>
                    
-                   <h3 className="text-[12px] md:text-[16px] tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">
+                   <h3 className="text-[14px] tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">
                      {editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}
                    </h3>
                    
@@ -772,47 +760,38 @@ export default function App() {
                        value={nuevaPieza.titulo} 
                        onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} 
                        placeholder="TÍTULO DE LA OBRA" 
-                       className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
+                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
                        required
                      />
-                     
-                     {/* 👇 NUEVO CAMPO DE COSTO 👇 */}
-                     <div className="w-full relative">
-                       <input 
-                         type="number" 
-                         value={nuevaPieza.costo} 
-                         onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} 
-                         placeholder="COSTO DE FABRICACIÓN (USD)" 
-                         className="w-full bg-transparent text-white/70 text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
-                       />
-                     </div>
-
-                     {/* CAMPO DE PRECIO DE VENTA FINAL */}
+                     <input 
+                       type="number" 
+                       value={nuevaPieza.costo} 
+                       onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} 
+                       placeholder="COSTO FABRICACIÓN (USD)" 
+                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
+                     />
                      <input 
                        type="number" 
                        value={nuevaPieza.precio} 
                        onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} 
-                       placeholder="PRECIO VENTA FINAL (USD)" 
-                       className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
+                       placeholder="PRECIO VENTA (USD)" 
+                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
                        required
                      />
-                     
                      {nuevaPieza.subcategoria !== 'Anillos' && (
                        <input 
                          type="text" 
                          value={nuevaPieza.disponibilidad} 
                          onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} 
                          placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" 
-                         className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" 
+                         className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
                        />
                      )}
-                     
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       // SOLUCIÓN 2: selectappearance-none para quitar flechas nativas
                        <select 
                          value={nuevaPieza.subcategoria} 
                          onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} 
-                         className="appearance-none w-full bg-transparent text-gray-300 text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                         className="w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[12px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none transition-colors focus:bg-white/10"
                        >
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
@@ -822,11 +801,11 @@ export default function App() {
                      )}
                    </div>
 
-                   {/* 👇 SOLUCIÓN 1: CALCULADORA DE PRECIOS SELECCIONABLE 👇 */}
+                   {/* CALCULADORA DE PRECIOS */}
                    {nuevaPieza.costo > 0 && (
-                     <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 border-b border-white/5">
-                       <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para seleccionar)</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[11px] md:text-[12px] tracking-[0.2em] text-gray-300 uppercase">
+                     <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 border-b border-white/5 mt-6">
+                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[12px] tracking-[0.2em] text-gray-300 uppercase">
                           {[100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
@@ -834,7 +813,7 @@ export default function App() {
                                 key={porcentaje}
                                 type="button"
                                 onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})}
-                                className="bg-white/5 border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer"
+                                className="bg-white/5 rounded-sm px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none border-none"
                               >
                                 {porcentaje}%: ${sugerido.toFixed(2)}
                               </button>
@@ -845,12 +824,12 @@ export default function App() {
                    )}
 
                    {nuevaPieza.subcategoria === 'Anillos' && (
-                     <div className="w-full flex flex-col items-center mt-2 mb-10 pb-8 border-none">
-                       <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-400 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                     <div className="w-full flex flex-col items-center mt-4 mb-10 pb-8">
+                       <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                        <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2">
-                             <span className="text-white text-[12px] md:text-[14px] font-light">{talla}</span>
+                             <span className="text-white text-[14px] font-light">{talla}</span>
                              <input
                                type="number"
                                min="0"
@@ -860,7 +839,7 @@ export default function App() {
                                  tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }
                                })}
                                placeholder="0"
-                               className="w-12 md:w-16 bg-transparent text-white text-center text-[12px] py-2 outline-none border-none placeholder-gray-500 hover:bg-white/5 transition-colors"
+                               className="w-12 md:w-16 bg-white/5 rounded-sm text-white text-center text-[12px] py-2 outline-none border-none placeholder-gray-500 transition-colors focus:bg-white/10"
                              />
                            </div>
                          ))}
@@ -873,18 +852,18 @@ export default function App() {
                      onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} 
                      placeholder="DESCRIPCIÓN EDITORIAL..." 
                      rows="2" 
-                     className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"
+                     className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center transition-colors focus:bg-white/10"
                    ></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input 
                        type="file" 
                        onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} 
-                       className="text-[12px] md:text-[14px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[11px] md:file:text-[12px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" 
+                       className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[12px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" 
                      />
                      <button 
                        type="submit" 
-                       className="text-black text-[11px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl"
+                       className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl"
                      >
                        {editandoId ? 'Guardar Cambios' : 'Publicar'}
                      </button>
@@ -907,7 +886,7 @@ export default function App() {
                          
                          {producto.vendido && (
                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                             <span className="text-white tracking-[0.4em] text-[12px] md:text-[14px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                             <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                            </div>
                          )}
 
@@ -920,11 +899,11 @@ export default function App() {
                        </div>
                        
                        <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                         <h4 className="text-[12px] md:text-[16px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
-                         <span className="text-[12px] md:text-[16px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+                         <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
+                         <span className="text-[14px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                          
                          {!isRing && (
-                           <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                           <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                          )}
 
                          {isRing && (
@@ -940,14 +919,14 @@ export default function App() {
                                      <button 
                                        type="button"
                                        onClick={(e) => { 
-                                         e.preventDefault(); e.stopPropagation(); 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[12px] md:text-[14px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[12px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
+                                       {/* SOLUCION: SIN TACHADOS */}
                                        <span>{talla}</span>
                                      </button>
-                                     <span className={`text-[8px] md:text-[9px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     <span className={`text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock} disp.
                                      </span>
                                    </div>
@@ -957,22 +936,22 @@ export default function App() {
                            </div>
                          )}
                          
-                         <p className="text-[11px] md:text-[12px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                         <p className="text-[12px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
 
                          {userRole === 'cliente' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
-                                onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                                className={`flex-grow py-3 text-[10px] md:text-[11px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                                onClick={(e) => { if(canBuy) agregarAlCarrito(producto, e); }} 
+                                className={`flex-grow py-3 text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                               >
                                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                            </div>
                          )}
 
                          {userRole === 'admin' && (
-                           <button onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }} className={`w-full py-2.5 mt-auto text-[10px] md:text-[11px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }} className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
                          )}
                        </div>
                      </div>
@@ -980,7 +959,7 @@ export default function App() {
                  })}
                  
                  {productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory)).length === 0 && (
-                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] md:text-[14px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
+                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
                  )}
                </div>
             </section>
@@ -997,8 +976,8 @@ export default function App() {
                 </div>
                 
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
-                  <h2 className="text-2xl md:text-4xl tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
-                  <p className="text-xl tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
+                  <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
+                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
@@ -1013,7 +992,7 @@ export default function App() {
 
                      return (
                      <div className="flex flex-col items-center w-full mb-10 mt-2">
-                       <p className="text-[10px] md:text-[12px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
+                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
                        <div className="flex flex-wrap justify-center gap-4">
                          {tallasDisponibles.map(talla => {
                            const stock = parseInt(modalTallasObj[talla] || 0);
@@ -1025,14 +1004,13 @@ export default function App() {
                                <button 
                                  type="button"
                                  onClick={(e) => { 
-                                   e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[12px] md:text-[16px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[12px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
-                               <span className={`text-[9px] md:text-[10px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                               <span className={`text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                  {stock} disp.
                                </span>
                              </div>
@@ -1048,7 +1026,7 @@ export default function App() {
                            >
                              {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
-                           <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                          </div>
                        )}
                      </div>
@@ -1058,12 +1036,12 @@ export default function App() {
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <>
                       <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
-                      <p className="text-[12px] md:text-[14px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
+                      <p className="text-[12px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
                       
                       {userRole === 'cliente' && !productoSeleccionado.vendido ? (
                         <div className="flex gap-4 mt-auto w-full justify-center">
                           <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[12px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
-                          <button onClick={() => toggleFavorito(productoSeleccionado.id)} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xl bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-[14px] bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
                         </div>
                       ) : userRole === 'cliente' && (
                         <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[12px] font-bold uppercase">Pieza Agotada</span></div>
@@ -1075,23 +1053,24 @@ export default function App() {
             </div>
           )}
 
-          {user && activeView === 'bag' && userRole !== 'admin' && (
+          {/* VISTA BOLSO (SÓLO CLIENTES) */}
+          {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] md:text-[14px] text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
                 <div className="bg-white/5 backdrop-blur-xl p-4 md:p-10 shadow-2xl rounded-sm w-full overflow-x-hidden">
-                  <h3 className="text-[10px] md:text-[12px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                  <h3 className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                   
                   {carrito.map(item => (
                     <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                       <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                       <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
                       <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                        <h4 className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
-                        <p className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                        <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
+                        <p className="text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
                           {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                         </p>
                         
@@ -1108,19 +1087,19 @@ export default function App() {
                           >+</button>
                         </div>
                       </div>
-                      <span className="text-[14px] md:text-[16px] tracking-[0.1em] text-white whitespace-nowrap">${item.precio * (item.cantidad || 1)} USD</span>
+                      <span className="text-[14px] tracking-[0.1em] text-white whitespace-nowrap">${(item.precio * (item.cantidad || 1)).toFixed(2)} USD</span>
                     </div>
                   ))}
                   
-                  <div className="mt-8 md:mt-12 flex flex-col items-end gap-2 md:gap-3 text-[12px] md:text-[14px] tracking-[0.1em] uppercase">
-                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito}.00 USD</span></p>
+                  <div className="mt-8 md:mt-12 flex flex-col items-end gap-2 md:gap-3 text-[12px] tracking-[0.1em] uppercase">
+                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
                     <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">Gratis</span></p>
                     <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                    <p className="text-[14px] md:text-[16px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {subtotalCarrito}.00 USD</span></p>
+                    <p className="text-[14px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
                   </div>
                   
                   <div className="flex justify-center mt-10 md:mt-16">
-                    <button onClick={finalizarPedido} className="text-black text-[11px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
+                    <button onClick={finalizarPedido} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
                       Finalizar Pedido
                     </button>
                   </div>
@@ -1129,12 +1108,13 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'deseos' && userRole !== 'admin' && (
+          {/* VISTA DESEOS (SÓLO CLIENTES) */}
+          {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
               {favoritos.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] md:text-[14px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
@@ -1145,17 +1125,17 @@ export default function App() {
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[12px] md:text-[14px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                            <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                           </div>
                         )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                        <h4 className="text-[12px] md:text-[16px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
-                        <span className="text-[12px] md:text-[16px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
+                        <span className="text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[11px] md:text-[12px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[12px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm md:text-lg flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
                           </button>
                         </div>
@@ -1169,10 +1149,10 @@ export default function App() {
 
           {user && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] md:text-[14px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
             </section>
           )}
@@ -1181,25 +1161,25 @@ export default function App() {
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
                 
-                <h2 className="text-2xl md:text-3xl tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
                 <div className="w-12 h-px bg-white/20 mb-12"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
-                    <label className="block text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[14px] md:text-[16px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-[14px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
-                    <label className="block text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[14px] md:text-[16px] tracking-[0.2em] uppercase font-light">
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-[14px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
-                    <label className="block text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[14px] md:text-[16px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <label className="block text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[14px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1208,13 +1188,13 @@ export default function App() {
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -1222,8 +1202,8 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[10px] md:text-[12px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
                     
                     <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
@@ -1237,8 +1217,8 @@ export default function App() {
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
                             <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
-                              <span className={`text-[11px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[9px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
                               </button>
                             </div>
@@ -1251,13 +1231,13 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[10px] md:text-[12px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                     <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[11px] md:text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -1272,7 +1252,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[10px] md:text-[12px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1281,7 +1261,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[11px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1291,7 +1271,7 @@ export default function App() {
                 
                 {userRole === 'cliente' && (
                   <div className="mb-4 pt-10 border-t border-white/10 mt-6 w-full">
-                     <p className="text-gray-400 text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-center py-4 font-light">Bienvenido a su espacio exclusivo en Antares.</p>
+                     <p className="text-gray-400 text-[12px] tracking-[0.3em] uppercase text-center py-4 font-light">Bienvenido a su espacio exclusivo en Antares.</p>
                   </div>
                 )}
 
@@ -1301,7 +1281,7 @@ export default function App() {
 
         </main>
         
-        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[9px] md:text-[11px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
+        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
@@ -1316,14 +1296,14 @@ export default function App() {
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
 
-              <h2 className="text-xl md:text-2xl tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+              <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
+                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -1339,7 +1319,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                     <input 
@@ -1347,13 +1327,13 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="flex justify-center gap-8 w-full">
                       <input 
                         type="text" 
@@ -1361,7 +1341,7 @@ export default function App() {
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1370,7 +1350,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1379,7 +1359,7 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-24 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                     </div>
@@ -1389,7 +1369,7 @@ export default function App() {
                     <select 
                       value={perfilForm.prefijo} 
                       onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} 
-                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
                     >
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
@@ -1402,7 +1382,7 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-none text-white text-[12px] md:text-[14px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                      className="w-48 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                     />
                   </div>
 
@@ -1416,12 +1396,12 @@ export default function App() {
                       onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
                       className="hidden" 
                     />
-                    <span className="text-gray-400 text-[10px] md:text-[11px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                    <span className="text-gray-400 text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[9px] md:text-[10px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[10px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
@@ -1455,7 +1435,7 @@ export default function App() {
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         {p.vendido && (
                           <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
                           </div>
                         )}
                       </div>
