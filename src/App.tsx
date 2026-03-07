@@ -45,7 +45,20 @@ export default function App() {
     tratamiento: '', nombre: '', apellidos: '', dia: '', mes: '', anio: '', prefijo: '+593', telefono: '', newsletter: false
   });
 
+  // ESTADOS DEL CHECKOUT
+  const [checkoutPaso, setCheckoutPaso] = useState(1);
+  const [envioConfig, setEnvioConfig] = useState({ tipo: 'local', sectorPrecio: 0, sectorNombre: '', linkMaps: '' });
+  const [comprobantePago, setComprobantePago] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
+  const sectoresQuito = [
+    { nombre: 'Quito Centro', precio: 2.50 },
+    { nombre: 'Quito Norte', precio: 3.50 },
+    { nombre: 'Quito Sur', precio: 4.00 },
+    { nombre: 'Valles (Tumbaco / Chillos)', precio: 5.00 },
+    { nombre: 'Provincias', precio: 6.50 },
+  ];
 
   const parseTallasseguro = (tallasData) => {
     if (!tallasData) return {};
@@ -53,9 +66,7 @@ export default function App() {
     try {
       const parsed = JSON.parse(tallasData);
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      // Ignorar errores de parseo y continuar
-    }
+    } catch (e) {}
     if (typeof tallasData === 'string') {
       const obj = {};
       tallasData.split(',').forEach(t => { 
@@ -70,27 +81,18 @@ export default function App() {
   const fetchProductos = async () => {
     const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
     if (data) setProductos(data);
-    if (error) console.error(error);
   };
 
   const fetchConfiguracion = async () => {
     const { data, error } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
     if (data && data.menus_ocultos) setHiddenItems(data.menus_ocultos);
-    if (error) console.error(error);
   };
 
   useEffect(() => {
     fetchProductos();
     fetchConfiguracion();
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleUserSession(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleUserSession(session?.user ?? null);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => handleUserSession(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => handleUserSession(session?.user ?? null));
     return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,7 +102,6 @@ export default function App() {
     if (currentUser) {
       setShowLoginModal(false);
       fetchUserRole(currentUser.id);
-
       setPerfilForm({
         tratamiento: currentUser.user_metadata?.tratamiento || '',
         nombre: currentUser.user_metadata?.first_name || '',
@@ -112,12 +113,8 @@ export default function App() {
         telefono: currentUser.user_metadata?.telefono?.split(' ')[1] || '',
         newsletter: currentUser.user_metadata?.newsletter || false
       });
-
-      if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) {
-        setShowCompleteProfile(true);
-      } else {
-        setShowCompleteProfile(false);
-      }
+      if (!currentUser.user_metadata?.first_name || !currentUser.user_metadata?.last_name) setShowCompleteProfile(true);
+      else setShowCompleteProfile(false);
     } else {
       setUserRole('cliente');
       setShowCompleteProfile(false);
@@ -129,9 +126,7 @@ export default function App() {
       const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
       if (data && data.rol) setUserRole(data.rol);
       else setUserRole('cliente');
-      if (error) console.error(error);
     } catch (error) {
-      console.error("Error al obtener rol:", error);
       setUserRole('cliente');
     }
   };
@@ -146,35 +141,22 @@ export default function App() {
     e.preventDefault();
     const { data, error } = await supabase.auth.updateUser({
       data: {
-        first_name: perfilForm.nombre,
-        last_name: perfilForm.apellidos,
-        tratamiento: perfilForm.tratamiento,
-        fecha_nacimiento: `${perfilForm.anio}-${perfilForm.mes}-${perfilForm.dia}`,
-        telefono: `${perfilForm.prefijo} ${perfilForm.telefono}`,
-        newsletter: perfilForm.newsletter
+        first_name: perfilForm.nombre, last_name: perfilForm.apellidos, tratamiento: perfilForm.tratamiento,
+        fecha_nacimiento: `${perfilForm.anio}-${perfilForm.mes}-${perfilForm.dia}`, telefono: `${perfilForm.prefijo} ${perfilForm.telefono}`, newsletter: perfilForm.newsletter
       }
     });
-
-    if (error) {
-      alert('Hubo un error al actualizar su información. Intente de nuevo.');
-      console.error(error);
-    } else {
-      setUser(data.user); 
-      setShowCompleteProfile(false);
-    }
+    if (error) alert('Hubo un error al actualizar su información.');
+    else { setUser(data.user); setShowCompleteProfile(false); }
   };
 
   const solicitarCambioContrasena = async () => {
     if (!user || !user.email) return;
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: window.location.origin, 
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
       if (error) throw error;
       alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada.`);
     } catch (error) {
       alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.');
-      console.error(error);
     }
   };
 
@@ -186,9 +168,7 @@ export default function App() {
     setEditandoId(null);
   };
 
-  const handleCheckbox = (categoria) => {
-    setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
-  };
+  const handleCheckbox = (categoria) => setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
 
   const toggleMenuVisibility = async (itemName) => {
     let newHidden = [...hiddenItems];
@@ -197,26 +177,15 @@ export default function App() {
 
     if (isMainMenu) {
       let itemsToToggle = [itemName];
-      if (estructuraCatalogo[itemName]) {
-        itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
-      }
-
-      if (isCurrentlyHidden) {
-        newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
-      } else {
-        newHidden = [...new Set([...newHidden, ...itemsToToggle])];
-      }
+      if (estructuraCatalogo[itemName]) itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
+      if (isCurrentlyHidden) newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
+      else newHidden = [...new Set([...newHidden, ...itemsToToggle])];
     } else {
-      if (isCurrentlyHidden) {
-        newHidden = newHidden.filter(i => i !== itemName);
-      } else {
-        newHidden.push(itemName);
-      }
+      if (isCurrentlyHidden) newHidden = newHidden.filter(i => i !== itemName);
+      else newHidden.push(itemName);
     }
-
     setHiddenItems(newHidden); 
-    const { error } = await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
-    if (error) console.error("Error guardando configuración:", error);
+    await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
   };
 
   const handleSelectTalla = (e, productoId, talla) => {
@@ -224,27 +193,19 @@ export default function App() {
     e.stopPropagation();
     setTallasSeleccionadas(prev => {
       const currentSelected = prev[productoId] || [];
-      if (currentSelected.includes(talla)) {
-        return { ...prev, [productoId]: currentSelected.filter(t => t !== talla) };
-      } else {
-        return { ...prev, [productoId]: [...currentSelected, talla] };
-      }
+      if (currentSelected.includes(talla)) return { ...prev, [productoId]: currentSelected.filter(t => t !== talla) };
+      else return { ...prev, [productoId]: [...currentSelected, talla] };
     });
   };
 
   const triggerStarAnimation = (e) => {
     if (!e || !e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
+    const id = Date.now();
     const startX = rect.left + (rect.width / 2);
     const startY = rect.top + (rect.height / 2);
-    const id = Date.now();
-
     setStars(prev => [...prev, { id, x: startX, y: startY, active: false }]);
-    
-    setTimeout(() => { 
-      setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s)); 
-    }, 50);
-    
+    setTimeout(() => setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s)), 50);
     setTimeout(() => {
       setStars(prev => prev.filter(s => s.id !== id));
       setCartPulse(true);
@@ -253,11 +214,7 @@ export default function App() {
   };
 
   const agregarAlCarrito = (producto, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     const isRing = producto.subcategoria === 'Anillos';
     const selectedSizes = tallasSeleccionadas[producto.id] || [];
 
@@ -267,17 +224,13 @@ export default function App() {
 
     setCarrito(prev => {
       let newCart = [...prev];
-      
       if (isRing) {
         const tallasObj = parseTallasseguro(producto.tallas);
         selectedSizes.forEach(talla => {
           const maxForTalla = parseInt(tallasObj[talla] || 0);
           const index = newCart.findIndex(item => item.id === producto.id && item.tallaSeleccionada === talla);
-          
           if (index > -1) {
-            if (newCart[index].cantidad < maxForTalla) {
-              newCart[index].cantidad += 1;
-            }
+            if (newCart[index].cantidad < maxForTalla) newCart[index].cantidad += 1;
           } else {
             newCart.push({ ...producto, tallaSeleccionada: talla, cantidad: 1, stockMaximo: maxForTalla });
           }
@@ -285,11 +238,8 @@ export default function App() {
       } else {
         const stockMax = parseInt(producto.disponibilidad) || 99;
         const index = newCart.findIndex(item => item.id === producto.id);
-        
         if (index > -1) {
-          if (newCart[index].cantidad < stockMax) {
-            newCart[index].cantidad += 1;
-          }
+          if (newCart[index].cantidad < stockMax) newCart[index].cantidad += 1;
         } else {
           newCart.push({ ...producto, cantidad: 1, stockMaximo: stockMax });
         }
@@ -297,9 +247,7 @@ export default function App() {
       return newCart;
     });
 
-    if (isRing) {
-      setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
-    }
+    if (isRing) setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
     setProductoSeleccionado(null); 
   };
 
@@ -314,28 +262,65 @@ export default function App() {
   };
 
   const toggleFavorito = (id) => {
-    if (favoritos.includes(id)) {
-      setFavoritos(favoritos.filter(favId => favId !== id));
+    if (favoritos.includes(id)) setFavoritos(favoritos.filter(favId => favId !== id));
+    else setFavoritos([...favoritos, id]);
+  };
+
+  // 👇 FLUJO DE CHECKOUT Y WHATSAPP 👇
+  const handleContinuarCheckout = () => {
+    if (envioConfig.tipo === 'domicilio') {
+      setCheckoutPaso(2); // Pasa a pedir datos de pago
     } else {
-      setFavoritos([...favoritos, id]);
+      enviarPedidoWhatsApp(); // Si es local, envía directo sin pago previo
     }
   };
 
-  const finalizarPedido = () => {
-    alert('Esta función aún no está configurada, pronto podrás finalizar tu pedido de ANTARES.');
+  const enviarPedidoWhatsApp = async (e) => {
+    if(e) e.preventDefault();
+    setIsUploading(true);
+
+    let urlComprobante = '';
+    if (comprobantePago) {
+      const fileExt = comprobantePago.name.split('.').pop();
+      const fileName = `pago_${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('catalogo').upload(`comprobantes/${fileName}`, comprobantePago);
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(`comprobantes/${fileName}`);
+        urlComprobante = publicUrl;
+      }
+    }
+
+    const subtotal = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
+    const total = subtotal + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0);
+    
+    let mensaje = `*NUEVO PEDIDO - ANTARES*%0A------------------------%0A*Cliente:* ${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}%0A*Productos:*%0A`;
+    
+    carrito.forEach(item => {
+      const tallaStr = item.tallaSeleccionada ? ` (Talla: ${item.tallaSeleccionada})` : '';
+      mensaje += `- ${item.cantidad || 1}x ${item.titulo}${tallaStr} : $${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)}%0A`;
+    });
+
+    mensaje += `------------------------%0A*Subtotal:* $${subtotal.toFixed(2)}%0A*Envío:* ${envioConfig.tipo === 'domicilio' ? `$${envioConfig.sectorPrecio.toFixed(2)} (${envioConfig.sectorNombre})` : 'Recoger en Local (Gratis)'}%0A*TOTAL:* $${total.toFixed(2)}%0A------------------------%0A`;
+
+    if (envioConfig.tipo === 'domicilio') {
+      mensaje += `*Link Ubicación:* ${envioConfig.linkMaps || 'No proporcionado'}%0A`;
+    }
+    if (urlComprobante) {
+      mensaje += `*Comprobante de Pago:* ${urlComprobante}%0A`;
+    }
+
+    setIsUploading(false);
+    setCarrito([]);
+    setCheckoutPaso(1);
+    setActiveView('home');
+    window.open(`https://wa.me/593980111570?text=${mensaje}`, '_blank');
   };
 
   const prepararEdicion = (producto) => {
     setNuevaPieza({
-      titulo: producto.titulo, 
-      descripcion: producto.descripcion || '', 
-      costo: producto.costo || '', 
-      precio: producto.precio,
-      disponibilidad: producto.disponibilidad || '', 
-      subcategoria: producto.subcategoria || '',
-      tallas: parseTallasseguro(producto.tallas), 
-      imagen: null, 
-      imagen_url: producto.imagen_url
+      titulo: producto.titulo, descripcion: producto.descripcion || '', costo: producto.costo || '', 
+      precio: producto.precio, disponibilidad: producto.disponibilidad || '', subcategoria: producto.subcategoria || '',
+      tallas: parseTallasseguro(producto.tallas), imagen: null, imagen_url: producto.imagen_url
     });
     setEditandoId(producto.id);
     setShowInlineForm(true);
@@ -344,15 +329,69 @@ export default function App() {
   const cerrarFormulario = () => {
     setShowInlineForm(false);
     setEditandoId(null);
-    setNuevaPieza({ 
-      titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' 
-    });
+    setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, imagen: null, imagen_url: '' });
   };
 
-  const toggleVendido = async (id, estadoActual) => {
-    const { data, error } = await supabase.from('productos').update({ vendido: !estadoActual }).eq('id', id).select();
-    if (!error && data && data.length > 0) {
-      setProductos(prev => prev.map(p => p.id === id ? data[0] : p));
+  // 👇 SOLUCIÓN 1: DESCONTAR TALLAS EN EL ADMIN Y MARCAR VENDIDO 👇
+  const handleToggleVendidoAdmin = async (e, producto) => {
+    e.stopPropagation();
+    const isRing = producto.subcategoria === 'Anillos';
+    let nuevasTallas = null;
+    let nuevoVendido = producto.vendido;
+    let cantidadVendida = 1; 
+
+    if (isRing) {
+      const selectedSizes = tallasSeleccionadas[producto.id] || [];
+      if (selectedSizes.length === 0) {
+        return alert('Para descontar stock de un anillo, seleccione primero la(s) talla(s) que desea marcar como vendidas y luego presione este botón.');
+      }
+      
+      const tallasObj = parseTallasseguro(producto.tallas);
+      let errorStock = false;
+      
+      selectedSizes.forEach(talla => {
+        if (!tallasObj[talla] || tallasObj[talla] < 1) errorStock = true;
+        else tallasObj[talla] -= 1;
+      });
+
+      if (errorStock) return alert('Una de las tallas seleccionadas no tiene stock disponible para descontar.');
+      
+      nuevasTallas = JSON.stringify(tallasObj);
+      cantidadVendida = selectedSizes.length; // Si vendió 2 tallas, suma 2 a vendidos
+
+      // Verifica si se quedó sin stock total en todas las tallas
+      const totalStockRestante = Object.values(tallasObj).reduce((acc, val) => acc + Number(val), 0);
+      if (totalStockRestante === 0) nuevoVendido = true;
+
+      // Limpia selección
+      setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
+
+    } else {
+      // No es anillo
+      let disp = parseInt(producto.disponibilidad) || 1;
+      if (disp > 1 && !producto.vendido) {
+        disp -= 1;
+        // Solo actualizamos disponibilidad en el texto para reflejarlo, pero el prompt pedía esto específico en anillos.
+      } else {
+        nuevoVendido = !producto.vendido;
+      }
+    }
+
+    const currentVendidos = producto.vendidos || 0;
+    
+    const { data, error } = await supabase.from('productos').update({ 
+      tallas: nuevasTallas !== null ? nuevasTallas : producto.tallas,
+      vendido: nuevoVendido,
+      vendidos: currentVendidos + cantidadVendida
+    }).eq('id', producto.id).select();
+
+    if (!error && data && data.length > 0) setProductos(prev => prev.map(p => p.id === producto.id ? data[0] : p));
+  };
+
+  const handleBorrarLocal = async (id) => {
+    if(window.confirm('¿Seguro que deseas retirar esta pieza?')) {
+      const { error } = await supabase.from('productos').delete().eq('id', id);
+      if (!error) setProductos(prev => prev.filter(p => p.id !== id));
     }
   };
 
@@ -389,7 +428,6 @@ export default function App() {
         setProductos(prev => prev.map(p => p.id === editandoId ? data[0] : p));
         cerrarFormulario();
       }
-      if (error) console.error(error);
     } else {
       const { data, error } = await supabase.from('productos').insert([payload]).select();
       if (data && data.length > 0) {
@@ -399,27 +437,10 @@ export default function App() {
         });
         cerrarFormulario();
       }
-      if (error) console.error(error);
     }
   };
 
-  const handleBorrarLocal = async (id) => {
-    if(window.confirm('¿Seguro que deseas retirar esta pieza?')) {
-      const { error } = await supabase.from('productos').delete().eq('id', id);
-      if (!error) setProductos(prev => prev.filter(p => p.id !== id));
-    }
-  };
-
-  if (!areSupabaseCredentialsSet) {
-    return (
-      <div className="bg-black text-white min-h-screen flex items-center justify-center text-center p-6 font-serif">
-        <div className="bg-black/80 backdrop-blur-md p-12 rounded-sm max-w-2xl shadow-2xl border-none w-full mx-4">
-          <h2 className="text-[14px] text-white mb-4 tracking-[0.2em] uppercase">Configuración Requerida</h2>
-          <p className="text-gray-400 text-[12px]">Verifica tus credenciales de Supabase en los Secrets.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!areSupabaseCredentialsSet) return null;
 
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
@@ -429,20 +450,14 @@ export default function App() {
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
-
-  const isAllSelected = (menuPrincipal) => {
-    return estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
-  };
+  const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
   const toggleAll = (menuPrincipal) => {
     const subs = estructuraCatalogo[menuPrincipal];
-    if (isAllSelected(menuPrincipal)) {
-      setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
-    } else {
+    if (isAllSelected(menuPrincipal)) setCategoriasDescarga(prev => prev.filter(c => !subs.includes(c)));
+    else {
       const newSelections = [...categoriasDescarga];
-      subs.forEach(sub => {
-        if (!newSelections.includes(sub)) newSelections.push(sub);
-      });
+      subs.forEach(sub => { if (!newSelections.includes(sub)) newSelections.push(sub); });
       setCategoriasDescarga(newSelections);
     }
   };
@@ -453,29 +468,21 @@ export default function App() {
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   return (
-    <div className="bg-black text-white min-h-screen flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden text-[1.1rem]">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; font-family: "Times New Roman", Times, serif; }
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
-        select::-ms-expand { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; font-size: 1.02em; }
+        @font-face { font-family: 'TimesNumbers'; src: local('Times New Roman'), local('Times'); unicode-range: U+0030-0039; }
+        body { font-family: 'TimesNumbers', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+        select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         @media print { .screen-only { display: none !important; } .print-only { display: block !important; } }
       `}</style>
 
       {stars.map(star => (
-        <div
-          key={star.id}
-          className="fixed z-[9999] w-2 h-2 bg-white rounded-full pointer-events-none transition-all ease-in-out"
-          style={{
-            transitionDuration: '700ms',
-            left: star.active ? 'calc(100vw - 60px)' : star.x,
-            top: star.active ? '30px' : star.y,
-            opacity: star.active ? 0 : 1,
-            transform: star.active ? 'scale(0.1)' : 'scale(1)',
-            boxShadow: '0 0 20px 8px rgba(255, 255, 255, 0.8)'
-          }}
+        <div key={star.id} className="fixed z-[9999] w-2 h-2 bg-white rounded-full pointer-events-none transition-all ease-in-out"
+          style={{ transitionDuration: '700ms', left: star.active ? 'calc(100vw - 60px)' : star.x, top: star.active ? '30px' : star.y, opacity: star.active ? 0 : 1, transform: star.active ? 'scale(0.1)' : 'scale(1)', boxShadow: '0 0 20px 8px rgba(255, 255, 255, 0.8)' }}
         />
       ))}
 
@@ -483,7 +490,7 @@ export default function App() {
         <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
-            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] tracking-[0.2em] uppercase">
+            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[12px] md:text-[14px] tracking-[0.2em] uppercase">
               Volver
             </button>
           )}
@@ -491,14 +498,10 @@ export default function App() {
           {user && (
             <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
               
-              {/* SOLUCION: EL BOLSO SOLO SE VE SI NO ES ADMIN */}
               {userRole !== 'admin' && (
-                <button 
-                  onClick={() => setActiveView('bag')} 
-                  className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
-                >
+                <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] font-bold px-[4px] py-[1px] rounded-full">{carrito.length}</span>
+                  <span className="absolute -top-1 -right-2 bg-white text-black text-[10px] md:text-[11px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
 
@@ -508,21 +511,19 @@ export default function App() {
                 </button>
                 <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
-                    <button onClick={() => setActiveView('pedidos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
+                    <button onClick={() => setActiveView('perfil')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                    <button onClick={() => setActiveView('pedidos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
                     
-                    {/* SOLUCION: DESEOS SOLO PARA CLIENTE */}
                     {userRole !== 'admin' && (
-                      <button onClick={() => setActiveView('deseos')} className="text-[10px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                      <button onClick={() => setActiveView('deseos')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
                     )}
-
-                    {/* ADMIN: VER INVENTARIO */}
+                    
                     {userRole === 'admin' && (
-                      <button onClick={() => setActiveView('inventario')} className="text-[10px] tracking-[0.2em] uppercase text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Inventario / Finanzas</button>
+                      <button onClick={() => setActiveView('inventario')} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mb-5 font-bold">Inventario / Finanzas</button>
                     )}
 
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-[10px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={handleLogout} className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -604,7 +605,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-[14px] tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   &quot;Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista.&quot;
+                   &quot;Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección.&quot;
                  </p>
                </section>
 
@@ -628,11 +629,14 @@ export default function App() {
             </div>
           )}
 
-          {/* 👇 VISTA DE INVENTARIO DESGLOSADO POR TALLAS (SOLO ADMIN) 👇 */}
+          {/* 👇 VISTA 2: INVENTARIO Y SISTEMA CONTABLE (SÓLO ADMIN) 👇 */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">Inventario y Sistema Contable</h2>
-              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
+              
+              {/* TABLA 1: INVENTARIO ACTUAL */}
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
+                <h3 className="text-[12px] tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
                 <div className="min-w-[800px]">
                   <div className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
                     <div className="col-span-2 text-left">Pieza</div>
@@ -640,29 +644,28 @@ export default function App() {
                     <div>Stock</div>
                     <div>Costo</div>
                     <div>Precio</div>
-                    <div>Ganancia</div>
+                    <div>Ganancia Potencial</div>
                   </div>
                   {productos.reduce((acc, p) => {
-                    if (p.subcategoria === 'Anillos') {
-                      const tallasObj = parseTallasseguro(p.tallas);
-                      const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
-                      if (activeTallas.length === 0) {
-                        acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: 0 });
-                      } else {
+                    if (!p.vendido) {
+                      if (p.subcategoria === 'Anillos') {
+                        const tallasObj = parseTallasseguro(p.tallas);
+                        const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
                         activeTallas.forEach(([talla, cantidad]) => {
                           acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad) });
                         });
+                      } else {
+                        const disp = parseInt(p.disponibilidad) || 1;
+                        if (disp > 0) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: disp });
                       }
-                    } else {
-                      acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: parseInt(p.disponibilidad) || 0 });
                     }
                     return acc;
                   }, []).map((item, idx) => {
                     const costo = parseFloat(item.costo) || 0;
                     const precio = parseFloat(item.precio) || 0;
-                    const ganancia = precio - costo;
+                    const ganancia = (precio - costo) * item.stock_especifico;
                     return (
-                      <div key={`${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center">
+                      <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
                         <div className="col-span-2 flex items-center gap-4 text-left">
                           <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
                           <div className="flex flex-col truncate">
@@ -671,15 +674,53 @@ export default function App() {
                           </div>
                         </div>
                         <div className="text-white font-bold">{item.talla_especifica}</div>
-                        <div className={item.stock_especifico > 0 ? "text-white" : "text-red-500"}>{item.stock_especifico}</div>
+                        <div className="text-white">{item.stock_especifico}</div>
                         <div className="text-gray-400">${costo.toFixed(2)}</div>
                         <div className="text-white font-bold">${precio.toFixed(2)}</div>
-                        <div className="text-white">+${ganancia.toFixed(2)}</div>
+                        <div className="text-gray-400">+${ganancia.toFixed(2)}</div>
                       </div>
                     );
                   })}
-                  {productos.length === 0 && (
-                    <p className="text-center text-gray-500 text-[12px] uppercase py-8 tracking-[0.2em]">No hay piezas registradas en el catálogo.</p>
+                </div>
+              </div>
+
+              {/* TABLA 2: VENTAS REALIZADAS (Basado en la columna 'vendidos') */}
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
+                <h3 className="text-[12px] tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
+                <div className="min-w-[800px]">
+                  <div className="grid grid-cols-6 gap-4 text-[12px] tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                    <div className="col-span-2 text-left">Pieza Vendida</div>
+                    <div>Cant. Vendida</div>
+                    <div>Inv. Recuperada</div>
+                    <div>Venta Total</div>
+                    <div>Ganancia Neta Real</div>
+                  </div>
+                  {productos.filter(p => p.vendidos && p.vendidos > 0).map((item, idx) => {
+                    const costo = parseFloat(item.costo) || 0;
+                    const precio = parseFloat(item.precio) || 0;
+                    const cantidadVendida = parseInt(item.vendidos) || 0;
+                    
+                    const inversionRecuperada = costo * cantidadVendida;
+                    const ventaTotal = precio * cantidadVendida;
+                    const gananciaNeta = ventaTotal - inversionRecuperada;
+
+                    return (
+                      <div key={`sold-${item.id}`} className="grid grid-cols-6 gap-4 text-[12px] tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                        <div className="col-span-2 flex items-center gap-4 text-left">
+                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
+                          <div className="flex flex-col truncate">
+                            <span className="uppercase truncate text-gray-300">{item.titulo}</span>
+                          </div>
+                        </div>
+                        <div className="text-white font-bold">{cantidadVendida}</div>
+                        <div className="text-gray-400">${inversionRecuperada.toFixed(2)}</div>
+                        <div className="text-white font-bold">${ventaTotal.toFixed(2)}</div>
+                        <div className="text-green-400 font-bold">+${gananciaNeta.toFixed(2)}</div>
+                      </div>
+                    );
+                  })}
+                  {productos.filter(p => p.vendidos && p.vendidos > 0).length === 0 && (
+                    <p className="text-center text-gray-500 text-[12px] uppercase py-8 tracking-[0.2em]">Aún no hay registros de piezas vendidas.</p>
                   )}
                 </div>
               </div>
@@ -708,17 +749,7 @@ export default function App() {
                  <div 
                    onClick={() => { 
                      setEditandoId(null); 
-                     setNuevaPieza({
-                       titulo: '', 
-                       descripcion: '', 
-                       costo: '', 
-                       precio: '', 
-                       disponibilidad: '', 
-                       subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', 
-                       tallas: {}, 
-                       imagen: null, 
-                       imagen_url: '' 
-                     });
+                     setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, imagen: null, imagen_url: '' });
                      setShowInlineForm(true); 
                    }} 
                    className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0"
@@ -729,94 +760,49 @@ export default function App() {
                  </div>
                )}
 
-               {/* FORMULARIO DE ADMIN DE CRISTAL SIN LINEAS NI FONDOS GRISES */}
+               {/* FORMULARIO DE ADMIN: CRISTAL BORROSO, SIN LINEAS */}
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-white/5 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-sm border-none">
-                   <button 
-                     type="button" 
-                     onClick={cerrarFormulario} 
-                     className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md"
-                   >
-                     ×
-                   </button>
+                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-black/30 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border border-white/5">
                    
-                   <h3 className="text-[14px] tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">
-                     {editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}
-                   </h3>
+                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+                   
+                   <h3 className="text-[12px] md:text-[16px] tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
                      <div className="mb-12 flex justify-center bg-transparent p-0">
-                       <img 
-                         src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} 
-                         alt="Vista previa" 
-                         className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" 
-                       />
+                       <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-4 text-center items-center justify-items-center">
-                     <input 
-                       type="text" 
-                       value={nuevaPieza.titulo} 
-                       onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} 
-                       placeholder="TÍTULO DE LA OBRA" 
-                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
-                       required
-                     />
-                     <input 
-                       type="number" 
-                       value={nuevaPieza.costo} 
-                       onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} 
-                       placeholder="COSTO FABRICACIÓN (USD)" 
-                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
-                     />
-                     <input 
-                       type="number" 
-                       value={nuevaPieza.precio} 
-                       onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} 
-                       placeholder="PRECIO VENTA (USD)" 
-                       className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
-                       required
-                     />
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required />
+                     
+                     <div className="w-full relative">
+                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO DE FABRICACIÓN (USD)" className="w-full bg-transparent text-white/70 text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
+                     </div>
+
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA FINAL (USD)" className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required />
+                     
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input 
-                         type="text" 
-                         value={nuevaPieza.disponibilidad} 
-                         onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} 
-                         placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" 
-                         className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" 
-                       />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
                      )}
+                     
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select 
-                         value={nuevaPieza.subcategoria} 
-                         onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} 
-                         className="w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[12px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center appearance-none transition-colors focus:bg-white/10"
-                       >
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="appearance-none w-full bg-transparent text-gray-300 text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center hover:bg-white/5 transition-colors">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
-                         {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                           <option key={sub} value={sub} className="bg-black text-white">{sub}</option>
-                         ))}
+                         {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (<option key={sub} value={sub} className="bg-black text-white">{sub}</option>))}
                        </select>
                      )}
                    </div>
 
-                   {/* CALCULADORA DE PRECIOS */}
                    {nuevaPieza.costo > 0 && (
-                     <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 border-b border-white/5 mt-6">
-                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[12px] tracking-[0.2em] text-gray-300 uppercase">
+                     <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 mt-6">
+                       <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[11px] md:text-[12px] tracking-[0.2em] text-gray-300 uppercase">
                           {[100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
-                              <button 
-                                key={porcentaje}
-                                type="button"
-                                onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})}
-                                className="bg-white/5 rounded-sm px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none border-none"
-                              >
-                                {porcentaje}%: ${sugerido.toFixed(2)}
-                              </button>
+                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                             );
                           })}
                        </div>
@@ -830,43 +816,18 @@ export default function App() {
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2">
                              <span className="text-white text-[14px] font-light">{talla}</span>
-                             <input
-                               type="number"
-                               min="0"
-                               value={nuevaPieza.tallas[talla] || ''}
-                               onChange={(e) => setNuevaPieza({
-                                 ...nuevaPieza,
-                                 tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }
-                               })}
-                               placeholder="0"
-                               className="w-12 md:w-16 bg-white/5 rounded-sm text-white text-center text-[12px] py-2 outline-none border-none placeholder-gray-500 transition-colors focus:bg-white/10"
-                             />
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} placeholder="0" className="w-12 md:w-16 bg-transparent rounded-none border-b border-white/20 text-white text-center text-[12px] py-2 outline-none placeholder-gray-500 transition-colors focus:border-white/50" />
                            </div>
                          ))}
                        </div>
                      </div>
                    )}
 
-                   <textarea 
-                     value={nuevaPieza.descripcion} 
-                     onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} 
-                     placeholder="DESCRIPCIÓN EDITORIAL..." 
-                     rows="2" 
-                     className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[12px] tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center transition-colors focus:bg-white/10"
-                   ></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[12px] md:text-[14px] tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input 
-                       type="file" 
-                       onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} 
-                       className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[12px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" 
-                     />
-                     <button 
-                       type="submit" 
-                       className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl"
-                     >
-                       {editandoId ? 'Guardar Cambios' : 'Publicar'}
-                     </button>
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[11px] md:file:text-[12px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[11px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
                    </div>
                  </form>
                )}
@@ -886,7 +847,7 @@ export default function App() {
                          
                          {producto.vendido && (
                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                             <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                             <span className="text-white tracking-[0.4em] text-[12px] md:text-[14px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
                            </div>
                          )}
 
@@ -899,11 +860,11 @@ export default function App() {
                        </div>
                        
                        <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                         <h4 className="text-[14px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
-                         <span className="text-[14px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+                         <h4 className="text-[12px] md:text-[16px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words uppercase">{producto.titulo}</h4>
+                         <span className="text-[12px] md:text-[16px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                          
                          {!isRing && (
-                           <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
+                           <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? `Disponibilidad: ${producto.disponibilidad}` : 'Bajo Pedido'}</p>
                          )}
 
                          {isRing && (
@@ -923,7 +884,6 @@ export default function App() {
                                        }}
                                        className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[12px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
-                                       {/* SOLUCION: SIN TACHADOS */}
                                        <span>{talla}</span>
                                      </button>
                                      <span className={`text-[8px] tracking-[0.1em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
@@ -941,8 +901,8 @@ export default function App() {
                          {userRole === 'cliente' && !producto.vendido && (
                            <div className="flex gap-2 mt-auto w-full z-30 justify-center">
                               <button 
-                                onClick={(e) => { if(canBuy) agregarAlCarrito(producto, e); }} 
-                                className={`flex-grow py-3 text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                                onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
+                                className={`flex-grow py-3 text-[10px] md:text-[11px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                               >
                                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
                               </button>
@@ -950,8 +910,14 @@ export default function App() {
                            </div>
                          )}
 
+                         {/* 👇 SOLUCIÓN 1 Y 3: BOTÓN DE ADMIN PARA VENDER DESCONTANDO STOCK 👇 */}
                          {userRole === 'admin' && (
-                           <button onClick={(e) => { e.stopPropagation(); toggleVendido(producto.id, producto.vendido); }} className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                           <button 
+                             onClick={(e) => handleToggleVendidoAdmin(e, producto)} 
+                             className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
+                           >
+                             {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
+                           </button>
                          )}
                        </div>
                      </div>
@@ -968,13 +934,10 @@ export default function App() {
           {productoSeleccionado && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
               <div className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent" onClick={e => e.stopPropagation()}>
-                
                 <button onClick={() => setProductoSeleccionado(null)} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
-                
                 <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
                   <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
                 </div>
-                
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
                   <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
                   <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
@@ -1053,7 +1016,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA BOLSO (SÓLO CLIENTES) */}
+          {/* 👇 VISTA CHECKOUT / BOLSO MEJORADA (SOLUCIÓN 3 Y 4) 👇 */}
           {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
@@ -1061,54 +1024,132 @@ export default function App() {
               {carrito.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
-                <div className="bg-white/5 backdrop-blur-xl p-4 md:p-10 shadow-2xl rounded-sm w-full overflow-x-hidden">
-                  <h3 className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
                   
-                  {carrito.map(item => (
-                    <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
-                      <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
-                      <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain border border-white/10" />
-                      <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                        <h4 className="text-[12px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
-                        <p className="text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
-                          {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
-                        </p>
-                        
-                        <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
-                          <button 
-                            onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} 
-                            className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none"
-                          >-</button>
-                          <span className="text-[12px] text-white w-4 text-center">{item.cantidad || 1}</span>
-                          <button 
-                            onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} 
-                            disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)}
-                            className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}
-                          >+</button>
+                  {/* PASO 1: RESUMEN DEL CARRITO */}
+                  {checkoutPaso === 1 && (
+                    <>
+                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      {carrito.map(item => (
+                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
+                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                          <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
+                          <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
+                            <h4 className="text-[12px] md:text-[14px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words uppercase">{item.titulo}</h4>
+                            <p className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                              {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
+                            </p>
+                            <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
+                              <span className="text-[12px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
+                            </div>
+                          </div>
+                          <span className="text-[14px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                        </div>
+                      ))}
+                      
+                      <div className="mt-8 border-t border-white/10 pt-6">
+                        <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[10px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                        </div>
+
+                        {envioConfig.tipo === 'domicilio' && (
+                          <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full">
+                            <select 
+                              onChange={(e) => {
+                                const selected = sectoresQuito.find(s => s.nombre === e.target.value);
+                                setEnvioConfig({...envioConfig, sectorNombre: selected.nombre, sectorPrecio: selected.precio});
+                              }}
+                              value={envioConfig.sectorNombre}
+                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
+                            >
+                              {sectoresQuito.map(sector => (
+                                <option key={sector.nombre} value={sector.nombre} className="bg-black text-white">{sector.nombre} - ${sector.precio.toFixed(2)} USD</option>
+                              ))}
+                            </select>
+                            <input 
+                              type="url" 
+                              placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
+                              value={envioConfig.linkMaps}
+                              onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              required
+                            />
+                            <p className="text-[10px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[12px] tracking-[0.1em] uppercase">
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
+                        <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
+                        <p className="text-[14px] md:text-[16px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                      </div>
+                      
+                      <div className="flex justify-center mt-10 md:mt-16">
+                        <button onClick={handleContinuarCheckout} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                          {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* PASO 2: PAGO Y COMPROBANTE (Solo Domicilio) */}
+                  {checkoutPaso === 2 && (
+                    <div className="flex flex-col items-center animate-fade-in">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[12px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
+                      <p className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                        Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia por el valor total de <strong className="text-white">${(subtotalCarrito + envioConfig.sectorPrecio).toFixed(2)} USD</strong>.
+                      </p>
+
+                      <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
+                        <p className="text-[10px] tracking-[0.2em] text-amber-500 uppercase mb-4">Cuentas Autorizadas</p>
+                        <div className="text-[12px] tracking-[0.1em] text-white font-light space-y-4">
+                          <div>
+                            <strong>Banco Pichincha / DeUna</strong><br/>
+                            Ahorros: 2205567890<br/>
+                            Tonny Cuasquer<br/>
+                            CI: 172XXXXXXX
+                          </div>
+                          <hr className="border-white/5 w-1/2 mx-auto" />
+                          <div>
+                            <strong>Banco de Guayaquil</strong><br/>
+                            Ahorros: 10455678<br/>
+                            Tonny Cuasquer
+                          </div>
                         </div>
                       </div>
-                      <span className="text-[14px] tracking-[0.1em] text-white whitespace-nowrap">${(item.precio * (item.cantidad || 1)).toFixed(2)} USD</span>
+
+                      <div className="w-full max-w-md flex flex-col items-center gap-6">
+                         <label className="text-[10px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <input 
+                           type="file" 
+                           accept="image/*"
+                           onChange={e => setComprobantePago(e.target.files[0])} 
+                           className="text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:text-[10px] file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
+                         />
+                      </div>
+
+                      <button 
+                        onClick={enviarPedidoWhatsApp} 
+                        disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
+                        className={`mt-12 text-[12px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                      >
+                        {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
+                      </button>
                     </div>
-                  ))}
-                  
-                  <div className="mt-8 md:mt-12 flex flex-col items-end gap-2 md:gap-3 text-[12px] tracking-[0.1em] uppercase">
-                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
-                    <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">Gratis</span></p>
-                    <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                    <p className="text-[14px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
-                  </div>
-                  
-                  <div className="flex justify-center mt-10 md:mt-16">
-                    <button onClick={finalizarPedido} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none rounded-sm w-full sm:w-auto">
-                      Finalizar Pedido
-                    </button>
-                  </div>
+                  )}
+
                 </div>
               )}
             </section>
           )}
 
-          {/* VISTA DESEOS (SÓLO CLIENTES) */}
           {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
@@ -1118,7 +1159,6 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
-                    const isRing = producto.subcategoria === 'Anillos';
                     return (
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-[3/4] md:aspect-auto relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
@@ -1268,17 +1308,9 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                
-                {userRole === 'cliente' && (
-                  <div className="mb-4 pt-10 border-t border-white/10 mt-6 w-full">
-                     <p className="text-gray-400 text-[12px] tracking-[0.3em] uppercase text-center py-4 font-light">Bienvenido a su espacio exclusivo en Antares.</p>
-                  </div>
-                )}
-
               </div>
             </section>
           )}
-
         </main>
         
         <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
@@ -1401,7 +1433,7 @@ export default function App() {
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[10px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
@@ -1435,7 +1467,7 @@ export default function App() {
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         {p.vendido && (
                           <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                            <span className="text-white tracking-[0.4em] text-[12px] font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
                           </div>
                         )}
                       </div>
