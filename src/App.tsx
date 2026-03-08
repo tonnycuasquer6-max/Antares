@@ -53,7 +53,6 @@ export default function App() {
   const [listaPedidos, setListaPedidos] = useState([]);
   const [pedidoExpandido, setPedidoExpandido] = useState(null);
 
-  // ESTADOS DE FILTROS Y DROPDOWNS PERSONALIZADOS
   const [filtroColor, setFiltroColor] = useState('Todo');
   const [filtroTalla, setFiltroTalla] = useState('Todo');
   const [ordenPrecio, setOrdenPrecio] = useState('');
@@ -560,11 +559,10 @@ export default function App() {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
         
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
@@ -692,7 +690,7 @@ export default function App() {
           )}
 
           {!user && (
-            <div className="w-full flex justify-center mt-4 mb-4 auth-wrapper">
+            <div className="w-full flex justify-center mt-4 mb-4">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="30" width="30"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
@@ -851,7 +849,7 @@ export default function App() {
 
           {activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
+              <h2 className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
                 {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
               </h2>
               
@@ -878,7 +876,7 @@ export default function App() {
 
                       return (
                         <div key={month} className="mb-12">
-                          <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
+                          <h3 className="text-[10px] md:text-xs font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
                           <div className="flex flex-col gap-6">
                             {Object.entries(userGroups).map(([clientKey, clientPedidos]) => {
                                const [nombre, telefono] = clientKey.split('|');
@@ -960,7 +958,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
                 </div>
               )}
             </section>
@@ -980,7 +978,6 @@ export default function App() {
                  </ul>
                )}
 
-               {/* 👇 FILTROS DE BÚSQUEDA Y ORDENAMIENTO (SOLUCIÓN CUSTOM SIN NATIVE SELECT) 👇 */}
                {activeCategory === 'Acero Fino' && (
                  <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
@@ -992,9 +989,9 @@ export default function App() {
                           </div>
                           {openFilter === 'color' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-2 flex flex-col items-center bg-transparent border-none z-[200] min-w-[120px]">
-                               <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
+                               <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
                                  {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
-                                   <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>
+                                   <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                      {opt === 'Todo' ? 'Todos' : opt}
                                    </span>
                                  ))}
@@ -1009,10 +1006,10 @@ export default function App() {
                           </div>
                           {openFilter === 'talla' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-2 flex flex-col items-center bg-transparent border-none z-[200] min-w-[120px]">
-                               <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl max-h-64 overflow-y-auto">
-                                 <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Todas</span>
+                               <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none max-h-64 overflow-y-auto">
+                                 <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Todas</span>
                                  {tallasDisponibles.map(t => (
-                                   <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>
+                                   <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                      {t}
                                    </span>
                                  ))}
@@ -1027,10 +1024,10 @@ export default function App() {
                           </div>
                           {openFilter === 'precio' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-2 flex flex-col items-center bg-transparent border-none z-[200] min-w-[160px]">
-                               <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
-                                 <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Normal</span>
-                                 <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
-                                 <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
+                               <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
+                                 <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Normal</span>
+                                 <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
+                                 <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
                                </div>
                             </div>
                           )}
@@ -1060,10 +1057,10 @@ export default function App() {
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
                      
                      <div className="w-full relative">
-                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors" />
                      </div>
 
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
                        <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
@@ -1071,15 +1068,15 @@ export default function App() {
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                        <div className="relative w-full" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div onClick={() => setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white/50 hover:text-white transition-colors">
-                           {nuevaPieza.subcategoria ? nuevaPieza.subcategoria.toUpperCase() : 'TIPO DE JOYA (OPCIONAL)'}
+                         <div onClick={() => setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
+                           {nuevaPieza.subcategoria ? nuevaPieza.subcategoria : 'TIPO DE JOYA (OPCIONAL)'}
                          </div>
                          {openFormSelect === 'subcat' && (
                            <div className="absolute top-full left-0 w-full mt-0 pt-2 flex flex-col items-center bg-transparent border-none z-[300]">
-                             <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl max-h-48 overflow-y-auto">
-                               <div onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors">NINGUNO</div>
+                             <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none max-h-48 overflow-y-auto">
+                               <div onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                                 <div key={sub} onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors">{sub.toUpperCase()}</div>
+                                 <div key={sub} onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{sub}</div>
                                ))}
                              </div>
                            </div>
@@ -1089,15 +1086,15 @@ export default function App() {
 
                      {activeCategory === 'Acero Fino' && (
                        <div className="relative w-full" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div onClick={() => setOpenFormSelect(openFormSelect === 'color' ? null : 'color')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white/50 hover:text-white transition-colors">
-                           {nuevaPieza.color ? nuevaPieza.color.toUpperCase() : 'COLOR (OPCIONAL)'}
+                         <div onClick={() => setOpenFormSelect(openFormSelect === 'color' ? null : 'color')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
+                           {nuevaPieza.color ? nuevaPieza.color : 'COLOR (OPCIONAL)'}
                          </div>
                          {openFormSelect === 'color' && (
                            <div className="absolute top-full left-0 w-full mt-0 pt-2 flex flex-col items-center bg-transparent border-none z-[300]">
-                             <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
-                               <div onClick={() => { setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors">NINGUNO</div>
+                             <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
+                               <div onClick={() => { setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {['Silver', 'Gold', 'Black'].map(c => (
-                                 <div key={c} onClick={() => { setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors">{c.toUpperCase()}</div>
+                                 <div key={c} onClick={() => { setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{c}</div>
                                ))}
                              </div>
                            </div>
@@ -1113,7 +1110,7 @@ export default function App() {
                           {[115, 100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
-                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-white/5 rounded-sm px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none border-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                             );
                           })}
                        </div>
@@ -1127,7 +1124,7 @@ export default function App() {
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
                              <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 m-0" />
                            </div>
                          ))}
                        </div>
@@ -1137,14 +1134,13 @@ export default function App() {
                    <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-6 resize-none"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-2 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[9px] md:text-[10px] tracking-[0.3em] uppercase px-12 py-3 w-full md:w-auto">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
                    </div>
                  </form>
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                 {/* APLICACIÓN DEL FILTRO ANTES DEL MAP */}
                  {productosMostrar.map(producto => {
                    const tallasObj = parseTallasseguro(producto.tallas);
                    const isRing = producto.subcategoria === 'Anillos';
@@ -1361,14 +1357,14 @@ export default function App() {
                         {envioConfig.tipo === 'domicilio' && (
                           <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
                             <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
-                              <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors">
+                              <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors uppercase">
                                 {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
                               </div>
                               {openFormSelect === 'envio' && (
                                 <div className="absolute top-full right-0 w-full mt-0 pt-2 flex flex-col items-end bg-transparent border-none z-[300]">
-                                  <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
+                                  <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
                                     {sectoresQuito.map(sector => (
-                                      <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-400 hover:text-white text-[10px] tracking-[0.1em]">
+                                      <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-500 hover:text-white text-[10px] tracking-[0.1em] uppercase">
                                         {sector.nombre} - ${sector.precio.toFixed(2)} USD
                                       </span>
                                     ))}
@@ -1436,7 +1432,7 @@ export default function App() {
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
+                           className="text-[10px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
                          />
                       </div>
 
@@ -1512,19 +1508,19 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1597,7 +1593,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1639,14 +1635,14 @@ export default function App() {
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
                   <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                     <div onClick={() => setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.2em] py-3 cursor-pointer text-center hover:border-white/50 hover:text-white transition-colors uppercase">
+                     <div onClick={() => setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-3 cursor-pointer text-center transition-colors uppercase">
                        {perfilForm.tratamiento || 'SELECCIONAR TRATAMIENTO*'}
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full mt-0 pt-2 flex flex-col items-center bg-transparent border-none">
-                         <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
+                         <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
-                             <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{t}</div>
+                             <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
                          </div>
                        </div>
@@ -1707,14 +1703,14 @@ export default function App() {
 
                   <div className="flex justify-center gap-6 mt-4">
                     <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center hover:border-white/50 hover:text-white transition-colors">
+                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
                          {perfilForm.prefijo}
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full mt-0 pt-2 flex flex-col items-center bg-transparent border-none">
-                           <div className="bg-white/5 backdrop-blur-3xl w-full flex flex-col gap-4 py-4 shadow-2xl">
+                           <div className="bg-transparent backdrop-blur-2xl w-full flex flex-col gap-4 py-4 shadow-none">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
-                               <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors">{p}</div>
+                               <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
                            </div>
                          </div>
@@ -1744,11 +1740,11 @@ export default function App() {
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[7px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-white text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                  <button type="submit" className="mt-8 bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[10px] md:text-[12px] tracking-[0.3em] uppercase py-5 w-full">
                     Actualizar Perfil
                   </button>
               </form>
