@@ -59,6 +59,13 @@ export default function App() {
   const [openFilter, setOpenFilter] = useState(null);
   const [openFormSelect, setOpenFormSelect] = useState(null);
 
+  // ESTADOS DEL ATELIER PRÊT-À-PORTER (CUSTOMIZADOR)
+  const [customPrenda, setCustomPrenda] = useState('Camiseta');
+  const [customColor, setCustomColor] = useState('#ffffff');
+  const [customLogo, setCustomLogo] = useState(null);
+  const [customPlacement, setCustomPlacement] = useState('centro-pecho');
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
     { nombre: 'Quito Centro', precio: 1.00 },
@@ -511,6 +518,80 @@ export default function App() {
     }
   };
 
+  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER
+  const procesarImagenFondo = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    setIsRemovingBg(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        const rBg = data[0], gBg = data[1], bBg = data[2], aBg = data[3];
+        if(aBg > 0) { 
+            const tolerance = 40;
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i], g = data[i+1], b = data[i+2];
+              if (Math.abs(r - rBg) < tolerance && Math.abs(g - gBg) < tolerance && Math.abs(b - bBg) < tolerance) {
+                data[i+3] = 0; 
+              }
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+        setCustomLogo(canvas.toDataURL());
+        setIsRemovingBg(false);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getPrendaBaseImage = () => {
+    if (customPrenda === 'Camiseta') return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80';
+    if (customPrenda === 'Buzo') return 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80';
+    if (customPrenda === 'Chompa') return 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80';
+    return '';
+  };
+
+  const getPlacementStyles = () => {
+    switch(customPlacement) {
+      case 'pecho-izq': return { top: '30%', left: '65%', width: '15%', height: '15%', transform: 'translate(-50%, -50%)' };
+      case 'centro-pecho': return { top: '35%', left: '50%', transform: 'translate(-50%, -50%)', width: '30%', height: '30%' };
+      case 'espalda-sup': return { top: '25%', left: '50%', transform: 'translate(-50%, -50%)', width: '25%', height: '25%' };
+      case 'espalda-centro': return { top: '45%', left: '50%', transform: 'translate(-50%, -50%)', width: '40%', height: '40%' };
+      default: return {};
+    }
+  };
+
+  const handleCustomAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerStarAnimation(e);
+    
+    const customItem = {
+      id: `custom-${Date.now()}`,
+      titulo: `PRÊT-À-PORTER: ${customPrenda.toUpperCase()}`,
+      categoria: 'Sartorial',
+      subcategoria: 'A Medida',
+      precio: 45.00,
+      cantidad: 1,
+      stockMaximo: 99,
+      imagen_url: customLogo || getPrendaBaseImage(),
+      tallaSeleccionada: 'A Medida',
+      descripcion: `Color: ${customColor}, Ubicación: ${customPlacement}`
+    };
+
+    setCarrito(prev => [...prev, customItem]);
+  };
+
   if (!areSupabaseCredentialsSet) return null;
 
   const estructuraCatalogo = {
@@ -740,6 +821,7 @@ export default function App() {
             </div>
           )}
 
+          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
@@ -968,7 +1050,114 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'categoria' && (
+          {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Sartorial Personalizado</h2>
+              
+              <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start w-full">
+                 <div className="w-full lg:w-1/2 relative bg-[#0a0a0a] aspect-[3/4] flex items-center justify-center overflow-hidden border border-white/5">
+                   <div className="absolute inset-0 z-10 pointer-events-none" style={{ backgroundColor: customColor, mixBlendMode: 'multiply' }}></div>
+                   <img src={getPrendaBaseImage()} alt="Prenda" className="w-full h-full object-cover z-0" />
+                   
+                   {customLogo && (
+                     <img 
+                        src={customLogo} 
+                        alt="Logo" 
+                        className="absolute z-20 object-contain drop-shadow-2xl" 
+                        style={{ ...getPlacementStyles(), mixBlendMode: isRemovingBg ? 'normal' : 'multiply' }} 
+                     />
+                   )}
+                 </div>
+
+                 <div className="w-full lg:w-1/2 flex flex-col gap-10">
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Selección de Prenda</p>
+                     <div className="flex gap-4">
+                       {['Camiseta', 'Buzo', 'Chompa'].map(prenda => (
+                         <button 
+                           key={prenda} 
+                           onClick={() => setCustomPrenda(prenda)} 
+                           className={`py-3 px-6 text-[10px] tracking-[0.2em] uppercase transition-colors cursor-pointer outline-none border ${customPrenda === prenda ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}
+                         >
+                           {prenda}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Tono Sartorial</p>
+                     <div className="flex gap-4 flex-wrap">
+                       {[
+                         {name: 'Blanco', hex: '#ffffff'}, 
+                         {name: 'Negro', hex: '#111111'}, 
+                         {name: 'Gris', hex: '#555555'}, 
+                         {name: 'Navy', hex: '#1a2332'}, 
+                         {name: 'Vino', hex: '#3b1c20'}
+                       ].map(color => (
+                         <div 
+                           key={color.name} 
+                           onClick={() => setCustomColor(color.hex)} 
+                           className={`w-10 h-10 cursor-pointer rounded-full border-2 transition-transform ${customColor === color.hex ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`} 
+                           style={{ backgroundColor: color.hex, boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
+                           title={color.name}
+                         />
+                       ))}
+                     </div>
+                   </div>
+
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Insignia Personal</p>
+                     <input 
+                       type="file" 
+                       accept="image/*"
+                       onChange={procesarImagenFondo}
+                       className="text-[10px] text-gray-500 file:mr-4 file:py-3 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full"
+                     />
+                     {isRemovingBg && <p className="text-[8px] text-gray-400 tracking-[0.1em] uppercase animate-pulse">Procesando fondo y renderizando...</p>}
+                   </div>
+
+                   {customLogo && (
+                     <div className="flex flex-col gap-4 animate-fade-in">
+                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">4. Ubicación</p>
+                       <div className="grid grid-cols-2 gap-4">
+                         {[
+                           {id: 'pecho-izq', label: 'Pecho'}, 
+                           {id: 'centro-pecho', label: 'Mitad Pecho'}, 
+                           {id: 'espalda-sup', label: 'Espalda Superior'}, 
+                           {id: 'espalda-centro', label: 'Mitad Espalda'}
+                         ].map(loc => (
+                           <button 
+                             key={loc.id} 
+                             onClick={() => setCustomPlacement(loc.id)} 
+                             className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === loc.id ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}
+                           >
+                             {loc.label}
+                           </button>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
+                     <div className="flex justify-between items-end">
+                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR ESTIMADO</span>
+                        <span className="text-[18px] text-white font-bold tracking-[0.1em]">$45.00 USD</span>
+                     </div>
+                     <button 
+                       onClick={handleCustomAddToCart}
+                       className="w-full bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl"
+                     >
+                       Añadir Diseño al Bolso
+                     </button>
+                   </div>
+
+                 </div>
+              </div>
+            </section>
+          )}
+
+          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
@@ -993,7 +1182,7 @@ export default function App() {
                           </div>
                           {openFilter === 'color' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                               <div className="bg-white/5 backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-2xl border-none">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
                                  {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
                                    <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                      {opt === 'Todo' ? 'Todos' : opt}
@@ -1011,7 +1200,7 @@ export default function App() {
                             </div>
                             {openFilter === 'talla' && (
                               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                                 <div className="bg-white/5 backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-2xl border-none max-h-64 overflow-y-auto">
+                                 <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none max-h-64 overflow-y-auto">
                                    <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Todas</span>
                                    {tallasDisponibles.map(t => (
                                      <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
@@ -1030,7 +1219,7 @@ export default function App() {
                           </div>
                           {openFilter === 'precio' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[160px]">
-                               <div className="bg-white/5 backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-2xl border-none">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
                                  <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Normal</span>
                                  <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
                                  <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
@@ -1063,10 +1252,10 @@ export default function App() {
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
                      
                      <div className="w-full relative">
-                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors" />
                      </div>
 
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
                        <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
@@ -1079,7 +1268,7 @@ export default function App() {
                          </div>
                          {openFormSelect === 'subcat' && (
                            <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                             <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-2xl border-none max-h-48 overflow-y-auto">
+                             <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none max-h-48 overflow-y-auto">
                                <div onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                                  <div key={sub} onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{sub}</div>
@@ -1097,7 +1286,7 @@ export default function App() {
                          </div>
                          {openFormSelect === 'color' && (
                            <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                             <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-2xl border-none">
+                             <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                                <div onClick={() => { setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {['Silver', 'Gold', 'Black'].map(c => (
                                  <div key={c} onClick={() => { setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{c}</div>
@@ -1130,7 +1319,7 @@ export default function App() {
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
                              <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 m-0" />
                            </div>
                          ))}
                        </div>
@@ -1368,7 +1557,7 @@ export default function App() {
                               </div>
                               {openFormSelect === 'envio' && (
                                 <div className="absolute top-full right-0 w-full pt-1 z-[300]">
-                                  <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-2xl border-none">
+                                  <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                                     {sectoresQuito.map(sector => (
                                       <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-500 hover:text-white text-[10px] tracking-[0.1em] uppercase">
                                         {sector.nombre} - ${sector.precio.toFixed(2)} USD
@@ -1438,7 +1627,7 @@ export default function App() {
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
+                           className="text-[10px] text-gray-300 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
                          />
                       </div>
 
@@ -1646,7 +1835,7 @@ export default function App() {
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                         <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
                              <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
@@ -1714,7 +1903,7 @@ export default function App() {
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                           <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
                                <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
@@ -1746,7 +1935,7 @@ export default function App() {
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[7px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
