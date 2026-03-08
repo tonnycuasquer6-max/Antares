@@ -9,6 +9,8 @@ import { useState, useEffect } from 'react';
 
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
+// MOCKUP BLANCO PROPORCIONADO POR EL USUARIO
+const MOCKUP_BLANCO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/image_0.png";
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -64,7 +66,7 @@ export default function App() {
   const [customColor, setCustomColor] = useState('#ffffff');
   const [customLogo, setCustomLogo] = useState(null);
   const [customPlacement, setCustomPlacement] = useState('centro-pecho');
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [customRenderedImage, setCustomRenderedImage] = useState(null); // Imagen final del render
 
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
@@ -518,78 +520,102 @@ export default function App() {
     }
   };
 
-  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER
-  const procesarImagenFondo = (e) => {
+  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER (SARTORIAL A MEDIDA)
+  // SE ASUME QUE EL USUARIO SUBE UNA IMAGEN PNG TRANSPARENTE
+  const procesarInsigniaLogotipo = (e) => {
     const file = e.target.files[0];
     if(!file) return;
-    setIsRemovingBg(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        
-        const rBg = data[0], gBg = data[1], bBg = data[2], aBg = data[3];
-        if(aBg > 0) { 
-            const tolerance = 40;
-            for (let i = 0; i < data.length; i += 4) {
-              const r = data[i], g = data[i+1], b = data[i+2];
-              if (Math.abs(r - rBg) < tolerance && Math.abs(g - gBg) < tolerance && Math.abs(b - bBg) < tolerance) {
-                data[i+3] = 0; 
-              }
-            }
-            ctx.putImageData(imageData, 0, 0);
-        }
-        setCustomLogo(canvas.toDataURL());
-        setIsRemovingBg(false);
-      };
-      img.src = event.target.result;
-    };
+    reader.onload = (event) => setCustomLogo(event.target.result);
     reader.readAsDataURL(file);
   };
 
-  const getPrendaBaseImage = () => {
-    if (customPrenda === 'Camiseta') return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80';
-    if (customPrenda === 'Buzo') return 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80';
-    if (customPrenda === 'Chompa') return 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80';
-    return '';
-  };
+  // Lógica de Renderizado Programático del Diseño en el Lienzo (Canvas)
+  // Preserva sombras y texturas del mockup blanco original teñiendo matemáticamente
+  useEffect(() => {
+    if (activeCategory === 'Prêt-à-Porter' && activeView === 'categoria') {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const shirtImg = new Image();
+      shirtImg.crossOrigin = "Anonymous";
+      
+      shirtImg.onload = () => {
+        canvas.width = shirtImg.width;
+        canvas.height = shirtImg.height;
+        
+        // 1. Dibujar el mockup blanco original (base de textura y sombras)
+        ctx.drawImage(shirtImg, 0, 0);
+        
+        // 2. Teñir programáticamente la prenda preservando sombras
+        // Se dibuja el color sólido elegido encima y se funde usando multiplicación
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = customColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over'; // Restaurar modo normal
+        
+        // 3. Posicionar el Logo (PNG Transparente proporcionado)
+        if (customLogo) {
+          const logoImg = new Image();
+          logoImg.onload = () => {
+            let x, y, size;
+            const shirtWidth = canvas.width;
+            const shirtHeight = canvas.height;
+            
+            switch(customPlacement) {
+              casepecho-izq': 
+                x = shirtWidth * 0.65; y = shirtHeight * 0.3; size = shirtWidth * 0.15; break;
+              case 'centro-pecho': 
+                x = shirtWidth * 0.5; y = shirtHeight * 0.35; size = shirtWidth * 0.3; break;
+              caseespalda-sup': 
+                x = shirtWidth * 0.5; y = shirtHeight * 0.25; size = shirtWidth * 0.25; break;
+              caseespalda-centro': 
+                x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.4; break;
+              default: x = shirtWidth * 0.5; y = shirtHeight * 0.35; size = shirtWidth * 0.3;
+            }
+            
+            const aspectLogo = logoImg.width / logoImg.height;
+            ctx.drawImage(logoImg, x - size/2, y - (size/aspectLogo)/2, size, size/aspectLogo);
+            setCustomRenderedImage(canvas.toDataURL());
+          };
+          logoImg.src = customLogo;
+        } else {
+          setCustomRenderedImage(canvas.toDataURL());
+        }
+      };
+      // Se usa el mockup blanco del usuario o fotos genéricas de alta calidad
+      shirtImg.src = MOCKUP_BLANCO_URL;
+    }
+  }, [activeCategory, activeView, customColor, customLogo, customPlacement]);
 
-  const getPlacementStyles = () => {
+  const getPlacementLabel = () => {
     switch(customPlacement) {
-      case 'pecho-izq': return { top: '30%', left: '65%', width: '15%', height: '15%', transform: 'translate(-50%, -50%)' };
-      case 'centro-pecho': return { top: '35%', left: '50%', transform: 'translate(-50%, -50%)', width: '30%', height: '30%' };
-      case 'espalda-sup': return { top: '25%', left: '50%', transform: 'translate(-50%, -50%)', width: '25%', height: '25%' };
-      case 'espalda-centro': return { top: '45%', left: '50%', transform: 'translate(-50%, -50%)', width: '40%', height: '40%' };
-      default: return {};
+      casepecho-izq': return 'Pecho (Izquierda)';
+      case 'centro-pecho': return 'Centro Pecho';
+      caseespalda-sup': return 'Espalda Superior';
+      caseespalda-centro': return 'Mitad Espalda';
+      default: return 'Centro Pecho';
     }
   };
 
   const handleCustomAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     triggerStarAnimation(e);
     
     const customItem = {
       id: `custom-${Date.now()}`,
-      titulo: `PRÊT-À-PORTER: ${customPrenda.toUpperCase()}`,
-      categoria: 'Sartorial',
+      titulo: `PRÊT-À-PORTER: Camiseta Diseñada`,
+      categoria: 'Prêt-à-Porter',
       subcategoria: 'A Medida',
-      precio: 45.00,
+      precio: 39.00,
       cantidad: 1,
       stockMaximo: 99,
-      imagen_url: customLogo || getPrendaBaseImage(),
-      tallaSeleccionada: 'A Medida',
-      descripcion: `Color: ${customColor}, Ubicación: ${customPlacement}`
+      imagen_url: customRenderedImage || MOCKUP_BLANCO_URL,
+      tallaSeleccionada: 'A Medida (Sartorial)',
+      descripcion: `Color Tono: ${customColor}, Insignia: ${customLogo ? 'Subida' : 'Sin logo'}, Ubicación: ${getPlacementLabel()}`
     };
 
     setCarrito(prev => [...prev, customItem]);
+    alert('Su diseño sartorial ha sido añadido al bolso.');
   };
 
   if (!areSupabaseCredentialsSet) return null;
@@ -797,7 +823,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
                  </p>
                </section>
 
@@ -821,7 +847,6 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
@@ -1050,50 +1075,36 @@ export default function App() {
             </section>
           )}
 
+          {/* VISTA DEL ATELIER: PRÊT-À-PORTER (SARTORIAL A MEDIDA CON MOCKUP REAL) */}
           {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Sartorial Personalizado</h2>
               
               <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start w-full">
-                 <div className="w-full lg:w-1/2 relative bg-[#0a0a0a] aspect-[3/4] flex items-center justify-center overflow-hidden border border-white/5">
-                   <div className="absolute inset-0 z-10 pointer-events-none" style={{ backgroundColor: customColor, mixBlendMode: 'multiply' }}></div>
-                   <img src={getPrendaBaseImage()} alt="Prenda" className="w-full h-full object-cover z-0" />
-                   
-                   {customLogo && (
-                     <img 
-                        src={customLogo} 
-                        alt="Logo" 
-                        className="absolute z-20 object-contain drop-shadow-2xl" 
-                        style={{ ...getPlacementStyles(), mixBlendMode: isRemovingBg ? 'normal' : 'multiply' }} 
-                     />
-                   )}
+                 {/* Visualizador Programático (Canvas Render) */}
+                 <div className="w-full lg:w-1/2 relative bg-[#0a0a0a] aspect-square flex items-center justify-center overflow-hidden border border-white/5 group shadow-2xl">
+                   <img 
+                      src={customRenderedImage || MOCKUP_BLANCO_URL} 
+                      alt="Renderizado Sartorial" 
+                      className="w-full h-full object-contain z-10 transition-opacity duration-300" 
+                   />
+                   {!customRenderedImage && <p className="absolute text-[10px] text-gray-600 uppercase tracking-[0.2em]">Cargando Lienzo Sartorial...</p>}
                  </div>
 
+                 {/* Controles de Configuración Sartorial */}
                  <div className="w-full lg:w-1/2 flex flex-col gap-10">
+                   
                    <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Selección de Prenda</p>
-                     <div className="flex gap-4">
-                       {['Camiseta', 'Buzo', 'Chompa'].map(prenda => (
-                         <button 
-                           key={prenda} 
-                           onClick={() => setCustomPrenda(prenda)} 
-                           className={`py-3 px-6 text-[10px] tracking-[0.2em] uppercase transition-colors cursor-pointer outline-none border ${customPrenda === prenda ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}
-                         >
-                           {prenda}
-                         </button>
-                       ))}
-                     </div>
-                   </div>
-
-                   <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Tono Sartorial</p>
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Tono Sartorial (Teñido Programático)</p>
+                     <p className="text-[9px] text-gray-600 tracking-[0.1em] uppercase -mt-2">Preserva sombras y textura de tu foto blanca.</p>
                      <div className="flex gap-4 flex-wrap">
                        {[
                          {name: 'Blanco', hex: '#ffffff'}, 
                          {name: 'Negro', hex: '#111111'}, 
-                         {name: 'Gris', hex: '#555555'}, 
+                         {name: 'Gris Plata', hex: '#b5b5b5'}, 
                          {name: 'Navy', hex: '#1a2332'}, 
-                         {name: 'Vino', hex: '#3b1c20'}
+                         {name: 'Vino', hex: '#3b1c20'},
+                         {name: 'Oro Antares', hex: '#c9a063'}
                        ].map(color => (
                          <div 
                            key={color.name} 
@@ -1107,25 +1118,25 @@ export default function App() {
                    </div>
 
                    <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Insignia Personal</p>
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Insignia Personal (Subir PNG Transparente)</p>
+                     <p className="text-[9px] text-red-400/80 tracking-[0.1em] uppercase -mt-2">Obligatorio: Formato PNG transparente para calidad premium.</p>
                      <input 
                        type="file" 
-                       accept="image/*"
-                       onChange={procesarImagenFondo}
+                       accept="image/png,image/gif"
+                       onChange={procesarInsigniaLogotipo}
                        className="text-[10px] text-gray-500 file:mr-4 file:py-3 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full"
                      />
-                     {isRemovingBg && <p className="text-[8px] text-gray-400 tracking-[0.1em] uppercase animate-pulse">Procesando fondo y renderizando...</p>}
                    </div>
 
                    {customLogo && (
                      <div className="flex flex-col gap-4 animate-fade-in">
-                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">4. Ubicación</p>
+                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Ubicación de Insignia</p>
                        <div className="grid grid-cols-2 gap-4">
                          {[
-                           {id: 'pecho-izq', label: 'Pecho'}, 
-                           {id: 'centro-pecho', label: 'Mitad Pecho'}, 
-                           {id: 'espalda-sup', label: 'Espalda Superior'}, 
-                           {id: 'espalda-centro', label: 'Mitad Espalda'}
+                           {id: 'centro-pecho', label: 'Centro Pecho'}, 
+                           {id:pecho-izq', label: 'Pecho Izquierdo'}, 
+                           {id:espalda-sup', label: 'Espalda Superior'}, 
+                           {id:espalda-centro', label: 'Mitad Espalda'}
                          ].map(loc => (
                            <button 
                              key={loc.id} 
@@ -1141,14 +1152,14 @@ export default function App() {
 
                    <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
                      <div className="flex justify-between items-end">
-                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR ESTIMADO</span>
-                        <span className="text-[18px] text-white font-bold tracking-[0.1em]">$45.00 USD</span>
+                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR SARTORIAL A MEDIDA</span>
+                        <span className="text-[18px] text-white font-bold tracking-[0.1em]">$39.00 USD</span>
                      </div>
                      <button 
                        onClick={handleCustomAddToCart}
                        className="w-full bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl"
                      >
-                       Añadir Diseño al Bolso
+                       Añadir Diseño Sartorial al Bolso
                      </button>
                    </div>
 
@@ -1683,16 +1694,6 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'pedidos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
-              
-              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
-              </div>
-            </section>
-          )}
-
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
@@ -1703,19 +1704,19 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1935,7 +1936,7 @@ export default function App() {
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
