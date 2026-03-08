@@ -557,13 +557,29 @@ export default function App() {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
         select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none; }
         select::-ms-expand { display: none; }
+        
+        /* OCULTAR FLECHAS EN INPUT TYPE NUMBER GLOBALMENTE */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+
+        /* FONDO TRANSPARENTE EN INPUTS Y SELECTS PARA LOGIN Y OTROS FORMS */
+        .auth-wrapper input, .auth-wrapper select {
+          background-color: transparent !important;
+        }
+
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         @media print { 
@@ -681,7 +697,7 @@ export default function App() {
           )}
 
           {!user && (
-            <div className="w-full flex justify-center mt-4 mb-4">
+            <div className="w-full flex justify-center mt-4 mb-4 auth-wrapper">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="30" width="30"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
@@ -727,10 +743,9 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
+              <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
               
               <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
                 <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
@@ -777,7 +792,7 @@ export default function App() {
                         <div className="text-white">{item.stock_especifico}</div>
                         <div className="text-gray-400">${costo.toFixed(2)}</div>
                         <div className="text-white font-bold">${precio.toFixed(2)}</div>
-                        <div className="text-white">{ganancia > 0 ? `+$${ganancia.toFixed(2)}` : 'N/A'}</div>
+                        <div className="text-green-400">{ganancia > 0 ? `+$${ganancia.toFixed(2)}` : 'N/A'}</div>
                       </div>
                     );
                   })}
@@ -829,7 +844,7 @@ export default function App() {
                           <div className="text-white font-bold">{item.talla_especifica}</div>
                           <div className="text-gray-400">${item.costo.toFixed(2)}</div>
                           <div className="text-white font-bold">${item.precio.toFixed(2)}</div>
-                          <div className="text-white font-bold">+${ganancia.toFixed(2)}</div>
+                          <div className="text-green-400 font-bold">+${ganancia.toFixed(2)}</div>
                         </div>
                       );
                     });
@@ -839,10 +854,9 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA GESTIÓN DE PEDIDOS ADMIN */}
           {activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
+              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
                 {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
               </h2>
               
@@ -971,20 +985,19 @@ export default function App() {
                  </ul>
                )}
 
-               {/* 👇 FILTROS DE BÚSQUEDA Y ORDENAMIENTO (SOLUCIÓN 2) 👇 */}
                {activeCategory === 'Acero Fino' && (
                  <div className="flex flex-wrap justify-center gap-4 mb-10 w-full max-w-3xl mx-auto">
-                    <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                    <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
                        <option value="Todo" className="bg-black text-gray-500">Todos los Colores</option>
                        <option value="Silver" className="bg-black text-white">Silver</option>
                        <option value="Gold" className="bg-black text-white">Gold</option>
                        <option value="Black" className="bg-black text-white">Black</option>
                     </select>
-                    <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                    <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
                        <option value="Todo" className="bg-black text-gray-500">Todas las Tallas</option>
                        {tallasDisponibles.map(t => <option key={t} value={t} className="bg-black text-white">Talla {t}</option>)}
                     </select>
-                    <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="bg-white/5 border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
+                    <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
                        <option value="" className="bg-black text-gray-500">Ordenar Precio</option>
                        <option value="Asc" className="bg-black text-white">Menor a Mayor</option>
                        <option value="Desc" className="bg-black text-white">Mayor a Menor</option>
@@ -999,39 +1012,34 @@ export default function App() {
                )}
 
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-10 md:mb-16 bg-black/30 backdrop-blur-3xl p-8 md:p-12 shadow-2xl relative w-full rounded-none border border-white/5">
+                 <form onSubmit={handlePublicarLocal} className="mb-8 bg-black/30 backdrop-blur-3xl p-4 md:p-6 shadow-2xl relative w-full rounded-none border border-white/5">
                    <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
-                   <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-10 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+                   <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-4 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-                     <div className="mb-12 flex justify-center bg-transparent p-0">
+                     <div className="mb-4 flex justify-center bg-transparent p-0">
                        <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-4 text-center items-center justify-items-center">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
-                     
-                     <div className="w-full relative">
-                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-600 text-center transition-colors focus:bg-white/10" />
-                     </div>
-
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-4 text-center items-center justify-items-center">
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required />
+                     <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="appearance-none w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center transition-colors focus:bg-white/10">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (<option key={sub} value={sub} className="bg-black text-white">{sub}</option>))}
                        </select>
                      )}
 
-                     {/* 👇 SOLUCIÓN 1: SELECTOR DE COLOR OCULTO AL CLIENTE 👇 */}
                      {activeCategory === 'Acero Fino' && (
-                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="appearance-none w-full bg-white/5 rounded-sm backdrop-blur-md text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none cursor-pointer text-center transition-colors focus:bg-white/10">
+                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
                          <option value="" className="bg-black text-gray-500">COLOR (OPCIONAL)</option>
                          <option value="Silver" className="bg-black text-white">SILVER</option>
                          <option value="Gold" className="bg-black text-white">GOLD</option>
@@ -1041,13 +1049,13 @@ export default function App() {
                    </div>
 
                    {nuevaPieza.costo > 0 && (
-                     <div className="w-full flex flex-col items-center justify-center mb-10 pb-6 border-b border-white/5 mt-6">
+                     <div className="w-full flex flex-col items-center justify-center mb-6 pb-4 border-b border-white/5 mt-4">
                        <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
                        <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
-                          {[100, 75, 50, 25].map(porcentaje => {
+                          {[115, 100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
-                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-white/5 rounded-sm px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none border-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors cursor-pointer outline-none">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                             );
                           })}
                        </div>
@@ -1055,30 +1063,29 @@ export default function App() {
                    )}
 
                    {nuevaPieza.subcategoria === 'Anillos' && (
-                     <div className="w-full flex flex-col items-center mt-4 mb-10 pb-8">
+                     <div className="w-full flex flex-col items-center mt-4 mb-6 pb-4">
                        <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                        <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                          {tallasDisponibles.map(talla => (
-                           <div key={talla} className="flex flex-col items-center gap-2">
-                             <span className="text-white text-[10px] md:text-xs font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} placeholder="0" className="w-12 md:w-16 bg-white/5 rounded-sm text-white text-center text-[10px] md:text-xs py-2 outline-none border-none placeholder-gray-500 transition-colors focus:bg-white/10" />
+                           <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                             <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-12 md:w-16 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50" />
                            </div>
                          ))}
                        </div>
                      </div>
                    )}
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-white/5 rounded-sm backdrop-blur-md text-white text-[10px] md:text-xs tracking-[0.2em] py-4 outline-none border-none mb-12 resize-none placeholder-gray-500 text-center transition-colors focus:bg-white/10"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none mb-6 resize-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-2 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="text-black text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-3 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
                    </div>
                  </form>
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                 {/* APLICACIÓN DEL FILTRO ANTES DEL MAP */}
                  {productosMostrar.map(producto => {
                    const tallasObj = parseTallasseguro(producto.tallas);
                    const isRing = producto.subcategoria === 'Anillos';
@@ -1087,7 +1094,6 @@ export default function App() {
 
                    return (
                      <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
-                       {/* 👇 SOLUCIÓN 3: FOTOS CUADRADAS 1:1 (aspect-square) 👇 */}
                        <div className={`overflow-hidden aspect-square relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          {producto.vendido && (
@@ -1177,11 +1183,11 @@ export default function App() {
                   <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
                 </div>
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
-                  <h2 className="text-[10px] md:text-[14px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
-                  <p className="text-[10px] md:text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
+                  <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
+                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
-                    <p className="text-[10px] md:text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                    <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
                       {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
                     </p>
                   )}
@@ -1224,7 +1230,7 @@ export default function App() {
                          <div className="flex gap-4 mt-12 w-full justify-center">
                            <button 
                              onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
-                             className={`flex-grow text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                            >
                              {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
@@ -1257,32 +1263,32 @@ export default function App() {
 
           {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
                 <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
                   
                   {checkoutPaso === 1 && (
                     <>
-                      <h3 className="text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                       {carrito.map(item => (
                         <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                           <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
                           <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
                           <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                            <h4 className="text-[10px] md:text-[12px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
-                            <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
+                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
                               {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                             </p>
                             <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
-                              <span className="text-[10px] md:text-[12px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
                             </div>
                           </div>
-                          <span className="text-[10px] md:text-[12px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
                         </div>
                       ))}
                       
@@ -1301,7 +1307,7 @@ export default function App() {
                                 setEnvioConfig({...envioConfig, sectorNombre: selected.nombre, sectorPrecio: selected.precio});
                               }}
                               value={envioConfig.sectorNombre}
-                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] md:text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors"
+                              className="appearance-none w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 outline-none cursor-pointer text-right hover:border-white/50 transition-colors auth-wrapper"
                             >
                               {sectoresQuito.map(sector => (
                                 <option key={sector.nombre} value={sector.nombre} className="bg-black text-white">{sector.nombre} - ${sector.precio.toFixed(2)} USD</option>
@@ -1312,7 +1318,7 @@ export default function App() {
                               placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
                               value={envioConfig.linkMaps}
                               onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] md:text-[10px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
                               required
                             />
                             <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
@@ -1320,11 +1326,11 @@ export default function App() {
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] md:text-[12px] tracking-[0.1em] uppercase">
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
                         <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
                         <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                        <p className="text-[12px] md:text-[16px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
                       </div>
                       
                       <div className="flex justify-center mt-10 md:mt-16">
@@ -1339,13 +1345,13 @@ export default function App() {
                     <div className="flex flex-col items-center animate-fade-in">
                       <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
                       <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
-                      <p className="text-[8px] md:text-[10px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
                         Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
                       </p>
 
                       <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
-                        <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[10px] md:text-[12px] tracking-[0.1em] text-gray-300 font-light space-y-4">
+                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
+                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
                           <div>
                             <strong>Banco Pichincha / DeUna</strong><br/>
                             Ahorros: 2205567890<br/>
@@ -1362,19 +1368,19 @@ export default function App() {
                       </div>
 
                       <div className="w-full max-w-md flex flex-col items-center gap-6">
-                         <label className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
                          <input 
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] md:text-[12px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
+                           className="text-[10px] text-gray-300 file:mr-4 file:py-3 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full text-center" 
                          />
                       </div>
 
                       <button 
                         onClick={enviarPedidoWhatsApp} 
                         disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                        className={`mt-12 text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-white/20 text-gray-400 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
                       >
                         {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
                       </button>
@@ -1388,10 +1394,10 @@ export default function App() {
 
           {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
               {favoritos.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
@@ -1406,12 +1412,12 @@ export default function App() {
                         )}
                       </div>
                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                        <h4 className="text-[10px] md:text-[12px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
-                        <span className="text-[10px] md:text-[12px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                        <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[8px] md:text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[8px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-[10px] md:text-[14px] flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
                           </button>
                         </div>
@@ -1425,10 +1431,10 @@ export default function App() {
 
           {user && activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
               
               <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
               </div>
             </section>
           )}
@@ -1437,25 +1443,25 @@ export default function App() {
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
                 
-                <h2 className="text-[10px] md:text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
                 <div className="w-12 h-px bg-white/20 mb-12"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[10px] md:text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[10px] md:text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[10px] md:text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1464,13 +1470,13 @@ export default function App() {
                 <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -1478,23 +1484,23 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
                     
                     <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
                         <div key={menu} className="bg-transparent p-4 border border-none">
                           <div className="flex justify-between items-center">
-                            <span className={`text-[10px] md:text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
+                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
                             </button>
                           </div>
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
                             <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
-                              <span className={`text-[8px] md:text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
                               </button>
                             </div>
@@ -1507,13 +1513,13 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
                     <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[10px] md:text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -1528,7 +1534,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] md:text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1537,7 +1543,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1549,13 +1555,14 @@ export default function App() {
           )}
         </main>
         
-        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[8px] md:text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
+        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
+      <div className="auth-wrapper">
       {showCompleteProfile && user && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
            <div className="bg-white/5 backdrop-blur-3xl border border-none p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
@@ -1564,14 +1571,14 @@ export default function App() {
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
 
-              <h2 className="text-[12px] md:text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+              <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
 
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
                   
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="appearance-none w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
+                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -1587,7 +1594,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                     <input 
@@ -1595,13 +1602,13 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="flex justify-center gap-8 w-full">
                       <input 
                         type="text" 
@@ -1609,7 +1616,7 @@ export default function App() {
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1618,7 +1625,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1627,7 +1634,7 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-24 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                     </div>
@@ -1637,7 +1644,7 @@ export default function App() {
                     <select 
                       value={perfilForm.prefijo} 
                       onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} 
-                      className="appearance-none w-24 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
                     >
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
@@ -1650,7 +1657,7 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-none text-white text-[10px] md:text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                      className="w-48 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                     />
                   </div>
 
@@ -1664,24 +1671,24 @@ export default function App() {
                       onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
                       className="hidden" 
                     />
-                    <span className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                    <span className="text-gray-400 text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] md:text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-white text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                  <button type="submit" className="mt-8 bg-white text-black text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
                     Actualizar Perfil
                   </button>
               </form>
            </div>
         </div>
       )}
+      </div>
 
-      {/* CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO Y TALLAS ESTILO FOTO 2 */}
       <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
           <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
@@ -1703,17 +1710,15 @@ export default function App() {
                       <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         
-                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
                         {p.vendido && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                            <span className="tracking-[0.4em] text-[10px] md:text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
+                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
                           </div>
                         )}
                       </div>
                       <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
                       <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
                       
-                      {/* 👇 CAMBIO: Tallas y Disponibilidad con formato y tamaños solicitados 👇 */}
                       {p.subcategoria === 'Anillos' ? (
                         <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
                            {tallasDisponibles.map(t => {
@@ -1743,12 +1748,12 @@ export default function App() {
                         </p>
                       )}
 
-                      <p className="text-[10px] md:text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
+                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center tracking-[0.2em] text-[10px] md:text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
+                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
               )}
             </div>
           )
