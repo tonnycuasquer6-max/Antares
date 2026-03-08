@@ -59,16 +59,6 @@ export default function App() {
   const [openFilter, setOpenFilter] = useState(null);
   const [openFormSelect, setOpenFormSelect] = useState(null);
 
-  // Definición de la estructura del catálogo (Menú principal y subcategorías)
-  const estructuraCatalogo = {
-    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
-    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
-    // Se ha cambiado el nombre de raíz 'Prêt-à-Porter' a 'Firmamento' para evitar repeticiones.
-    // Mantiene las mismas subcategorías orientadas a vestuario.
-    'Firmamento': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
-  };
-
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
     { nombre: 'Quito Centro', precio: 1.00 },
@@ -523,6 +513,13 @@ export default function App() {
 
   if (!areSupabaseCredentialsSet) return null;
 
+  const estructuraCatalogo = {
+    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
+    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
+  };
+
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
   const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
@@ -719,7 +716,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
 
@@ -1497,6 +1494,16 @@ export default function App() {
             </section>
           )}
 
+          {user && activeView === 'pedidos' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              
+              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+              </div>
+            </section>
+          )}
+
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
@@ -1507,19 +1514,19 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1639,7 +1646,7 @@ export default function App() {
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-2xl border-none">
+                         <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
                              <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
@@ -1702,12 +1709,12 @@ export default function App() {
 
                   <div className="flex justify-center gap-6 mt-4">
                     <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
+                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
                          {perfilForm.prefijo}
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-2xl border-none">
+                           <div className="bg-white/5 backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
                                <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
@@ -1752,6 +1759,7 @@ export default function App() {
       )}
       </div>
 
+      {/* CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO Y TALLAS ESTILO FOTO 2 */}
       <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
           <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
@@ -1773,6 +1781,7 @@ export default function App() {
                       <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         
+                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
                         {p.vendido && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                             <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
@@ -1782,6 +1791,7 @@ export default function App() {
                       <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
                       <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
                       
+                      {/* 👇 CAMBIO: Tallas NO SE MUESTRAN en pulseras, collares, aretes, piercings 👇 */}
                       {p.subcategoria === 'Anillos' ? (
                         <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
                            {tallasDisponibles.map(t => {
@@ -1806,9 +1816,7 @@ export default function App() {
                            })}
                         </div>
                       ) : (
-                        <p style={{ color: '#aaaaaa', fontSize: '18px', marginBottom: '16px', textTransform: 'uppercase' }}>
-                          {p.disponibilidad ? p.disponibilidad : 'Bajo pedido'}
-                        </p>
+                        <div style={{ height: '16px', marginBottom: '16px' }}></div> 
                       )}
 
                       <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
