@@ -57,6 +57,7 @@ export default function App() {
   const [filtroColor, setFiltroColor] = useState('Todo');
   const [filtroTalla, setFiltroTalla] = useState('Todo');
   const [ordenPrecio, setOrdenPrecio] = useState('');
+  const [openFilter, setOpenFilter] = useState(null);
 
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
@@ -189,6 +190,7 @@ export default function App() {
     setFiltroColor('Todo');
     setFiltroTalla('Todo');
     setOrdenPrecio('');
+    setOpenFilter(null);
   };
 
   const handleCheckbox = (categoria) => setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
@@ -556,11 +558,10 @@ export default function App() {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
         
         select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none; }
         select::-ms-expand { display: none; }
@@ -572,10 +573,6 @@ export default function App() {
         }
         input[type="number"] {
           -moz-appearance: textfield;
-        }
-
-        .auth-wrapper input, .auth-wrapper select {
-          background-color: transparent !important;
         }
 
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -695,7 +692,7 @@ export default function App() {
           )}
 
           {!user && (
-            <div className="w-full flex justify-center mt-4 mb-4 auth-wrapper">
+            <div className="w-full flex justify-center mt-4 mb-4">
               <button onClick={() => setShowLoginModal(true)} className="text-white hover:text-gray-400 transition-colors p-0 bg-transparent border-none outline-none cursor-pointer z-50">
                 <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="30" width="30"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
@@ -983,32 +980,54 @@ export default function App() {
                  </ul>
                )}
 
+               {/* 👇 FILTROS DE BÚSQUEDA Y ORDENAMIENTO (SOLUCIÓN CUSTOM SIN NATIVE SELECT) 👇 */}
                {activeCategory === 'Acero Fino' && (
-                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center">
-                    <p className="text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">ORDENAR POR</p>
-                    <div className="flex flex-wrap justify-center gap-4 w-full">
-                       <div className="relative group flex-1 min-w-[150px]">
-                         <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
-                            <option value="Todo" className="bg-black text-gray-500">COLOR</option>
-                            <option value="Silver" className="bg-black text-white">SILVER</option>
-                            <option value="Gold" className="bg-black text-white">GOLD</option>
-                            <option value="Black" className="bg-black text-white">BLACK</option>
-                         </select>
+                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
+                    <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
+                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 w-full text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
+                       
+                       <div className="relative group cursor-pointer" onMouseLeave={() => setOpenFilter(null)}>
+                          <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors pb-2 ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                            Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
+                          </div>
+                          {openFilter === 'color' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex flex-col items-center bg-black/80 backdrop-blur-xl p-4 gap-4 border border-white/10 z-[200] min-w-[120px]">
+                               {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
+                                 <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>
+                                   {opt === 'Todo' ? 'Todos' : opt}
+                                 </span>
+                               ))}
+                            </div>
+                          )}
                        </div>
                        
-                       <div className="relative group flex-1 min-w-[150px]">
-                         <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
-                            <option value="Todo" className="bg-black text-gray-500">TALLA</option>
-                            {tallasDisponibles.map(t => <option key={t} value={t} className="bg-black text-white">TALLA {t}</option>)}
-                         </select>
+                       <div className="relative group cursor-pointer" onMouseLeave={() => setOpenFilter(null)}>
+                          <div onClick={() => setOpenFilter(openFilter === 'talla' ? null : 'talla')} className={`transition-colors pb-2 ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                            Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
+                          </div>
+                          {openFilter === 'talla' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex flex-col items-center bg-black/80 backdrop-blur-xl p-4 gap-4 border border-white/10 z-[200] min-w-[120px] max-h-64 overflow-y-auto">
+                               <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Todas</span>
+                               {tallasDisponibles.map(t => (
+                                 <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>
+                                   {t}
+                                 </span>
+                               ))}
+                            </div>
+                          )}
                        </div>
 
-                       <div className="relative group flex-1 min-w-[150px]">
-                         <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
-                            <option value="" className="bg-black text-gray-500">PRECIO</option>
-                            <option value="Asc" className="bg-black text-white">MENOR A MAYOR</option>
-                            <option value="Desc" className="bg-black text-white">MAYOR A MENOR</option>
-                         </select>
+                       <div className="relative group cursor-pointer" onMouseLeave={() => setOpenFilter(null)}>
+                          <div onClick={() => setOpenFilter(openFilter === 'precio' ? null : 'precio')} className={`transition-colors pb-2 ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                            Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
+                          </div>
+                          {openFilter === 'precio' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex flex-col items-center bg-black/80 backdrop-blur-xl p-4 gap-4 border border-white/10 z-[200] min-w-[160px]">
+                               <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Normal</span>
+                               <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
+                               <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white font-bold' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
+                            </div>
+                          )}
                        </div>
                     </div>
                  </div>
@@ -1035,24 +1054,24 @@ export default function App() {
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
                      
                      <div className="w-full relative">
-                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors" />
+                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                      </div>
 
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" required />
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
                        <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="appearance-none w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center hover:border-white/50 transition-colors">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center appearance-none hover:border-white/50 transition-colors">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (<option key={sub} value={sub} className="bg-black text-white">{sub}</option>))}
                        </select>
                      )}
 
                      {activeCategory === 'Acero Fino' && (
-                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="appearance-none w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center hover:border-white/50 transition-colors">
+                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center appearance-none hover:border-white/50 transition-colors">
                          <option value="" className="bg-black text-gray-500">COLOR (OPCIONAL)</option>
                          <option value="Silver" className="bg-black text-white">SILVER</option>
                          <option value="Gold" className="bg-black text-white">GOLD</option>
@@ -1082,7 +1101,7 @@ export default function App() {
                          {tallasDisponibles.map(talla => (
                            <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
                              <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-12 md:w-16 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50" />
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
                            </div>
                          ))}
                        </div>
@@ -1462,19 +1481,19 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[10px] tracking-[0.2em] uppercase font-light">
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
                   <div className="md:col-span-2 flex flex-col items-center">
                     <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[10px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
                       {user.email}
                     </p>
                   </div>
@@ -1532,7 +1551,7 @@ export default function App() {
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -1547,7 +1566,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1556,7 +1575,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1591,7 +1610,7 @@ export default function App() {
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="appearance-none w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
+                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -1607,7 +1626,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                     <input 
@@ -1615,13 +1634,13 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="flex justify-center gap-8 w-full">
                       <input 
                         type="text" 
@@ -1629,7 +1648,7 @@ export default function App() {
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1638,7 +1657,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1647,7 +1666,7 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-24 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                     </div>
@@ -1657,7 +1676,7 @@ export default function App() {
                     <select 
                       value={perfilForm.prefijo} 
                       onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} 
-                      className="appearance-none w-24 bg-transparent border-none text-white text-[10px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
                     >
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
@@ -1670,7 +1689,7 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                      className="w-48 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                     />
                   </div>
 
@@ -1693,7 +1712,7 @@ export default function App() {
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                  <button type="submit" className="mt-8 bg-white text-black text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
                     Actualizar Perfil
                   </button>
               </form>
@@ -1725,7 +1744,7 @@ export default function App() {
                         
                         {p.vendido && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                            <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
+                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
                           </div>
                         )}
                       </div>
@@ -1761,12 +1780,12 @@ export default function App() {
                         </p>
                       )}
 
-                      <p className="text-[10px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
+                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center tracking-[0.2em] text-[10px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
+                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
               )}
             </div>
           )
