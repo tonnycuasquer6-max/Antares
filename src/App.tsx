@@ -535,7 +535,6 @@ export default function App() {
   const cristalOpacoSubmenuClass = "flex flex-col bg-black/60 backdrop-blur-2xl py-6 px-8 shadow-2xl rounded-sm"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
-  // LÓGICA DEL BUSCADOR DE ACERO FINO
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
   if (activeCategory === 'Acero Fino') {
@@ -557,15 +556,15 @@ export default function App() {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative print:bg-black print:text-white w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
+        
         select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none; }
         select::-ms-expand { display: none; }
         
-        /* OCULTAR FLECHAS EN INPUT TYPE NUMBER GLOBALMENTE */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
           -webkit-appearance: none;
@@ -575,7 +574,6 @@ export default function App() {
           -moz-appearance: textfield;
         }
 
-        /* FONDO TRANSPARENTE EN INPUTS Y SELECTS PARA LOGIN Y OTROS FORMS */
         .auth-wrapper input, .auth-wrapper select {
           background-color: transparent !important;
         }
@@ -856,7 +854,7 @@ export default function App() {
 
           {activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-xl md:text-2xl tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
                 {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
               </h2>
               
@@ -883,7 +881,7 @@ export default function App() {
 
                       return (
                         <div key={month} className="mb-12">
-                          <h3 className="text-[10px] md:text-xs font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
+                          <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
                           <div className="flex flex-col gap-6">
                             {Object.entries(userGroups).map(([clientKey, clientPedidos]) => {
                                const [nombre, telefono] = clientKey.split('|');
@@ -965,7 +963,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
                 </div>
               )}
             </section>
@@ -986,22 +984,33 @@ export default function App() {
                )}
 
                {activeCategory === 'Acero Fino' && (
-                 <div className="flex flex-wrap justify-center gap-4 mb-10 w-full max-w-3xl mx-auto">
-                    <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
-                       <option value="Todo" className="bg-black text-gray-500">Todos los Colores</option>
-                       <option value="Silver" className="bg-black text-white">Silver</option>
-                       <option value="Gold" className="bg-black text-white">Gold</option>
-                       <option value="Black" className="bg-black text-white">Black</option>
-                    </select>
-                    <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
-                       <option value="Todo" className="bg-black text-gray-500">Todas las Tallas</option>
-                       {tallasDisponibles.map(t => <option key={t} value={t} className="bg-black text-white">Talla {t}</option>)}
-                    </select>
-                    <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="bg-transparent border border-white/10 text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase">
-                       <option value="" className="bg-black text-gray-500">Ordenar Precio</option>
-                       <option value="Asc" className="bg-black text-white">Menor a Mayor</option>
-                       <option value="Desc" className="bg-black text-white">Mayor a Menor</option>
-                    </select>
+                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center">
+                    <p className="text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">ORDENAR POR</p>
+                    <div className="flex flex-wrap justify-center gap-4 w-full">
+                       <div className="relative group flex-1 min-w-[150px]">
+                         <select value={filtroColor} onChange={e => setFiltroColor(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
+                            <option value="Todo" className="bg-black text-gray-500">COLOR</option>
+                            <option value="Silver" className="bg-black text-white">SILVER</option>
+                            <option value="Gold" className="bg-black text-white">GOLD</option>
+                            <option value="Black" className="bg-black text-white">BLACK</option>
+                         </select>
+                       </div>
+                       
+                       <div className="relative group flex-1 min-w-[150px]">
+                         <select value={filtroTalla} onChange={e => setFiltroTalla(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
+                            <option value="Todo" className="bg-black text-gray-500">TALLA</option>
+                            {tallasDisponibles.map(t => <option key={t} value={t} className="bg-black text-white">TALLA {t}</option>)}
+                         </select>
+                       </div>
+
+                       <div className="relative group flex-1 min-w-[150px]">
+                         <select value={ordenPrecio} onChange={e => setOrdenPrecio(e.target.value)} className="w-full bg-transparent border-none text-gray-500 hover:text-white focus:text-white text-[10px] tracking-[0.2em] py-3 px-6 outline-none appearance-none cursor-pointer text-center uppercase transition-colors">
+                            <option value="" className="bg-black text-gray-500">PRECIO</option>
+                            <option value="Asc" className="bg-black text-white">MENOR A MAYOR</option>
+                            <option value="Desc" className="bg-black text-white">MAYOR A MENOR</option>
+                         </select>
+                       </div>
+                    </div>
                  </div>
                )}
 
@@ -1023,23 +1032,27 @@ export default function App() {
                    )}
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-4 text-center items-center justify-items-center">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" required />
-                     <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-600 text-center hover:bg-white/5 focus:bg-white/10 transition-colors" />
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" required />
+                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
+                     
+                     <div className="w-full relative">
+                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors" />
+                     </div>
+
+                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" required />
                      
                      {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none placeholder-gray-400 text-center transition-colors focus:bg-white/10" />
+                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
                      )}
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
+                       <select value={nuevaPieza.subcategoria} onChange={e => setNuevaPieza({...nuevaPieza, subcategoria: e.target.value, tallas: {}})} className="appearance-none w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center hover:border-white/50 transition-colors">
                          <option value="" className="bg-black text-gray-500">TIPO DE JOYA (OPCIONAL)</option>
                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (<option key={sub} value={sub} className="bg-black text-white">{sub}</option>))}
                        </select>
                      )}
 
                      {activeCategory === 'Acero Fino' && (
-                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="w-full bg-transparent text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none cursor-pointer text-center appearance-none hover:bg-white/5 transition-colors">
+                       <select value={nuevaPieza.color} onChange={e => setNuevaPieza({...nuevaPieza, color: e.target.value})} className="appearance-none w-full bg-transparent border-b border-white/20 text-gray-300 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none cursor-pointer text-center hover:border-white/50 transition-colors">
                          <option value="" className="bg-black text-gray-500">COLOR (OPCIONAL)</option>
                          <option value="Silver" className="bg-black text-white">SILVER</option>
                          <option value="Gold" className="bg-black text-white">GOLD</option>
@@ -1076,7 +1089,7 @@ export default function App() {
                      </div>
                    )}
 
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none border-none mb-6 resize-none placeholder-gray-500 text-center hover:bg-white/5 focus:bg-white/10 transition-colors"></textarea>
+                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-6 resize-none"></textarea>
                    
                    <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
                      <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-2 file:px-6 file:border-0 file:tracking-[0.2em] file:uppercase file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer w-full md:w-auto" />
@@ -1266,7 +1279,7 @@ export default function App() {
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
                 <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
                   
@@ -1415,7 +1428,7 @@ export default function App() {
                         <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
                         <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[8px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
@@ -1519,7 +1532,7 @@ export default function App() {
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
                         <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[10px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
                             <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
@@ -1534,7 +1547,7 @@ export default function App() {
                                     {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[8px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1543,7 +1556,7 @@ export default function App() {
                       ))}
                     </div>
                     <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                      <button onClick={() => window.print()} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1578,7 +1591,7 @@ export default function App() {
                   <select 
                     value={perfilForm.tratamiento} 
                     onChange={e => setPerfilForm({...perfilForm, tratamiento: e.target.value})} 
-                    className="appearance-none w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
+                    className="appearance-none w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none cursor-pointer uppercase text-center hover:bg-white/5 transition-colors" 
                     required
                   >
                     <option value="" className="bg-black text-gray-500">SELECCIONAR TRATAMIENTO*</option>
@@ -1594,7 +1607,7 @@ export default function App() {
                       value={perfilForm.nombre} 
                       onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
                       placeholder="DOS NOMBRES*" 
-                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                     <input 
@@ -1602,13 +1615,13 @@ export default function App() {
                       value={perfilForm.apellidos} 
                       onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
                       placeholder="DOS APELLIDOS*" 
-                      className="w-full bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
+                      className="w-full bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 uppercase text-center hover:bg-white/5 transition-colors" 
                       required
                     />
                   </div>
 
                   <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
                     <div className="flex justify-center gap-8 w-full">
                       <input 
                         type="text" 
@@ -1616,7 +1629,7 @@ export default function App() {
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1625,7 +1638,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-16 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                       <input 
@@ -1634,7 +1647,7 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                        className="w-24 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                         required
                       />
                     </div>
@@ -1644,7 +1657,7 @@ export default function App() {
                     <select 
                       value={perfilForm.prefijo} 
                       onChange={e => setPerfilForm({...perfilForm, prefijo: e.target.value})} 
-                      className="appearance-none w-24 bg-transparent border-none text-white text-[12px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
+                      className="appearance-none w-24 bg-transparent border-none text-white text-[10px] tracking-[0.1em] py-3 outline-none cursor-pointer text-center hover:bg-white/5 transition-colors"
                     >
                       <option value="+593" className="bg-black text-white">🇪🇨 +593</option>
                       <option value="+34" className="bg-black text-white">🇪🇸 +34</option>
@@ -1657,7 +1670,7 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-none text-white text-[12px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
+                      className="w-48 bg-transparent border-none text-white text-[10px] tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:bg-white/5 transition-colors" 
                     />
                   </div>
 
@@ -1671,16 +1684,16 @@ export default function App() {
                       onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
                       className="hidden" 
                     />
-                    <span className="text-gray-400 text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                    <span className="text-gray-400 text-[8px] tracking-[0.1em] leading-relaxed max-w-md text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[9px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-white text-black text-[12px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
+                  <button type="submit" className="mt-8 bg-white text-black text-[10px] font-bold tracking-[0.3em] py-5 w-full uppercase hover:bg-gray-200 transition-colors border-none outline-none cursor-pointer">
                     Actualizar Perfil
                   </button>
               </form>
@@ -1712,7 +1725,7 @@ export default function App() {
                         
                         {p.vendido && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
+                            <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
                           </div>
                         )}
                       </div>
@@ -1731,11 +1744,11 @@ export default function App() {
                                    color: isAvailable ? '#ffffff' : '#ff0000',
                                    width: '40px', height: '40px',
                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                   fontSize: '16px', fontWeight: 'bold'
+                                   fontSize: '19px', fontWeight: 'bold'
                                  }}>
                                    {t}
                                  </div>
-                                 <span style={{ fontSize: '15px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                 <span style={{ fontSize: '18px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
                                    {stock}
                                  </span>
                                </div>
@@ -1743,17 +1756,17 @@ export default function App() {
                            })}
                         </div>
                       ) : (
-                        <p style={{ color: '#aaaaaa', fontSize: '15px', marginBottom: '16px', textTransform: 'uppercase' }}>
+                        <p style={{ color: '#aaaaaa', fontSize: '18px', marginBottom: '16px', textTransform: 'uppercase' }}>
                           {p.disponibilidad ? p.disponibilidad : 'Bajo pedido'}
                         </p>
                       )}
 
-                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
+                      <p className="text-[10px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
+                <p className="text-center tracking-[0.2em] text-[10px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
               )}
             </div>
           )
