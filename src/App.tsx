@@ -59,6 +59,16 @@ export default function App() {
   const [openFilter, setOpenFilter] = useState(null);
   const [openFormSelect, setOpenFormSelect] = useState(null);
 
+  // Definición de la estructura del catálogo (Menú principal y subcategorías)
+  const estructuraCatalogo = {
+    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
+    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    // Se ha cambiado el nombre de raíz 'Prêt-à-Porter' a 'Firmamento' para evitar repeticiones.
+    // Mantiene las mismas subcategorías orientadas a vestuario.
+    'Firmamento': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
+  };
+
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
     { nombre: 'Quito Centro', precio: 1.00 },
@@ -513,13 +523,6 @@ export default function App() {
 
   if (!areSupabaseCredentialsSet) return null;
 
-  const estructuraCatalogo = {
-    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
-    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
-    'Prêt-à-Porter': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
-  };
-
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
   const isAllSelected = (menuPrincipal) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
 
@@ -716,7 +719,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
                  </p>
                </section>
 
@@ -1004,7 +1007,6 @@ export default function App() {
                           )}
                        </div>
                        
-                       {/* 👇 Tallas solo se muestra si estamos en Anillos o Todo 👇 */}
                        {['Todo', 'Anillos'].includes(activeSubCategory) && (
                          <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
                             <div onClick={() => setOpenFilter(openFilter === 'talla' ? null : 'talla')} className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
@@ -1492,16 +1494,6 @@ export default function App() {
                   )})}
                 </div>
               )}
-            </section>
-          )}
-
-          {user && activeView === 'pedidos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
-              
-              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
-              </div>
             </section>
           )}
 
