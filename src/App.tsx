@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 // MOCKUP BLANCO PROPORCIONADO POR EL USUARIO
-const MOCKUP_BLANCO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/image_0.png";
+const MOCKUP_BLANCO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/CAMISTA.png";
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
