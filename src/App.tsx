@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 // MOCKUPS BLANCOS PROPORCIONADOS POR EL USUARIO
-const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png";
+const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/81.png";
 const MOCKUP_BACK_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/82.png";
 
 export default function App() {
@@ -538,7 +538,7 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         
-        // BORRADO AUTOMÁTICO DE FONDO BÁSICO (Asume fondo de color uniforme)
+        // BORRADO AUTOMÁTICO DE FONDO BÁSICO
         try {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = imageData.data;
@@ -556,7 +556,7 @@ export default function App() {
           setCustomLogo(canvas.toDataURL());
         } catch(e) {
            console.error("Error al procesar fondo:", e);
-           setCustomLogo(event.target.result); // Falla segura: usa imagen original
+           setCustomLogo(event.target.result); 
         }
         setIsRemovingBg(false);
       };
@@ -596,7 +596,7 @@ export default function App() {
             const shirtWidth = canvas.width;
             const shirtHeight = canvas.height;
             
-            // POSICIONES ADAPTADAS A MOCKUP (Ajustar porcentajes si es necesario)
+            // POSICIONES ADAPTADAS A MOCKUP
             if (customVista === 'frente') {
                 switch(customPlacement) {
                   case 'pecho-izq': x = shirtWidth * 0.65; y = shirtHeight * 0.35; size = shirtWidth * 0.12; break;
@@ -688,7 +688,7 @@ export default function App() {
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
-  const cristalOpacoSubmenuClass = "flex flex-col bg-transparent backdrop-blur-[30px] py-6 px-8 shadow-none border-none"; 
+  const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-md py-6 px-8 shadow-none border-none"; 
   const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
@@ -1132,10 +1132,10 @@ export default function App() {
                  {/* Visualizador Programático (Canvas Render) */}
                  <div className="w-full lg:w-1/2 flex flex-col gap-4">
                      <div className="flex justify-center gap-4 mb-2">
-                       <button onClick={() => setCustomView('frente')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer ${customVista === 'frente' ? 'bg-white text-black' : 'bg-transparent border border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
-                       <button onClick={() => setCustomView('espalda')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer ${customVista === 'espalda' ? 'bg-white text-black' : 'bg-transparent border border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
+                       <button onClick={() => setCustomView('frente')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
+                       <button onClick={() => setCustomView('espalda')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
                      </div>
-                     <div className="w-full relative bg-[#000000] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl">
+                     <div className="w-full relative bg-black aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border border-white/5">
                        <img 
                           src={customRenderedImage || (customVista === 'frente' ? MOCKUP_FRONT_URL : MOCKUP_BACK_URL)} 
                           alt="Renderizado Sartorial" 
