@@ -521,7 +521,6 @@ export default function App() {
   };
 
   // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER (SARTORIAL A MEDIDA)
-  // SE ASUME QUE EL USUARIO SUBE UNA IMAGEN PNG TRANSPARENTE
   const procesarInsigniaLogotipo = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -530,8 +529,6 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // Lógica de Renderizado Programático del Diseño en el Lienzo (Canvas)
-  // Preserva sombras y texturas del mockup blanco original teñiendo matemáticamente
   useEffect(() => {
     if (activeCategory === 'Prêt-à-Porter' && activeView === 'categoria') {
       const canvas = document.createElement('canvas');
@@ -543,17 +540,13 @@ export default function App() {
         canvas.width = shirtImg.width;
         canvas.height = shirtImg.height;
         
-        // 1. Dibujar el mockup blanco original (base de textura y sombras)
         ctx.drawImage(shirtImg, 0, 0);
         
-        // 2. Teñir programáticamente la prenda preservando sombras
-        // Se dibuja el color sólido elegido encima y se funde usando multiplicación
         ctx.globalCompositeOperation = 'multiply';
         ctx.fillStyle = customColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = 'source-over'; // Restaurar modo normal
+        ctx.globalCompositeOperation = 'source-over';
         
-        // 3. Posicionar el Logo (PNG Transparente proporcionado)
         if (customLogo) {
           const logoImg = new Image();
           logoImg.onload = () => {
@@ -562,13 +555,13 @@ export default function App() {
             const shirtHeight = canvas.height;
             
             switch(customPlacement) {
-              casepecho-izq': 
+              case 'pecho-izq': 
                 x = shirtWidth * 0.65; y = shirtHeight * 0.3; size = shirtWidth * 0.15; break;
               case 'centro-pecho': 
                 x = shirtWidth * 0.5; y = shirtHeight * 0.35; size = shirtWidth * 0.3; break;
-              caseespalda-sup': 
+              case 'espalda-sup': 
                 x = shirtWidth * 0.5; y = shirtHeight * 0.25; size = shirtWidth * 0.25; break;
-              caseespalda-centro': 
+              case 'espalda-centro': 
                 x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.4; break;
               default: x = shirtWidth * 0.5; y = shirtHeight * 0.35; size = shirtWidth * 0.3;
             }
@@ -582,17 +575,16 @@ export default function App() {
           setCustomRenderedImage(canvas.toDataURL());
         }
       };
-      // Se usa el mockup blanco del usuario o fotos genéricas de alta calidad
       shirtImg.src = MOCKUP_BLANCO_URL;
     }
   }, [activeCategory, activeView, customColor, customLogo, customPlacement]);
 
   const getPlacementLabel = () => {
     switch(customPlacement) {
-      casepecho-izq': return 'Pecho (Izquierda)';
+      case 'pecho-izq': return 'Pecho (Izquierda)';
       case 'centro-pecho': return 'Centro Pecho';
-      caseespalda-sup': return 'Espalda Superior';
-      caseespalda-centro': return 'Mitad Espalda';
+      case 'espalda-sup': return 'Espalda Superior';
+      case 'espalda-centro': return 'Mitad Espalda';
       default: return 'Centro Pecho';
     }
   };
@@ -823,7 +815,7 @@ export default function App() {
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
-                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfection."
+                   "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
 
@@ -847,6 +839,7 @@ export default function App() {
             </div>
           )}
 
+          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
@@ -1134,9 +1127,9 @@ export default function App() {
                        <div className="grid grid-cols-2 gap-4">
                          {[
                            {id: 'centro-pecho', label: 'Centro Pecho'}, 
-                           {id:pecho-izq', label: 'Pecho Izquierdo'}, 
-                           {id:espalda-sup', label: 'Espalda Superior'}, 
-                           {id:espalda-centro', label: 'Mitad Espalda'}
+                           {id: 'pecho-izq', label: 'Pecho Izquierdo'}, 
+                           {id: 'espalda-sup', label: 'Espalda Superior'}, 
+                           {id: 'espalda-centro', label: 'Mitad Espalda'}
                          ].map(loc => (
                            <button 
                              key={loc.id} 
@@ -1638,7 +1631,7 @@ export default function App() {
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] text-gray-300 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
+                           className="text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
                          />
                       </div>
 
@@ -1691,6 +1684,16 @@ export default function App() {
                   )})}
                 </div>
               )}
+            </section>
+          )}
+
+          {user && activeView === 'pedidos' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
+              
+              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
+                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+              </div>
             </section>
           )}
 
@@ -1899,7 +1902,7 @@ export default function App() {
 
                   <div className="flex justify-center gap-6 mt-4">
                     <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
+                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
                          {perfilForm.prefijo}
                        </div>
                        {openFormSelect === 'prefijo' && (
