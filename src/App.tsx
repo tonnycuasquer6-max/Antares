@@ -10,9 +10,12 @@ import { useState, useEffect } from 'react';
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
 
-// MOCKUPS OFICIALES PROPORCIONADOS (DEBEN TENER FONDO TRANSPARENTE PARA QUE EL COLOR FUNCIONE BIEN)
-const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/81.png";
-const MOCKUP_BACK_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/82.png";
+// FUNCION PARA OBTENER EL MOCKUP SEGUN LA PRENDA Y VISTA
+const getMockupUrl = (prenda, vista) => {
+  if (prenda === 'Buso') return vista === 'frente' ? "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/85.png" : "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/86.png";
+  if (prenda === 'Hoodie' || prenda === 'Capucha') return vista === 'frente' ? "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/83.png" : "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/84.png";
+  return vista === 'frente' ? "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/81.png" : "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/82.png";
+};
 
 export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -653,9 +656,9 @@ export default function App() {
         setCustomRenderedImage(null);
       };
       
-      shirtImg.src = customVista === 'frente' ? MOCKUP_FRONT_URL : MOCKUP_BACK_URL;
+      shirtImg.src = getMockupUrl(customPrenda, customVista);
     }
-  }, [activeCategory, activeView, customColor, customLogo, customPlacement, customVista, sizeOffset, yOffset]);
+  }, [activeCategory, activeView, customColor, customLogo, customPlacement, customVista, sizeOffset, yOffset, customPrenda]);
 
   const getPlacementLabel = () => {
     switch(customPlacement) {
@@ -722,7 +725,8 @@ export default function App() {
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario']
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
@@ -2000,7 +2004,7 @@ export default function App() {
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                         <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
                              <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
@@ -2068,7 +2072,7 @@ export default function App() {
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                           <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
                                <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
