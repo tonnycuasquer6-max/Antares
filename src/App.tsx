@@ -9,8 +9,8 @@ import { useState, useEffect } from 'react';
 
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
-// MOCKUPS BLANCOS PROPORCIONADOS POR EL USUARIO
-const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/81.png";
+// MOCKUPS OFICIALES PROPORCIONADOS
+const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png";
 const MOCKUP_BACK_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/82.png";
 
 export default function App() {
@@ -63,7 +63,6 @@ export default function App() {
   const [openFormSelect, setOpenFormSelect] = useState(null);
 
   // ESTADOS DEL ATELIER PRÊT-À-PORTER (CUSTOMIZADOR)
-  const [customPrenda, setCustomPrenda] = useState('Camiseta');
   const [customVista, setCustomView] = useState('frente'); // 'frente' o 'espalda'
   const [customColor, setCustomColor] = useState('#ffffff');
   const [customLogo, setCustomLogo] = useState(null);
@@ -523,7 +522,7 @@ export default function App() {
     }
   };
 
-  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER
+  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER (CON BORRADO AUTOMÁTICO DE FONDO)
   const procesarInsigniaLogotipo = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -538,17 +537,17 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         
-        // BORRADO AUTOMÁTICO DE FONDO BÁSICO
         try {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = imageData.data;
+          // Toma el color de la esquina superior izquierda como color de fondo a borrar
           const rBg = data[0], gBg = data[1], bBg = data[2], aBg = data[3];
           if(aBg > 0) { 
-              const tolerance = 40;
+              const tolerance = 45; // Tolerancia para borrar variaciones de sombra
               for (let i = 0; i < data.length; i += 4) {
                 const r = data[i], g = data[i+1], b = data[i+2];
                 if (Math.abs(r - rBg) < tolerance && Math.abs(g - gBg) < tolerance && Math.abs(b - bBg) < tolerance) {
-                  data[i+3] = 0; 
+                  data[i+3] = 0; // Transparente
                 }
               }
               ctx.putImageData(imageData, 0, 0);
@@ -565,9 +564,9 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // EFECTO PRINCIPAL DE RENDERIZADO
+  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR
   useEffect(() => {
-    if (activeCategory === 'Sartorial' && activeView === 'categoria') {
+    if (activeCategory === 'Prêt-à-Porter' && activeView === 'categoria') {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const shirtImg = new Image();
@@ -577,18 +576,18 @@ export default function App() {
         canvas.width = shirtImg.width;
         canvas.height = shirtImg.height;
         
-        // 1. Dibujar el mockup blanco original
+        // 1. Dibuja el mockup
         ctx.drawImage(shirtImg, 0, 0);
         
-        // 2. Teñir la prenda preservando sombras usando 'multiply'
+        // 2. Tiñe matemáticamente la prenda respetando sombras
         if(customColor !== '#ffffff') {
            ctx.globalCompositeOperation = 'multiply';
            ctx.fillStyle = customColor;
            ctx.fillRect(0, 0, canvas.width, canvas.height);
-           ctx.globalCompositeOperation = 'source-over'; // Restaurar
+           ctx.globalCompositeOperation = 'source-over';
         }
         
-        // 3. Imprimir Logo en la posición correcta
+        // 3. Imprime Logo
         if (customLogo) {
           const logoImg = new Image();
           logoImg.onload = () => {
@@ -596,19 +595,31 @@ export default function App() {
             const shirtWidth = canvas.width;
             const shirtHeight = canvas.height;
             
-            // POSICIONES ADAPTADAS A MOCKUP
+            // COORDENADAS EXACTAS SOLICITADAS
             if (customVista === 'frente') {
                 switch(customPlacement) {
-                  case 'pecho-izq': x = shirtWidth * 0.65; y = shirtHeight * 0.35; size = shirtWidth * 0.12; break;
-                  case 'pecho-der': x = shirtWidth * 0.35; y = shirtHeight * 0.35; size = shirtWidth * 0.12; break;
-                  case 'centro-pecho': x = shirtWidth * 0.5; y = shirtHeight * 0.40; size = shirtWidth * 0.35; break;
-                  default: x = shirtWidth * 0.5; y = shirtHeight * 0.40; size = shirtWidth * 0.35;
+                  case 'pecho-izq': 
+                      x = shirtWidth * 0.65; y = shirtHeight * 0.35; size = shirtWidth * 0.12; 
+                      break;
+                  case 'pecho-der': 
+                      x = shirtWidth * 0.35; y = shirtHeight * 0.35; size = shirtWidth * 0.12; 
+                      break;
+                  case 'centro-pecho': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.40; size = shirtWidth * 0.35; 
+                      break;
+                  default: 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.40; size = shirtWidth * 0.35;
                 }
             } else {
                 switch(customPlacement) {
-                  case 'espalda-sup': x = shirtWidth * 0.5; y = shirtHeight * 0.25; size = shirtWidth * 0.20; break;
-                  case 'espalda-centro': x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.40; break;
-                  default: x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.40;
+                  case 'espalda-sup': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.25; size = shirtWidth * 0.20; 
+                      break;
+                  case 'espalda-centro': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.40; 
+                      break;
+                  default: 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.45; size = shirtWidth * 0.40;
                 }
             }
             
@@ -623,7 +634,7 @@ export default function App() {
       };
       
       shirtImg.onerror = () => {
-        console.error("No se pudo cargar la imagen base.");
+        console.error("No se pudo cargar la imagen base de Supabase.");
         setCustomRenderedImage(null);
       };
       
@@ -650,8 +661,8 @@ export default function App() {
     
     const customItem = {
       id: `custom-${Date.now()}`,
-      titulo: `SARTORIAL: Camiseta Diseño Exclusivo`,
-      categoria: 'Sartorial',
+      titulo: `PRÊT-À-PORTER: Diseño Exclusivo`,
+      categoria: 'Prêt-à-Porter',
       subcategoria: 'A Medida',
       precio: 45.00,
       cantidad: 1,
@@ -1122,10 +1133,10 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA DEL ATELIER: SARTORIAL (CUSTOMIZADOR CON FOTOS PROPORCIONADAS) */}
-          {user && activeView === 'categoria' && activeCategory === 'Sartorial' && (
+          {/* VISTA DEL ATELIER: PRÊT-À-PORTER (CUSTOMIZADOR CON FOTOS PROPORCIONADAS) */}
+          {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Sartorial Personalizado</h2>
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Prêt-à-Porter Personalizado</h2>
               
               <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start w-full">
                  
@@ -1135,13 +1146,13 @@ export default function App() {
                        <button onClick={() => setCustomView('frente')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
                        <button onClick={() => setCustomView('espalda')} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
                      </div>
-                     <div className="w-full relative bg-black aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border border-white/5">
+                     <div className="w-full relative bg-transparent backdrop-blur-[30px] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none">
                        <img 
                           src={customRenderedImage || (customVista === 'frente' ? MOCKUP_FRONT_URL : MOCKUP_BACK_URL)} 
-                          alt="Renderizado Sartorial" 
+                          alt="Renderizado Prêt-à-Porter" 
                           className="w-full h-full object-contain z-10 transition-opacity duration-300" 
                        />
-                       {!customRenderedImage && <p className="absolute text-[10px] text-gray-600 uppercase tracking-[0.2em] z-50">Cargando Lienzo Sartorial...</p>}
+                       {!customRenderedImage && <p className="absolute text-[10px] text-gray-600 uppercase tracking-[0.2em] z-50">Cargando Lienzo...</p>}
                      </div>
                  </div>
 
@@ -1149,7 +1160,7 @@ export default function App() {
                  <div className="w-full lg:w-1/2 flex flex-col gap-10">
                    
                    <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Tono Sartorial</p>
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Tono de Prenda</p>
                      <div className="flex gap-4 flex-wrap">
                        {[
                          {name: 'Blanco Original', hex: '#ffffff'}, 
@@ -1172,7 +1183,6 @@ export default function App() {
 
                    <div className="flex flex-col gap-4">
                      <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Insignia Personal</p>
-                     <p className="text-[9px] text-gray-400 tracking-[0.1em] uppercase -mt-2">Eliminamos el fondo automáticamente para un acabado perfecto.</p>
                      <div className="flex flex-col gap-2">
                        <input 
                          type="file" 
@@ -1186,18 +1196,18 @@ export default function App() {
 
                    {customLogo && (
                      <div className="flex flex-col gap-4 animate-fade-in">
-                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Ubicación en la prenda ({customVista})</p>
+                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Ubicación ({customVista})</p>
                        <div className="grid grid-cols-2 gap-4">
                          {customVista === 'frente' ? (
                            <>
-                             <button onClick={() => setCustomPlacement('pecho-izq')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
-                             <button onClick={() => setCustomPlacement('pecho-der')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
-                             <button onClick={() => setCustomPlacement('centro-pecho')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
+                             <button onClick={() => setCustomPlacement('pecho-izq')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Izquierdo</button>
+                             <button onClick={() => setCustomPlacement('pecho-der')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Derecho</button>
+                             <button onClick={() => setCustomPlacement('centro-pecho')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Centro Pecho</button>
                            </>
                          ) : (
                            <>
-                             <button onClick={() => setCustomPlacement('espalda-sup')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
-                             <button onClick={() => setCustomPlacement('espalda-centro')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
+                             <button onClick={() => setCustomPlacement('espalda-sup')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Espalda Superior</button>
+                             <button onClick={() => setCustomPlacement('espalda-centro')} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Centro Espalda</button>
                            </>
                          )}
                        </div>
@@ -1206,7 +1216,7 @@ export default function App() {
 
                    <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
                      <div className="flex justify-between items-end">
-                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR SARTORIAL A MEDIDA</span>
+                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR A MEDIDA</span>
                         <span className="text-[18px] text-white font-bold tracking-[0.1em]">$45.00 USD</span>
                      </div>
                      <button 
@@ -1222,7 +1232,7 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'categoria' && activeCategory !== 'Sartorial' && activeCategory !== 'Prêt-à-Porter' && (
+          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
