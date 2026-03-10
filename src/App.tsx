@@ -690,7 +690,8 @@ export default function App() {
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario']
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
@@ -781,7 +782,7 @@ export default function App() {
               
               {userRole !== 'admin' && (
                 <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                   <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
@@ -1261,7 +1262,7 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'categoria' && activeCategory !== 'Sartorial' && activeCategory !== 'Prêt-à-Porter' && (
+          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
@@ -1939,7 +1940,7 @@ export default function App() {
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                         <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
                              <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
@@ -2007,7 +2008,7 @@ export default function App() {
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                           <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
                                <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
