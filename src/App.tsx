@@ -694,7 +694,8 @@ export default function App() {
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario']
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
+    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
@@ -734,6 +735,13 @@ export default function App() {
       productosMostrar = productosMostrar.sort((a,b) => b.precio - a.precio);
     }
   }
+
+  const coloresPredeterminados = [
+    {name: 'Blanco Original', hex: '#ffffff'}, 
+    {name: 'Negro', hex: '#111111'}, 
+    {name: 'Rojo', hex: '#aa0000'}, 
+    {name: 'Azul', hex: '#000055'}
+  ];
 
   return (
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
@@ -1174,15 +1182,8 @@ export default function App() {
                    
                    <div className="flex flex-col gap-4">
                      <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Tono de Prenda</p>
-                     <div className="flex gap-4 flex-wrap">
-                       {[
-                         {name: 'Blanco Original', hex: '#ffffff'}, 
-                         {name: 'Negro', hex: '#111111'}, 
-                         {name: 'Gris Oscuro', hex: '#333333'}, 
-                         {name: 'Navy', hex: '#1a2332'}, 
-                         {name: 'Vino', hex: '#3b1c20'},
-                         {name: 'Caqui', hex: '#8a7e71'}
-                       ].map(color => (
+                     <div className="flex gap-4 flex-wrap items-center">
+                       {coloresPredeterminados.map(color => (
                          <div 
                            key={color.name} 
                            onClick={() => setCustomColor(color.hex)} 
@@ -1191,6 +1192,19 @@ export default function App() {
                            title={color.name}
                          />
                        ))}
+                       {/* Selector de gama libre de colores (Gradiente circular) */}
+                       <label 
+                         className={`relative w-10 h-10 cursor-pointer rounded-full border-2 transition-transform flex items-center justify-center overflow-hidden ${!coloresPredeterminados.map(c=>c.hex).includes(customColor) ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
+                         style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
+                         title="Elegir otro color"
+                       >
+                         <input 
+                           type="color" 
+                           value={customColor}
+                           onChange={(e) => setCustomColor(e.target.value)}
+                           className="absolute opacity-0 w-full h-full cursor-pointer"
+                         />
+                       </label>
                      </div>
                    </div>
 
@@ -1215,8 +1229,8 @@ export default function App() {
                            <>
                              <button type="button" onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Izquierdo</button>
                              <button type="button" onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Derecho</button>
-                             <button type="button" onClick={() => { setCustomPlacement('pecho-sup-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-sup-centro' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Sup. Centro</button>
-                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'centro-pecho' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Centro Pecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-sup-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'pecho-sup-centro' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Pecho Sup. Centro</button>
+                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}>Centro Pecho</button>
                            </>
                          ) : (
                            <>
@@ -1944,7 +1958,7 @@ export default function App() {
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                         <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
                              <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                            ))}
@@ -2012,7 +2026,7 @@ export default function App() {
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                           <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
                                <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
                              ))}
