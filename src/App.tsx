@@ -566,7 +566,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR
+  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR (TEÑIDO REAL + OFFSETS DE TAMAÑO Y POSICIÓN DE 5 EN 5)
   useEffect(() => {
     if (activeCategory === 'Prêt-à-Porter' && activeView === 'categoria') {
       const canvas = document.createElement('canvas');
@@ -722,8 +722,7 @@ export default function App() {
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
     'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
-    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
+    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario']
   };
 
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
@@ -766,7 +765,7 @@ export default function App() {
 
   const coloresPredeterminados = [
     {name: 'Blanco Original', hex: '#ffffff'}, 
-    {name: 'Rojo', hex: '#aa0000'}
+    {name: 'Negro', hex: '#111111'}
   ];
 
   return (
@@ -819,7 +818,7 @@ export default function App() {
               
               {userRole !== 'admin' && (
                 <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
-                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                  <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                   <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
