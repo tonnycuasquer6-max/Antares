@@ -9,7 +9,8 @@ import { useState, useEffect } from 'react';
 
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
-// MOCKUPS OFICIALES PROPORCIONADOS
+
+// MOCKUPS OFICIALES PROPORCIONADOS (DEBEN TENER FONDO TRANSPARENTE PARA QUE EL COLOR FUNCIONE BIEN)
 const MOCKUP_FRONT_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/81.png";
 const MOCKUP_BACK_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/82.png";
 
@@ -39,7 +40,6 @@ export default function App() {
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
-
   const [stars, setStars] = useState([]);
   const [cartPulse, setCartPulse] = useState(false);
 
@@ -62,9 +62,8 @@ export default function App() {
   const [openFilter, setOpenFilter] = useState(null);
   const [openFormSelect, setOpenFormSelect] = useState(null);
 
-  // ESTADOS DEL ATELIER PRÊT-À-PORTER (CUSTOMIZADOR)
-  const [customPrenda, setCustomPrenda] = useState('Camiseta');
-  const [customVista, setCustomView] = useState('frente'); // 'frente' o 'espalda'
+  // ESTADOS DEL ATELIER SARTORIAL (CUSTOMIZADOR)
+  const [customVista, setCustomView] = useState('frente'); 
   const [customColor, setCustomColor] = useState('#ffffff');
   const [customLogo, setCustomLogo] = useState(null);
   const [customPlacement, setCustomPlacement] = useState('centro-pecho');
@@ -103,17 +102,17 @@ export default function App() {
   };
 
   const fetchProductos = async () => {
-    const { data, error } = await supabase.from('productos').select('*').order('id', { ascending: false });
+    const { data } = await supabase.from('productos').select('*').order('id', { ascending: false });
     if (data) setProductos(data);
   };
 
   const fetchConfiguracion = async () => {
-    const { data, error } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
+    const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
     if (data && data.menus_ocultos) setHiddenItems(data.menus_ocultos);
   };
 
   const fetchPedidosAdmin = async () => {
-    const { data, error } = await supabase.from('pedidos').select('*').order('id', { ascending: false });
+    const { data } = await supabase.from('pedidos').select('*').order('id', { ascending: false });
     if (data) setListaPedidos(data);
   };
 
@@ -158,7 +157,7 @@ export default function App() {
 
   const fetchUserRole = async (userId) => {
     try {
-      const { data, error } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
+      const { data } = await supabase.from('perfiles').select('rol').eq('id', userId).single();
       if (data && data.rol) setUserRole(data.rol);
       else setUserRole('cliente');
     } catch (error) {
@@ -524,7 +523,7 @@ export default function App() {
     }
   };
 
-  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER CON BORRADO AUTOMÁTICO DE FONDO Y AJUSTES FINOS
+  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER CON BORRADO DE FONDO
   const procesarInsigniaLogotipo = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -565,7 +564,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR (COLOR REAL Y OFFSET)
+  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR (TEÑIDO REAL + OFFSETS DE TAMAÑO Y POSICIÓN)
   useEffect(() => {
     if (activeCategory === 'Sartorial' && activeView === 'categoria') {
       const canvas = document.createElement('canvas');
@@ -577,18 +576,22 @@ export default function App() {
         canvas.width = shirtImg.width;
         canvas.height = shirtImg.height;
         
-        // 1. Color real aplicado bajo la textura original
-        ctx.fillStyle = customColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 2. Multiplicar las sombras de la camiseta original encima del color
-        ctx.globalCompositeOperation = 'multiply';
+        // 1. Dibujamos la camiseta original primero
         ctx.drawImage(shirtImg, 0, 0);
         
-        // 3. Cortar el exceso de color manteniendo solo la forma de la camiseta
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.drawImage(shirtImg, 0, 0);
-        ctx.globalCompositeOperation = 'source-over'; // Restaurar
+        if(customColor !== '#ffffff') {
+           // 2. Pintamos el color encima de la ropa respetando la forma (source-atop)
+           ctx.globalCompositeOperation = 'source-atop';
+           ctx.fillStyle = customColor;
+           ctx.fillRect(0, 0, canvas.width, canvas.height);
+           
+           // 3. Multiplicamos la textura original para recuperar arrugas y sombras oscuras
+           ctx.globalCompositeOperation = 'multiply';
+           ctx.drawImage(shirtImg, 0, 0);
+           
+           // Restauramos el comportamiento normal del canvas
+           ctx.globalCompositeOperation = 'source-over'; 
+        }
         
         // 4. Imprimir Logo en la posición correcta + Ajustes finos
         if (customLogo) {
@@ -625,6 +628,7 @@ export default function App() {
                 }
             }
             
+            // APLICAMOS LOS AJUSTES FINOS (+/-)
             const finalSize = Math.max(10, baseSize + sizeOffset);
             const finalY = y + yOffset;
             
@@ -970,7 +974,7 @@ export default function App() {
                 <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
                 <div className="min-w-[800px]">
                   <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
-                    <div className="col-span-2 text-left">Pieza Vendida</div>
+                    <div className="col-span-2 text-left">Pie Vendida</div>
                     <div>Talla</div>
                     <div>Costo</div>
                     <div>Precio Venta</div>
@@ -1148,10 +1152,10 @@ export default function App() {
                  {/* Visualizador Programático (Canvas Render) */}
                  <div className="w-full lg:w-1/2 flex flex-col gap-4">
                      <div className="flex justify-center gap-4 mb-2">
-                       <button onClick={() => { setCustomView('frente'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
-                       <button onClick={() => { setCustomView('espalda'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
+                       <button type="button" onClick={() => { setCustomView('frente'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
+                       <button type="button" onClick={() => { setCustomView('espalda'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
                      </div>
-                     <div className="w-full relative bg-[#000000] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border border-white/5">
+                     <div className="w-full relative bg-transparent backdrop-blur-3xl aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none">
                        <img 
                           src={customRenderedImage || (customVista === 'frente' ? MOCKUP_FRONT_URL : MOCKUP_BACK_URL)} 
                           alt="Renderizado Sartorial" 
@@ -1206,14 +1210,14 @@ export default function App() {
                        <div className="grid grid-cols-2 gap-4">
                          {customVista === 'frente' ? (
                            <>
-                             <button onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
-                             <button onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
-                             <button onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
                            </>
                          ) : (
                            <>
-                             <button onClick={() => { setCustomPlacement('espalda-sup'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
-                             <button onClick={() => { setCustomPlacement('espalda-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-sup'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
                            </>
                          )}
                        </div>
@@ -1224,15 +1228,15 @@ export default function App() {
                            <div className="flex flex-col items-center gap-2">
                              <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Tamaño</span>
                              <div className="flex gap-2">
-                               <button onClick={() => setSizeOffset(s => s - 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">-</button>
-                               <button onClick={() => setSizeOffset(s => s + 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">+</button>
+                               <button type="button" onClick={() => setSizeOffset(s => s - 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">-</button>
+                               <button type="button" onClick={() => setSizeOffset(s => s + 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">+</button>
                              </div>
                            </div>
                            <div className="flex flex-col items-center gap-2">
                              <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Posición Vertical</span>
                              <div className="flex gap-2">
-                               <button onClick={() => setYOffset(y => y - 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▲</button>
-                               <button onClick={() => setYOffset(y => y + 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▼</button>
+                               <button type="button" onClick={() => setYOffset(y => y - 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▲</button>
+                               <button type="button" onClick={() => setYOffset(y => y + 2)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▼</button>
                              </div>
                            </div>
                          </div>
