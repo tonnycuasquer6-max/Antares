@@ -918,6 +918,7 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center w-full px-4 md:px-0">
           
+          {/* HOME */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
                <section className="w-full text-center py-16 md:py-32 px-4">
@@ -954,7 +955,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VISTA DE INVENTARIO Y FINANZAS (ADMIN) */}
+          {/* INVENTARIO */}
           {userRole === 'admin' && activeView === 'inventario' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
@@ -1066,6 +1067,7 @@ export default function App() {
             </section>
           )}
 
+          {/* PEDIDOS */}
           {activeView === 'pedidos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
@@ -1183,7 +1185,7 @@ export default function App() {
             </section>
           )}
 
-          {/* VISTA DEL ATELIER: PRÊT-À-PORTER (CUSTOMIZADOR CON FOTOS PROPORCIONADAS) */}
+          {/* PRÊT-À-PORTER */}
           {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Prêt-à-Porter Personalizado</h2>
@@ -1198,7 +1200,7 @@ export default function App() {
                      </div>
                      <div className="w-full relative bg-transparent backdrop-blur-[30px] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none">
                        <img 
-                          src={customRenderedImage || (customVista === 'frente' ? MOCKUP_FRONT_URL : MOCKUP_BACK_URL)} 
+                          src={customRenderedImage || getMockupUrl(customPrenda, customVista)} 
                           alt="Renderizado Prêt-à-Porter" 
                           className="w-full h-full object-contain z-10 transition-opacity duration-300" 
                        />
@@ -1326,7 +1328,8 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'categoria' && activeCategory !== 'Sartorial' && activeCategory !== 'Prêt-à-Porter' && (
+          {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
+          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
                <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
@@ -1594,6 +1597,7 @@ export default function App() {
             </section>
           )}
 
+          {/* MODAL PRODUCTO */}
           {productoSeleccionado && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
               <div className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent" onClick={e => e.stopPropagation()}>
@@ -1680,6 +1684,7 @@ export default function App() {
             </div>
           )}
 
+          {/* CARRITO */}
           {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
@@ -1815,6 +1820,7 @@ export default function App() {
             </section>
           )}
 
+          {/* DESEOS */}
           {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
@@ -1852,16 +1858,7 @@ export default function App() {
             </section>
           )}
 
-          {user && activeView === 'pedidos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Mis Pedidos</h2>
-              
-              <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
-                <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
-              </div>
-            </section>
-          )}
-
+          {/* PERFIL */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
@@ -1976,6 +1973,7 @@ export default function App() {
               </div>
             </section>
           )}
+
         </main>
         
         <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
