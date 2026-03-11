@@ -767,7 +767,8 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-md py-6 px-8 shadow-none border-none"; 
-  
+  const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-300";
+
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
   if (activeCategory === 'Acero Fino') {
@@ -848,31 +849,33 @@ export default function App() {
                 </button>
               )}
 
-              <div className="group relative">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
-                  className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none"
-                >
+              <div 
+                className="relative cursor-pointer" 
+                onMouseEnter={() => setUserMenuAbierto(true)} 
+                onMouseLeave={() => setUserMenuAbierto(false)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
+              >
+                <div className="text-white hover:text-gray-400 transition-colors bg-transparent border-none outline-none py-2">
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
-                </button>
-                <div className={`absolute top-full right-0 pt-4 z-[100] ${userMenuAbierto ? 'block' : 'hidden lg:group-hover:block'}`}>
+                </div>
+                <div className={`absolute top-full right-0 pt-2 z-[100] ${userMenuAbierto ? 'block' : 'hidden'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => { setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full">Mi Perfil</button>
+                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2">Mi Perfil</div>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 w-full">Gestionar Pedidos</button>
-                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold w-full">Inventario / Finanzas</button>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Gestionar Pedidos</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 font-bold w-full py-2">Inventario / Finanzas</div>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 w-full">Mis Pedidos</button>
-                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 w-full">Deseos ({favoritos.length})</button>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Mis Pedidos</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 w-full py-2">Deseos ({favoritos.length})</div>
                       </>
                     )}
 
-                    <hr className="border-white/10 my-4" />
-                    <button onClick={() => { setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full">Cerrar Sesión</button>
+                    <hr className="border-white/10 my-2" />
+                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full py-2">Cerrar Sesión</div>
                   </div>
                 </div>
               </div>
@@ -889,28 +892,31 @@ export default function App() {
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
-                    <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
-                      <span 
-                        onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
-                        className={`inline-block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
-                      >
+                    <li 
+                      key={menu} 
+                      className="group relative cursor-pointer py-2 border-none bg-transparent" 
+                      onMouseEnter={() => setMenuAbierto(menu)} 
+                      onMouseLeave={() => setMenuAbierto(null)}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
+                    >
+                      <div className={`inline-block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                         {menu}
-                        <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-px bg-white transition-all duration-300 ${menuAbierto === menu ? 'w-full' : 'w-0 lg:group-hover:w-full'}`}></div>
-                      </span>
-                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden lg:group-hover:block'}`}>
+                        <div className={`${menuUnderlineClass} ${menuAbierto === menu ? 'w-full left-0' : 'w-0 left-1/2 lg:group-hover:w-full lg:group-hover:left-0'}`}></div>
+                      </div>
+                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span 
+                              <div 
                                 key={sub} 
                                 onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
-                                className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
+                                className={`cursor-pointer block mt-3 first:mt-0 text-[10px] md:text-xs transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
                               >
                                 {sub}
-                              </span>
+                              </div>
                             );
                           })}
                         </div>
@@ -920,24 +926,26 @@ export default function App() {
                 })}
                 
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
-                  <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                    <span 
-                      onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
-                      className={`inline-block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
-                    >
+                  <li 
+                    className="group relative cursor-pointer py-2 border-none bg-transparent" 
+                    onMouseEnter={() => setMenuAbierto('Obsequios')} 
+                    onMouseLeave={() => setMenuAbierto(null)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
+                  >
+                    <div className={`inline-block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                       Obsequios
-                      <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-px bg-white transition-all duration-300 ${menuAbierto === 'Obsequios' ? 'w-full' : 'w-0 lg:group-hover:w-full'}`}></div>
-                    </span>
-                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden lg:group-hover:block'}`}>
+                      <div className={`${menuUnderlineClass} ${menuAbierto === 'Obsequios' ? 'w-full left-0' : 'w-0 left-1/2 lg:group-hover:w-full lg:group-hover:left-0'}`}></div>
+                    </div>
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span 
+                          <div 
                             key={p} 
                             onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
-                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs"
+                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-3 first:mt-0 text-[10px] md:text-xs py-2"
                           >
                             $ {p}.00 USD
-                          </span>
+                          </div>
                         ))}
                       </div>
                     </div>
