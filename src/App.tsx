@@ -852,28 +852,29 @@ export default function App() {
               <div 
                 className="relative cursor-pointer" 
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
               >
                 <div className="text-white hover:text-gray-400 transition-colors bg-transparent border-none outline-none py-2">
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </div>
-                <div className={`absolute top-full right-0 pt-2 z-[100] ${userMenuAbierto ? 'block' : 'hidden lg:group-hover:block'}`}>
+                <div className={`absolute top-full right-0 pt-2 z-[100] ${userMenuAbierto ? 'block' : 'hidden'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2">Mi Perfil</div>
+                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2">Mi Perfil</div>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Gestionar Pedidos</div>
-                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 font-bold w-full py-2">Inventario / Finanzas</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Gestionar Pedidos</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 font-bold w-full py-2">Inventario / Finanzas</div>
                       </>
                     ) : (
                       <>
-                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Mis Pedidos</div>
-                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 w-full py-2">Deseos ({favoritos.length})</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Mis Pedidos</div>
+                        <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 w-full py-2">Deseos ({favoritos.length})</div>
                       </>
                     )}
 
                     <hr className="border-white/10 my-2" />
-                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full py-2">Cerrar Sesión</div>
+                    <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full py-2">Cerrar Sesión</div>
                   </div>
                 </div>
               </div>
@@ -894,6 +895,7 @@ export default function App() {
                       key={menu} 
                       className="group relative cursor-pointer py-2 border-none bg-transparent" 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
+                      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
                     >
                       <div className={`inline-block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                         {menu}
@@ -909,6 +911,7 @@ export default function App() {
                               <div 
                                 key={sub} 
                                 onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
+                                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }}
                                 className={`cursor-pointer block mt-3 first:mt-0 text-[10px] md:text-xs transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
                               >
                                 {sub}
@@ -925,6 +928,7 @@ export default function App() {
                   <li 
                     className="group relative cursor-pointer py-2 border-none bg-transparent" 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
                   >
                     <div className={`inline-block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                       Obsequios
@@ -936,6 +940,7 @@ export default function App() {
                           <div 
                             key={p} 
                             onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }}
                             className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-3 first:mt-0 text-[10px] md:text-xs py-2"
                           >
                             $ {p}.00 USD
@@ -1398,7 +1403,7 @@ export default function App() {
                             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
                                <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none">
                                  {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
-                                   <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
+                                   <span key={opt} onClick={(e) => { e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                      {opt === 'Todo' ? 'Todos' : opt}
                                    </span>
                                  ))}
@@ -1415,9 +1420,9 @@ export default function App() {
                             {openFilter === 'talla' && (
                               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
                                  <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none max-h-64 overflow-y-auto">
-                                   <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Todas</span>
+                                   <span onClick={(e) => { e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Todas</span>
                                    {tallasDisponibles.map(t => (
-                                     <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
+                                     <span key={t} onClick={(e) => { e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                        {t}
                                      </span>
                                    ))}
@@ -1434,9 +1439,9 @@ export default function App() {
                           {openFilter === 'precio' && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px] sm:min-w-[160px]">
                                <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none">
-                                 <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Normal</span>
-                                 <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
-                                 <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
+                                 <span onClick={(e) => { e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Normal</span>
+                                 <span onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
+                                 <span onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
                                </div>
                             </div>
                           )}
@@ -1483,9 +1488,9 @@ export default function App() {
                          {openFormSelect === 'subcat' && (
                            <div className="absolute top-full left-0 w-full pt-1 z-[300]">
                              <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none max-h-48 overflow-y-auto">
-                               <div onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
+                               <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                                 <div key={sub} onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{sub}</div>
+                                 <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{sub}</div>
                                ))}
                              </div>
                            </div>
@@ -1501,9 +1506,9 @@ export default function App() {
                          {openFormSelect === 'color' && (
                            <div className="absolute top-full left-0 w-full pt-1 z-[300]">
                              <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
-                               <div onClick={() => { setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
+                               <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">NINGUNO</div>
                                {['Silver', 'Gold', 'Black'].map(c => (
-                                 <div key={c} onClick={() => { setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{c}</div>
+                                 <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase">{c}</div>
                                ))}
                              </div>
                            </div>
@@ -1756,7 +1761,7 @@ export default function App() {
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
                          <div className="bg-black/90 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-3 sm:gap-4 py-3 sm:py-4 shadow-2xl rounded-sm">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
-                             <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors uppercase w-full px-4">{t}</div>
+                             <div key={t} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors uppercase w-full px-4">{t}</div>
                            ))}
                          </div>
                        </div>
@@ -1824,7 +1829,7 @@ export default function App() {
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
                            <div className="bg-black/90 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-3 sm:gap-4 py-3 sm:py-4 shadow-2xl rounded-sm">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
-                               <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors w-full px-2">{p}</div>
+                               <div key={p} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors w-full px-2">{p}</div>
                              ))}
                            </div>
                          </div>
