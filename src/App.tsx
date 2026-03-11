@@ -851,14 +851,12 @@ export default function App() {
 
               <div 
                 className="relative cursor-pointer" 
-                onMouseEnter={() => setUserMenuAbierto(true)} 
-                onMouseLeave={() => setUserMenuAbierto(false)}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
               >
                 <div className="text-white hover:text-gray-400 transition-colors bg-transparent border-none outline-none py-2">
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </div>
-                <div className={`absolute top-full right-0 pt-2 z-[100] ${userMenuAbierto ? 'block' : 'hidden'}`}>
+                <div className={`absolute top-full right-0 pt-2 z-[100] ${userMenuAbierto ? 'block' : 'hidden lg:group-hover:block'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
                     <div onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2">Mi Perfil</div>
                     
@@ -895,15 +893,13 @@ export default function App() {
                     <li 
                       key={menu} 
                       className="group relative cursor-pointer py-2 border-none bg-transparent" 
-                      onMouseEnter={() => setMenuAbierto(menu)} 
-                      onMouseLeave={() => setMenuAbierto(null)}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
                     >
                       <div className={`inline-block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                         {menu}
                         <div className={`${menuUnderlineClass} ${menuAbierto === menu ? 'w-full left-0' : 'w-0 left-1/2 lg:group-hover:w-full lg:group-hover:left-0'}`}></div>
                       </div>
-                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
+                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === menu ? 'block' : 'hidden lg:group-hover:block'}`}>
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
@@ -928,15 +924,13 @@ export default function App() {
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
                   <li 
                     className="group relative cursor-pointer py-2 border-none bg-transparent" 
-                    onMouseEnter={() => setMenuAbierto('Obsequios')} 
-                    onMouseLeave={() => setMenuAbierto(null)}
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
                   >
                     <div className={`inline-block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                       Obsequios
                       <div className={`${menuUnderlineClass} ${menuAbierto === 'Obsequios' ? 'w-full left-0' : 'w-0 left-1/2 lg:group-hover:w-full lg:group-hover:left-0'}`}></div>
                     </div>
-                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden lg:group-hover:block'}`}>
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
                           <div 
