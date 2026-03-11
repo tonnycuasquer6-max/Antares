@@ -774,7 +774,7 @@ export default function App() {
   ];
 
   return (
-    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden overflow-y-auto">
       
       <style>{`
         ::-webkit-scrollbar { display: none; }
@@ -810,7 +810,7 @@ export default function App() {
       ))}
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
+        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 sm:px-6 md:px-8" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
             <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
@@ -860,7 +860,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-4 sm:gap-x-8 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.1em] sm:tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -917,37 +917,37 @@ export default function App() {
           )}
         </header>
 
-        <main className="flex-grow flex flex-col items-center w-full px-4 md:px-0">
+        <main className="flex-grow flex flex-col items-center w-full px-4 sm:px-6 md:px-8">
           
           {/* HOME */}
           {(!user || activeView === 'home') && (
             <div className="w-full animate-fade-in flex flex-col items-center pb-20">
-               <section className="w-full text-center py-16 md:py-32 px-4">
+               <section className="w-full text-center py-16 md:py-32">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
 
-               <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
+               <section className="w-full max-w-5xl mx-auto py-12 md:py-20 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
                    "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
 
-               <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
+               <section className="w-full max-w-6xl mx-auto py-16 md:py-24">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
-                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 text-center">
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-6 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
                    </div>
-                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-6 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
                    </div>
-                   <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
+                   <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-6 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 lg:col-span-1">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
                    </div>
@@ -958,7 +958,7 @@ export default function App() {
 
           {/* INVENTARIO */}
           {userRole === 'admin' && activeView === 'inventario' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
               
               <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
@@ -1070,13 +1070,13 @@ export default function App() {
 
           {/* PEDIDOS */}
           {activeView === 'pedidos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
               <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
                 {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
               </h2>
               
               {userRole === 'admin' ? (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6 w-full">
                   {(() => {
                     const groupedOrdersByMonth = listaPedidos.reduce((acc, pedido) => {
                       let dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
@@ -1097,7 +1097,7 @@ export default function App() {
                       });
 
                       return (
-                        <div key={month} className="mb-12">
+                        <div key={month} className="mb-12 w-full">
                           <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
                           <div className="flex flex-col gap-6">
                             {Object.entries(userGroups).map(([clientKey, clientPedidos]) => {
@@ -1106,16 +1106,16 @@ export default function App() {
                                const isExpanded = pedidoExpandido === expandKey;
                                
                                return (
-                                 <div key={clientKey} className="bg-black/30 backdrop-blur-xl p-6 shadow-2xl rounded-sm border border-white/5">
+                                 <div key={clientKey} className="bg-black/30 backdrop-blur-xl p-4 sm:p-6 shadow-2xl rounded-sm border border-white/5 w-full">
                                      <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
                                         <div className="flex items-center gap-4">
-                                           <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-lg rounded-full uppercase">{nombre.charAt(0)}</div>
+                                           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white text-black flex items-center justify-center font-bold text-base sm:text-lg rounded-full uppercase">{nombre.charAt(0)}</div>
                                            <div>
-                                             <p className="text-white text-[10px] tracking-[0.1em] uppercase font-bold">{nombre}</p>
-                                             <p className="text-gray-400 text-[8px] tracking-[0.1em] mt-1">📞 {telefono}</p>
+                                             <p className="text-white text-[8px] sm:text-[10px] tracking-[0.1em] uppercase font-bold">{nombre}</p>
+                                             <p className="text-gray-400 text-[7px] sm:text-[8px] tracking-[0.1em] mt-1">📞 {telefono}</p>
                                            </div>
                                         </div>
-                                        <div className="text-right text-gray-400 text-[8px] tracking-[0.2em] uppercase">
+                                        <div className="text-right text-gray-400 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase">
                                            {clientPedidos.length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
                                         </div>
                                      </div>
@@ -1123,43 +1123,43 @@ export default function App() {
                                      {isExpanded && (
                                         <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
                                            {[...clientPedidos].reverse().map(pedido => (
-                                              <div key={pedido.id} className="bg-black/20 p-4 border border-white/5">
-                                                 <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-                                                    <span className="text-white font-bold text-[10px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
-                                                    <span className={`text-[8px] md:text-[10px] px-3 py-1 font-bold uppercase tracking-[0.1em] ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
+                                              <div key={pedido.id} className="bg-black/20 p-3 sm:p-4 border border-white/5">
+                                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/5 pb-2 gap-2 sm:gap-0">
+                                                    <span className="text-white font-bold text-[8px] sm:text-[10px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
+                                                    <span className={`text-[7px] sm:text-[8px] md:text-[10px] px-2 sm:px-3 py-1 font-bold uppercase tracking-[0.1em] text-center w-fit ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
                                                       {pedido.estado}
                                                     </span>
                                                  </div>
                                                  
                                                  <div className="space-y-2 mb-4">
                                                    {JSON.parse(pedido.productos).map((prod, i) => (
-                                                     <div key={i} className="flex justify-between text-[10px] text-gray-300">
-                                                       <span>{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
+                                                     <div key={i} className="flex justify-between text-[8px] sm:text-[10px] text-gray-300">
+                                                       <span className="truncate pr-2">{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
                                                        <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
                                                      </div>
                                                    ))}
-                                                   <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[10px] font-bold text-white">
+                                                   <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[8px] sm:text-[10px] font-bold text-white">
                                                      <span>Envío:</span>
                                                      <span>${parseFloat(pedido.total_envio).toFixed(2)}</span>
                                                    </div>
                                                  </div>
 
                                                  {pedido.link_maps && (
-                                                   <div className="pt-2 text-[10px] text-blue-400 mb-2">
+                                                   <div className="pt-2 text-[8px] sm:text-[10px] text-blue-400 mb-2">
                                                      <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
                                                    </div>
                                                  )}
 
                                                  {pedido.comprobante_url && (
-                                                   <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[10px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
+                                                   <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[8px] sm:text-[10px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
                                                  )}
 
                                                  {pedido.estado === 'En progreso' && (
-                                                   <div className="flex gap-4 mt-4 pt-4 border-t border-white/5">
-                                                     <button onClick={() => completarPedido(pedido)} className="flex-grow py-3 bg-white text-black text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
+                                                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 pt-4 border-t border-white/5">
+                                                     <button onClick={() => completarPedido(pedido)} className="w-full sm:flex-grow py-3 bg-white text-black text-[7px] sm:text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
                                                        Completar (Descuenta Stock)
                                                      </button>
-                                                     <button onClick={() => cancelarPedido(pedido.id)} className="py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
+                                                     <button onClick={() => cancelarPedido(pedido.id)} className="w-full sm:w-auto py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[7px] sm:text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
                                                        Cancelar
                                                      </button>
                                                    </div>
@@ -1179,7 +1179,7 @@ export default function App() {
                   {listaPedidos.length === 0 && <p className="text-gray-500 text-center text-[10px] uppercase">No hay pedidos registrados.</p>}
                 </div>
               ) : (
-                <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm">
+                <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm w-full">
                   <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
                 </div>
               )}
@@ -1188,40 +1188,40 @@ export default function App() {
 
           {/* PRÊT-À-PORTER */}
           {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Prêt-à-Porter Personalizado</h2>
+            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 sm:mb-12 text-center border-b border-white/10 pb-4 sm:pb-6 break-words">Prêt-à-Porter Personalizado</h2>
               
-              <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start w-full">
+              <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center lg:items-start w-full">
                  
                  {/* Visualizador Programático (Canvas Render) */}
-                 <div className="w-full lg:w-1/2 flex flex-col gap-4">
-                     <div className="flex justify-center gap-4 mb-2">
-                       <button type="button" onClick={() => { setCustomView('frente'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
-                       <button type="button" onClick={() => { setCustomView('espalda'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
+                 <div className="w-full max-w-[400px] md:max-w-[500px] lg:max-w-none lg:w-1/2 flex flex-col gap-4">
+                     <div className="flex justify-center gap-2 sm:gap-4 mb-2">
+                       <button type="button" onClick={() => { setCustomView('frente'); setSizeOffset(0); setYOffset(0); }} className={`px-4 sm:px-6 py-2 text-[8px] sm:text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border flex-1 sm:flex-none ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
+                       <button type="button" onClick={() => { setCustomView('espalda'); setSizeOffset(0); setYOffset(0); }} className={`px-4 sm:px-6 py-2 text-[8px] sm:text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border flex-1 sm:flex-none ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
                      </div>
-                     <div className="w-full relative bg-transparent backdrop-blur-[30px] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none">
+                     <div className="w-full relative bg-transparent backdrop-blur-[30px] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none mx-auto">
                        <img 
                           src={customRenderedImage || getMockupUrl(customPrenda, customVista)} 
                           alt="Renderizado Prêt-à-Porter" 
                           className="w-full h-full object-contain z-10 transition-opacity duration-300" 
                        />
-                       {!customRenderedImage && <p className="absolute text-[10px] text-gray-600 uppercase tracking-[0.2em] z-50">Cargando Lienzo...</p>}
+                       {!customRenderedImage && <p className="absolute text-[8px] sm:text-[10px] text-gray-600 uppercase tracking-[0.2em] z-50 text-center px-4">Cargando Lienzo...</p>}
                      </div>
                  </div>
 
                  {/* Controles de Configuración Sartorial */}
-                 <div className="w-full lg:w-1/2 flex flex-col gap-10">
+                 <div className="w-full max-w-[400px] md:max-w-[500px] lg:max-w-none lg:w-1/2 flex flex-col gap-8 lg:gap-10">
 
                    {/* Selector de Prenda Base */}
-                   <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Seleccione la Prenda</p>
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   <div className="flex flex-col gap-3 sm:gap-4">
+                     <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase text-center lg:text-left">1. Seleccione la Prenda</p>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 w-full">
                        {['Camiseta', 'Buso', 'Hoodie', 'Capucha'].map(prenda => (
                          <button 
                            key={prenda}
                            type="button" 
                            onClick={() => setCustomPrenda(prenda)} 
-                           className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPrenda === prenda ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}
+                           className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border w-full ${customPrenda === prenda ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}
                          >
                            {prenda}
                          </button>
@@ -1229,21 +1229,21 @@ export default function App() {
                      </div>
                    </div>
                    
-                   <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Tono de Prenda</p>
-                     <div className="flex gap-4 flex-wrap items-center">
+                   <div className="flex flex-col gap-3 sm:gap-4">
+                     <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase text-center lg:text-left">2. Tono de Prenda</p>
+                     <div className="flex gap-3 sm:gap-4 flex-wrap items-center justify-center lg:justify-start">
                        {coloresPredeterminados.map(color => (
                          <div 
                            key={color.name} 
                            onClick={() => setCustomColor(color.hex)} 
-                           className={`w-10 h-10 cursor-pointer rounded-full border-2 transition-transform ${customColor === color.hex ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`} 
+                           className={`w-8 h-8 sm:w-10 sm:h-10 cursor-pointer rounded-full border-2 transition-transform ${customColor === color.hex ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`} 
                            style={{ backgroundColor: color.hex, boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
                            title={color.name}
                          />
                        ))}
                        {/* Selector de gama libre de colores (Gradiente circular) */}
                        <label 
-                         className={`relative w-10 h-10 cursor-pointer rounded-full border-2 transition-transform flex items-center justify-center overflow-hidden ${!coloresPredeterminados.map(c=>c.hex).includes(customColor) ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
+                         className={`relative w-8 h-8 sm:w-10 sm:h-10 cursor-pointer rounded-full border-2 transition-transform flex items-center justify-center overflow-hidden ${!coloresPredeterminados.map(c=>c.hex).includes(customColor) ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
                          style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
                          title="Elegir otro color"
                        >
@@ -1257,53 +1257,53 @@ export default function App() {
                      </div>
                    </div>
 
-                   <div className="flex flex-col gap-4">
-                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Insignia Personal</p>
-                     <div className="flex flex-col gap-2">
+                   <div className="flex flex-col gap-3 sm:gap-4">
+                     <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase text-center lg:text-left">3. Insignia Personal</p>
+                     <div className="flex flex-col gap-2 w-full">
                        <input 
                          type="file" 
                          accept="image/*"
                          onChange={procesarInsigniaLogotipo}
-                         className="text-[10px] text-gray-500 file:mr-4 file:py-3 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full"
+                         className="text-[8px] sm:text-[10px] text-gray-500 file:mr-2 sm:file:mr-4 file:py-2 sm:file:py-3 file:px-4 sm:file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.1em] sm:file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full"
                        />
-                       {isRemovingBg && <p className="text-[8px] text-blue-400 tracking-[0.1em] uppercase animate-pulse mt-2">Procesando transparencia y renderizando...</p>}
+                       {isRemovingBg && <p className="text-[7px] sm:text-[8px] text-blue-400 tracking-[0.1em] uppercase animate-pulse mt-1 sm:mt-2 text-center lg:text-left">Procesando transparencia y renderizando...</p>}
                      </div>
                    </div>
 
                    {customLogo && (
-                     <div className="flex flex-col gap-4 animate-fade-in">
-                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">4. Ubicación ({customVista})</p>
-                       <div className="grid grid-cols-2 gap-4">
+                     <div className="flex flex-col gap-4 animate-fade-in w-full">
+                       <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase text-center lg:text-left">4. Ubicación ({customVista})</p>
+                       <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full">
                          {customVista === 'frente' ? (
                            <>
-                             <button type="button" onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
-                             <button type="button" onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
-                             <button type="button" onClick={() => { setCustomPlacement('pecho-sup-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'pecho-sup-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Sup. Centro</button>
-                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border w-full ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border w-full ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-sup-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 w-full ${customPlacement === 'pecho-sup-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Sup. Centro</button>
+                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 w-full ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
                            </>
                          ) : (
                            <>
-                             <button type="button" onClick={() => { setCustomPlacement('espalda-sup'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
-                             <button type="button" onClick={() => { setCustomPlacement('espalda-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-sup'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border w-full ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-2 sm:py-3 px-1 sm:px-2 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border w-full ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
                            </>
                          )}
                        </div>
 
-                       <div className="flex flex-col gap-4 mt-2">
-                         <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">5. Ajuste Fino</p>
-                         <div className="flex gap-8">
+                       <div className="flex flex-col gap-3 sm:gap-4 mt-2 w-full">
+                         <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase text-center lg:text-left">5. Ajuste Fino</p>
+                         <div className="flex flex-wrap justify-center lg:justify-start gap-6 sm:gap-8 w-full">
                            <div className="flex flex-col items-center gap-2">
-                             <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Tamaño</span>
+                             <span className="text-[7px] sm:text-[8px] text-gray-400 tracking-[0.1em] uppercase">Tamaño</span>
                              <div className="flex gap-2">
-                               <button type="button" onClick={() => setSizeOffset(s => s - 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">-</button>
-                               <button type="button" onClick={() => setSizeOffset(s => s + 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">+</button>
+                               <button type="button" onClick={() => setSizeOffset(s => s - 5)} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-base sm:text-lg font-bold outline-none">-</button>
+                               <button type="button" onClick={() => setSizeOffset(s => s + 5)} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-base sm:text-lg font-bold outline-none">+</button>
                              </div>
                            </div>
                            <div className="flex flex-col items-center gap-2">
-                             <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Posición Vertical</span>
+                             <span className="text-[7px] sm:text-[8px] text-gray-400 tracking-[0.1em] uppercase">Posición Vertical</span>
                              <div className="flex gap-2">
-                               <button type="button" onClick={() => setYOffset(y => y - 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▲</button>
-                               <button type="button" onClick={() => setYOffset(y => y + 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▼</button>
+                               <button type="button" onClick={() => setYOffset(y => y - 5)} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-xs sm:text-sm font-bold outline-none">▲</button>
+                               <button type="button" onClick={() => setYOffset(y => y + 5)} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-xs sm:text-sm font-bold outline-none">▼</button>
                              </div>
                            </div>
                          </div>
@@ -1311,14 +1311,14 @@ export default function App() {
                      </div>
                    )}
 
-                   <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
-                     <div className="flex justify-between items-end">
-                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR A MEDIDA</span>
-                        <span className="text-[18px] text-white font-bold tracking-[0.1em]">${getCalculatedPrice()} USD</span>
+                   <div className="mt-4 sm:mt-8 pt-4 sm:pt-8 border-t border-white/10 flex flex-col gap-4 sm:gap-6 w-full">
+                     <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-2 sm:gap-0 w-full">
+                        <span className="text-[12px] sm:text-[14px] text-white tracking-[0.2em] font-light">VALOR A MEDIDA</span>
+                        <span className="text-[16px] sm:text-[18px] text-white font-bold tracking-[0.1em]">${getCalculatedPrice()} USD</span>
                      </div>
                      <button 
                        onClick={handleCustomAddToCart}
-                       className="w-full bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl"
+                       className="w-full bg-white text-black text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase py-4 sm:py-5 hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl"
                      >
                        Añadir Diseño al Bolso
                      </button>
@@ -1331,13 +1331,13 @@ export default function App() {
 
           {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
           {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
                <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
                
                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-6 border-b border-white/10 pb-6">
+                 <ul className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-12 mb-6 border-b border-white/10 pb-6">
                    {subcategoriasJoyeria.map(sub => (
-                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
+                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[8px] sm:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
                        {sub}
                      </li>
                    ))}
@@ -1345,17 +1345,17 @@ export default function App() {
                )}
 
                {activeCategory === 'Acero Fino' && (
-                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
-                    <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 w-full text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
+                 <div className="w-full max-w-3xl mx-auto mb-8 sm:mb-10 flex flex-col items-center relative z-[150]">
+                    <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-4 sm:mb-6 uppercase">Ordenar Por</p>
+                    <div className="flex flex-wrap justify-center gap-6 sm:gap-8 md:gap-16 w-full text-[8px] sm:text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
                        
                        <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
                           <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                             Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
                           </div>
                           {openFilter === 'color' && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none">
                                  {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
                                    <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                                      {opt === 'Todo' ? 'Todos' : opt}
@@ -1372,8 +1372,8 @@ export default function App() {
                               Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
                             </div>
                             {openFilter === 'talla' && (
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                                 <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none max-h-64 overflow-y-auto">
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
+                                 <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none max-h-64 overflow-y-auto">
                                    <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Todas</span>
                                    {tallasDisponibles.map(t => (
                                      <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
@@ -1391,8 +1391,8 @@ export default function App() {
                             Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
                           </div>
                           {openFilter === 'precio' && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[160px]">
-                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px] sm:min-w-[160px]">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 shadow-none border-none">
                                  <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Normal</span>
                                  <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menor a Mayor</span>
                                  <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Mayor a Menor</span>
@@ -1405,23 +1405,23 @@ export default function App() {
                )}
 
                {userRole === 'admin' && !showInlineForm && (
-                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, color: '', imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0">
-                   <span className="text-white tracking-[0.2em] text-[10px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
+                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, color: '', imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-6 sm:mb-8 md:mb-12 border border-dashed border-white/20 py-4 sm:py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer w-full">
+                   <span className="text-white tracking-[0.2em] text-[8px] sm:text-[10px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
                  </div>
                )}
 
                {userRole === 'admin' && showInlineForm && (
                  <form onSubmit={handlePublicarLocal} className="mb-8 bg-black/30 backdrop-blur-3xl p-4 md:p-6 shadow-2xl relative w-full rounded-none border border-white/5">
-                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+                   <button type="button" onClick={cerrarFormulario} className="absolute top-2 sm:top-4 right-2 sm:right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-xl sm:text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
                    <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-4 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                    
                    {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
                      <div className="mb-4 flex justify-center bg-transparent p-0">
-                       <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
+                       <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-32 sm:h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
                      </div>
                    )}
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-4 text-center items-center justify-items-center">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-12 gap-y-4 mb-4 text-center items-center justify-items-center w-full">
                      <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
                      
                      <div className="w-full relative">
@@ -1474,11 +1474,11 @@ export default function App() {
                    {nuevaPieza.costo > 0 && (
                      <div className="w-full flex flex-col items-center justify-center mb-6 pb-4 border-b border-white/5 mt-4">
                        <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
+                       <div className="flex gap-2 sm:gap-4 md:gap-8 flex-wrap justify-center text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] text-gray-300 uppercase">
                           {[115, 100, 75, 50, 25].map(porcentaje => {
                             const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                             return (
-                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-2 sm:px-4 py-1 sm:py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                             );
                           })}
                        </div>
@@ -1488,11 +1488,11 @@ export default function App() {
                    {nuevaPieza.subcategoria === 'Anillos' && (
                      <div className="w-full flex flex-col items-center mt-4 mb-6 pb-4">
                        <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+                       <div className="flex gap-2 sm:gap-4 md:gap-8 flex-wrap justify-center">
                          {tallasDisponibles.map(talla => (
-                           <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
-                             <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
+                           <div key={talla} className="flex flex-col items-center gap-1 sm:gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                             <span className="text-white text-[10px] sm:text-[12px] md:text-sm font-light">{talla}</span>
+                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-8 sm:w-10 bg-transparent text-white text-center text-[8px] sm:text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
                            </div>
                          ))}
                        </div>
@@ -1501,14 +1501,14 @@ export default function App() {
 
                    <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-6 resize-none"></textarea>
                    
-                   <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-3 w-full md:w-auto">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
+                   <div className="flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-10 bg-transparent p-0 w-full">
+                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[8px] sm:text-[10px] md:text-xs text-gray-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-4 sm:file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.1em] sm:file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+                     <button type="submit" className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[8px] sm:text-[9px] md:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-8 sm:px-12 py-2 sm:py-3 w-full md:w-auto">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
                    </div>
                  </form>
                )}
 
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 w-full">
                  {productosMostrar.map(producto => {
                    const tallasObj = parseTallasseguro(producto.tallas);
                    const isRing = producto.subcategoria === 'Anillos';
@@ -1516,8 +1516,8 @@ export default function App() {
                    const canBuy = !isRing || selectedSizes.length > 0;
 
                    return (
-                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
-                       <div className={`overflow-hidden aspect-square relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
+                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0 w-full">
+                       <div className={`overflow-hidden aspect-square relative w-full ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
                          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                          {producto.vendido && (
                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -1532,8 +1532,8 @@ export default function App() {
                          )}
                        </div>
                        
-                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center w-full">
+                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
                          <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
                          
                          {!isRing && (
@@ -1542,24 +1542,24 @@ export default function App() {
 
                          {isRing && (
                            <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
-                             <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                             <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full">
                                {tallasDisponibles.map(talla => {
                                  const stock = parseInt(tallasObj[talla] || 0);
                                  const isAvailable = stock > 0;
                                  const isSelected = selectedSizes.includes(talla);
                                  
                                  return (
-                                   <div key={talla} className="flex flex-col items-center gap-1.5">
+                                   <div key={talla} className="flex flex-col items-center gap-1 sm:gap-1.5">
                                      <button 
                                        type="button"
                                        onClick={(e) => { 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] sm:text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
                                        <span>{talla}</span>
                                      </button>
-                                     <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     <span className={`text-[10px] sm:text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock}
                                      </span>
                                    </div>
@@ -1569,22 +1569,22 @@ export default function App() {
                            </div>
                          )}
                          
-                         <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                         <p className="text-[8px] sm:text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-4 sm:mb-6 break-words uppercase w-full">{producto.descripcion}</p>
 
                          {userRole === 'cliente' && !producto.vendido && (
-                           <div className="flex gap-2 mt-auto w-full z-30 justify-center">
+                           <div className="flex flex-col sm:flex-row gap-2 mt-auto w-full z-30 justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                                className={`flex-grow py-3 text-[8px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                                className={`w-full sm:flex-grow py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                               >
                                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full sm:w-auto px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
                            </div>
                          )}
 
                          {userRole === 'admin' && (
-                           <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                           <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} className={`w-full py-2 sm:py-2.5 mt-auto text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
                          )}
                        </div>
                      </div>
@@ -1592,7 +1592,7 @@ export default function App() {
                  })}
                  
                  {productosMostrar.length === 0 && (
-                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
+                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] col-span-full text-center py-10 w-full">No hay piezas en esta categoría aún.</p>
                  )}
                </div>
             </section>
@@ -1600,18 +1600,18 @@ export default function App() {
 
           {/* MODAL PRODUCTO */}
           {productoSeleccionado && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
-              <div className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent" onClick={e => e.stopPropagation()}>
-                <button onClick={() => setProductoSeleccionado(null)} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
-                <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
-                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-0 sm:p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
+              <div className="w-full h-full sm:h-auto max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-sm items-stretch bg-[#0a0a0a] max-h-[100vh] sm:max-h-[90vh] md:max-h-[80vh]" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setProductoSeleccionado(null)} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 z-[250] text-2xl sm:text-3xl cursor-pointer bg-black/50 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center border-none outline-none">×</button>
+                <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex flex-col justify-center min-h-[300px] md:min-h-0">
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover sm:object-contain block m-0 p-0" />
                 </div>
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
-                  <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
-                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
+                <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/5 backdrop-blur-3xl border-t md:border-t-0 md:border-l border-white/5 m-0">
+                  <h2 className="text-[12px] sm:text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md w-full">{productoSeleccionado.titulo}</h2>
+                  <p className="text-[12px] sm:text-[14px] tracking-[0.1em] text-white font-light mb-6 sm:mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
-                    <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                    <p className="text-[10px] sm:text-[12px] tracking-[0.2em] text-gray-300 mb-6 sm:mb-8 uppercase drop-shadow-md">
                       {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
                     </p>
                   )}
@@ -1622,27 +1622,27 @@ export default function App() {
                      const modalCanBuy = modalSelectedSizes.length > 0;
 
                      return (
-                     <div className="flex flex-col items-center w-full mb-10 mt-2">
-                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
-                       <div className="flex flex-wrap justify-center gap-4">
+                     <div className="flex flex-col items-center w-full mb-8 sm:mb-10 mt-2">
+                       <p className="text-[8px] sm:text-[10px] tracking-[0.2em] text-gray-400 mb-4 sm:mb-6 uppercase">Seleccione su talla</p>
+                       <div className="flex flex-wrap justify-center gap-2 sm:gap-4 w-full">
                          {tallasDisponibles.map(talla => {
                            const stock = parseInt(modalTallasObj[talla] || 0);
                            const isAvailable = stock > 0;
                            const isSelected = modalSelectedSizes.includes(talla);
                            
                            return (
-                             <div key={talla} className="flex flex-col items-center gap-2">
+                             <div key={talla} className="flex flex-col items-center gap-1 sm:gap-2">
                                <button 
                                  type="button"
                                  onClick={(e) => { 
                                    e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-[10px] sm:text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
-                               <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                               <span className={`text-[10px] sm:text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                  {stock}
                                </span>
                              </div>
@@ -1651,14 +1651,14 @@ export default function App() {
                        </div>
 
                        {userRole === 'cliente' && !productoSeleccionado.vendido && (
-                         <div className="flex gap-4 mt-12 w-full justify-center">
+                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-8 sm:mt-12 w-full justify-center">
                            <button 
                              onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
-                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                             className={`w-full sm:flex-grow text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase py-3 sm:py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
                            >
                              {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
                            </button>
-                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="w-full sm:w-auto border border-white/20 py-3 sm:py-0 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xs sm:text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥ QUITAR' : '♡ GUARDAR'}</button>
                          </div>
                        )}
                      </div>
@@ -1667,16 +1667,16 @@ export default function App() {
 
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <>
-                      <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
-                      <p className="text-[10px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
+                      <div className="w-12 h-px bg-white/30 mb-6 sm:mb-8 mx-auto"></div>
+                      <p className="text-[8px] sm:text-[10px] text-gray-200 leading-loose mb-8 sm:mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words w-full">{productoSeleccionado.descripcion}</p>
                       
                       {userRole === 'cliente' && !productoSeleccionado.vendido ? (
-                        <div className="flex gap-4 mt-auto w-full justify-center">
-                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[8px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-auto w-full justify-center">
+                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="w-full sm:flex-grow bg-white text-black text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase py-3 sm:py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="w-full sm:w-auto border border-white/20 py-3 sm:py-0 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-xs sm:text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥ QUITAR' : '♡ GUARDAR'}</button>
                         </div>
                       ) : userRole === 'cliente' && (
-                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[8px] font-bold uppercase">Pieza Agotada</span></div>
+                        <div className="mt-auto py-3 sm:py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.3em] sm:tracking-[0.4em] text-[7px] sm:text-[8px] font-bold uppercase">Pieza Agotada</span></div>
                       )}
                     </>
                   )}
@@ -1688,53 +1688,53 @@ export default function App() {
           {/* CARRITO */}
           {userRole !== 'admin' && user && activeView === 'bag' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] uppercase text-white mb-8 sm:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
               
               {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] sm:text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
               ) : (
-                <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
+                <div className="bg-white/5 backdrop-blur-3xl p-4 sm:p-6 md:p-10 shadow-2xl relative border border-none w-full overflow-hidden">
                   
                   {checkoutPaso === 1 && (
                     <>
-                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      <h3 className="text-[7px] sm:text-[8px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
                       {carrito.map(item => (
-                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
-                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
-                          <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
+                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative w-full">
+                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-lg sm:text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4 z-50">×</button>
+                          <img src={item.imagen_url} alt={item.titulo} className="w-20 h-20 sm:w-24 sm:h-24 object-contain bg-black/20" />
                           <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
-                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                            <h4 className="text-[8px] sm:text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words px-4 sm:px-0">{item.titulo}</h4>
+                            <p className="text-[7px] sm:text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-2 mb-2 px-2 sm:px-0">
                               {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
                             </p>
                             <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
-                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <span className="text-[8px] sm:text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
                               <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
                             </div>
                           </div>
-                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                          <span className="text-[8px] sm:text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
                         </div>
                       ))}
                       
-                      <div className="mt-8 border-t border-white/10 pt-6">
-                        <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
-                        <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                      <div className="mt-8 border-t border-white/10 pt-6 w-full">
+                        <label className="text-[7px] sm:text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mb-8 w-full">
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`w-full sm:w-auto px-4 sm:px-6 py-3 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`w-full sm:w-auto px-4 sm:px-6 py-3 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
                         </div>
 
                         {envioConfig.tipo === 'domicilio' && (
-                          <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
+                          <div className="flex flex-col items-center sm:items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
                             <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
-                              <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors uppercase">
+                              <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[8px] sm:text-[10px] tracking-[0.1em] py-3 cursor-pointer text-center sm:text-right hover:border-white/50 transition-colors uppercase">
                                 {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
                               </div>
                               {openFormSelect === 'envio' && (
                                 <div className="absolute top-full right-0 w-full pt-1 z-[300]">
                                   <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
                                     {sectoresQuito.map(sector => (
-                                      <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-500 hover:text-white text-[10px] tracking-[0.1em] uppercase">
+                                      <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-center sm:text-right px-4 text-gray-500 hover:text-white text-[8px] sm:text-[10px] tracking-[0.1em] uppercase">
                                         {sector.nombre} - ${sector.precio.toFixed(2)} USD
                                       </span>
                                     ))}
@@ -1747,23 +1747,23 @@ export default function App() {
                               placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
                               value={envioConfig.linkMaps}
                               onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[7px] sm:text-[8px] tracking-[0.1em] py-3 outline-none text-center sm:text-right hover:border-white/50 transition-colors"
                               required
                             />
-                            <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                            <p className="text-[7px] sm:text-[8px] text-gray-500 tracking-[0.1em] text-center sm:text-right mt-2 max-w-xs sm:max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
                           </div>
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
-                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
-                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
+                      <div className="mt-4 flex flex-col items-center sm:items-end gap-3 text-[8px] sm:text-[10px] tracking-[0.1em] uppercase w-full">
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Subtotal:</span> <span className="text-white">$ {subtotalCarrito.toFixed(2)} USD</span></p>
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Envío:</span> <span className="text-white">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
                         <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                        <p className="text-[10px] sm:text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Total:</span> <span className="font-bold">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
                       </div>
                       
-                      <div className="flex justify-center mt-10 md:mt-16">
-                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                      <div className="flex justify-center mt-10 md:mt-16 w-full">
+                        <button onClick={handleContinuarCheckout} className="w-full sm:w-auto text-black text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">
                           {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
                         </button>
                       </div>
@@ -1771,16 +1771,16 @@ export default function App() {
                   )}
 
                   {checkoutPaso === 2 && (
-                    <div className="flex flex-col items-center animate-fade-in">
-                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
-                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
-                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                    <div className="flex flex-col items-center animate-fade-in w-full">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-center sm:self-start text-[7px] sm:text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[8px] sm:text-[10px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-white mb-6 sm:mb-8 text-center font-light w-full">Confirmación de Pago</h3>
+                      <p className="text-[7px] sm:text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-xs sm:max-w-lg mb-6 sm:mb-8 leading-loose">
                         Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
                       </p>
 
-                      <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
-                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
+                      <div className="w-full max-w-[280px] sm:max-w-md border border-white/10 p-4 sm:p-6 mb-6 sm:mb-8 text-center bg-white/5">
+                        <p className="text-[7px] sm:text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
+                        <div className="text-[8px] sm:text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
                           <div>
                             <strong>Banco Pichincha / DeUna</strong><br/>
                             Ahorros: 2205567890<br/>
@@ -1796,20 +1796,20 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="w-full max-w-md flex flex-col items-center gap-6">
-                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                      <div className="w-full max-w-[280px] sm:max-w-md flex flex-col items-center gap-4 sm:gap-6">
+                         <label className="text-[7px] sm:text-[8px] tracking-[0.2em] uppercase text-gray-400 text-center">Adjuntar Captura de Transferencia</label>
                          <input 
                            type="file" 
                            accept="image/*"
                            onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
+                           className="text-[8px] sm:text-[10px] text-gray-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-4 sm:file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.1em] sm:file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
                          />
                       </div>
 
                       <button 
                         onClick={enviarPedidoWhatsApp} 
                         disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-transparent text-gray-400 cursor-not-allowed' : 'bg-transparent text-gray-500 hover:text-white'}`}
+                        className={`mt-8 sm:mt-12 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-10 py-4 sm:py-5 transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-transparent text-gray-400 cursor-not-allowed' : 'bg-transparent text-gray-500 hover:text-white'}`}
                       >
                         {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
                       </button>
@@ -1824,16 +1824,16 @@ export default function App() {
           {/* DESEOS */}
           {userRole !== 'admin' && user && activeView === 'deseos' && (
             <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
               
               {favoritos.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 w-full">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
                     return (
-                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
-                      <div className="overflow-hidden aspect-square relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0 w-full">
+                      <div className="overflow-hidden aspect-square relative cursor-pointer w-full" onClick={() => setProductoSeleccionado(producto)}>
                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -1841,13 +1841,13 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
-                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center w-full">
+                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
                         <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
                         
-                        <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <p className="text-[8px] sm:text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase w-full">{producto.descripcion}</p>
                         <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
                             Quitar de lista de deseos ♥
                           </button>
                         </div>
@@ -1861,43 +1861,43 @@ export default function App() {
 
           {/* PERFIL */}
           {user && activeView === 'perfil' && (
-            <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
-              <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
+            <section className="w-full max-w-4xl mx-auto px-4 py-8 md:py-20 flex-grow animate-fade-in">
+              <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center w-full">
                 
-                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
-                <div className="w-12 h-px bg-white/20 mb-12"></div>
+                <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <div className="w-8 sm:w-12 h-px bg-white/20 mb-8 sm:mb-12"></div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
-                  <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 w-full max-w-2xl mb-8 sm:mb-12 text-center md:text-center">
+                  <div className="flex flex-col items-center w-full">
+                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Nombres</label>
+                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase font-light break-words w-full px-2">
                       {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                  <div className="flex flex-col items-center w-full">
+                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Apellidos</label>
+                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase font-light break-words w-full px-2">
                       {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
                     </p>
                   </div>
-                  <div className="md:col-span-2 flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                  <div className="md:col-span-2 flex flex-col items-center w-full overflow-hidden">
+                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] font-light truncate w-full px-2" title={user.email}>
                       {user.email}
                     </p>
                   </div>
                 </div>
 
-                <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
+                <div className="w-full border-t border-white/10 pt-8 sm:pt-10 mb-8 sm:mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
                   <button 
                     onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="w-full sm:w-auto text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white border border-white/20 px-6 sm:px-8 py-3 sm:py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                    className="w-full sm:w-auto text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white border border-white/20 px-6 sm:px-8 py-3 sm:py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
@@ -1905,23 +1905,23 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    <label className="block text-[12px] sm:text-[14px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light px-4">Oculta o muestra secciones en la página principal.</p>
                     
-                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
+                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-8 sm:mb-10 px-2 sm:px-0">
                       {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
-                        <div key={menu} className="bg-transparent p-4 border border-none">
-                          <div className="flex justify-between items-center">
-                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
+                        <div key={menu} className="bg-transparent p-3 sm:p-4 border border-none w-full">
+                          <div className="flex justify-between items-center w-full">
+                            <span className={`text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-2 sm:px-3 py-1 sm:py-2 cursor-pointer transition-colors whitespace-nowrap ml-2">
                               {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
                             </button>
                           </div>
                           
                           {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
-                            <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
-                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                            <div key={sub} className="flex justify-between items-center pl-4 sm:pl-6 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-white/5 w-full">
+                              <span className={`text-[8px] sm:text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] sm:text-[8px] uppercase tracking-[0.1em] sm:tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors whitespace-nowrap ml-2">
                                 {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
                               </button>
                             </div>
@@ -1933,29 +1933,29 @@ export default function App() {
                 )}
 
                 {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
-                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-4 sm:mt-6 w-full flex flex-col items-center">
+                    <label className="block text-[12px] sm:text-[14px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light px-4">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto px-4 sm:px-0">
                       {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
-                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
+                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4 w-full">
                           <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                            <button className="text-gray-300 group-hover:text-white text-[10px] sm:text-[12px] tracking-[0.2em] sm:tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
                               {menuPrincipal}
                             </button>
-                            <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
-                              {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+                            <div className={`w-3 h-3 sm:w-3.5 sm:h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
+                              {isAllSelected(menuPrincipal) && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black"></div>}
                             </div>
                           </div>
                           {menuPdfExpandido === menuPrincipal && (
-                            <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
+                            <div className="pt-3 sm:pt-4 md:pt-6 flex flex-col gap-2 sm:gap-3 md:gap-4 pl-2 animate-fade-in w-full">
                               {submenus.map(cat => (
                                 <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
-                                  <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                                    {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
+                                  <div className={`w-3 h-3 sm:w-3.5 sm:h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                                    {categoriasDescarga.includes(cat) && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black"></div>}
                                   </div>
                                   <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                  <span className="text-gray-400 group-hover:text-white text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
                                 </label>
                               ))}
                             </div>
@@ -1963,8 +1963,8 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                    <div className="flex justify-center w-full px-4 sm:px-0">
+                      <button onClick={() => window.print()} className="w-full sm:w-auto text-black text-[10px] sm:text-[12px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-8 py-3 sm:py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
                         <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Generar Catálogo PDF
                       </button>
@@ -1974,10 +1974,9 @@ export default function App() {
               </div>
             </section>
           )}
-
         </main>
         
-        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
+        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[8px] sm:text-[10px] tracking-[0.3em] sm:tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
@@ -1986,33 +1985,33 @@ export default function App() {
 
       <div className="auth-wrapper">
       {showCompleteProfile && user && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-           <div className="bg-white/5 backdrop-blur-3xl border border-none p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-0 sm:p-4 animate-fade-in overflow-y-auto">
+           <div className="bg-white/5 backdrop-blur-3xl border border-none p-6 sm:p-8 md:p-16 w-full h-full sm:h-auto max-w-2xl flex flex-col shadow-2xl relative my-0 sm:my-8 rounded-none overflow-y-auto sm:overflow-visible">
               
               {(user.user_metadata?.first_name) && (
-                <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
+                <button onClick={() => setShowCompleteProfile(false)} className="absolute top-2 right-2 sm:top-4 sm:right-6 text-gray-500 hover:text-white text-2xl sm:text-3xl bg-black/50 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center border-none cursor-pointer outline-none z-50">×</button>
               )}
 
-              <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+              <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-white mb-8 sm:mb-12 text-center font-light mt-6 sm:mt-0">Complete su Perfil</h2>
 
-              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
+              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8 sm:gap-10 w-full">
                   
                   <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                     <div onClick={() => setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-3 cursor-pointer text-center transition-colors uppercase">
+                     <div onClick={() => setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 sm:py-3 cursor-pointer text-center transition-colors uppercase">
                        {perfilForm.tratamiento || 'SELECCIONAR TRATAMIENTO*'}
                      </div>
                      {openFormSelect === 'tratamiento' && (
                        <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                         <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                         <div className="bg-black/90 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-3 sm:gap-4 py-3 sm:py-4 shadow-2xl rounded-sm">
                            {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
-                             <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
+                             <div key={t} onClick={() => { setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors uppercase w-full px-4">{t}</div>
                            ))}
                          </div>
                        </div>
                      )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center items-center justify-items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 text-center items-center justify-items-center w-full">
                     <input 
                       type="text" 
                       value={perfilForm.nombre} 
@@ -2031,16 +2030,16 @@ export default function App() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-6 items-center">
-                    <label className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
-                    <div className="flex justify-center gap-8 w-full">
+                  <div className="flex flex-col gap-4 sm:gap-6 items-center w-full">
+                    <label className="text-[8px] md:text-[10px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <div className="flex justify-center gap-4 sm:gap-8 w-full max-w-[280px] sm:max-w-none mx-auto">
                       <input 
                         type="text" 
                         maxLength={2} 
                         value={perfilForm.dia} 
                         onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
                         placeholder="DD" 
-                        className="w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        className="w-12 sm:w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
                         required
                       />
                       <input 
@@ -2049,7 +2048,7 @@ export default function App() {
                         value={perfilForm.mes} 
                         onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
                         placeholder="MM" 
-                        className="w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        className="w-12 sm:w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
                         required
                       />
                       <input 
@@ -2058,22 +2057,22 @@ export default function App() {
                         value={perfilForm.anio} 
                         onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
                         placeholder="AAAA" 
-                        className="w-24 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        className="w-16 sm:w-24 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="flex justify-center gap-6 mt-4">
-                    <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
+                  <div className="flex justify-center items-end gap-4 sm:gap-6 mt-2 sm:mt-4 w-full max-w-[280px] sm:max-w-none mx-auto">
+                    <div className="relative w-16 sm:w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
+                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 sm:py-3 cursor-pointer text-center transition-colors">
                          {perfilForm.prefijo}
                        </div>
                        {openFormSelect === 'prefijo' && (
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                           <div className="bg-black/90 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-3 sm:gap-4 py-3 sm:py-4 shadow-2xl rounded-sm">
                              {['+593', '+34', '+1', '+52', '+57'].map(p => (
-                               <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
+                               <div key={p} onClick={() => { setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-300 hover:text-white cursor-pointer text-center transition-colors w-full px-2">{p}</div>
                              ))}
                            </div>
                          </div>
@@ -2084,13 +2083,13 @@ export default function App() {
                       value={perfilForm.telefono} 
                       onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
                       placeholder="MÓVIL" 
-                      className="w-48 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                      className="flex-grow sm:w-48 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 sm:py-3 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
                     />
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer mt-8 group justify-center px-4">
-                    <div className={`w-5 h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                      {perfilForm.newsletter && <div className="w-3 h-3 bg-black"></div>}
+                  <label className="flex items-start gap-3 sm:gap-4 cursor-pointer mt-6 sm:mt-8 group justify-center px-2 sm:px-4 w-full">
+                    <div className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                      {perfilForm.newsletter && <div className="w-2 h-2 sm:w-3 sm:h-3 bg-black"></div>}
                     </div>
                     <input 
                       type="checkbox" 
@@ -2098,16 +2097,16 @@ export default function App() {
                       onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
                       className="hidden" 
                     />
-                    <span className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                    <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-left sm:text-center">
                       Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
                     </span>
                   </label>
 
-                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                  <p className="text-gray-500 text-[6px] sm:text-[7px] tracking-[0.1em] leading-loose mt-2 sm:mt-4 pt-4 sm:pt-6 text-center max-w-md mx-auto px-4">
                     Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
                   </p>
 
-                  <button type="submit" className="mt-8 bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[10px] md:text-[12px] tracking-[0.3em] uppercase py-5 w-full">
+                  <button type="submit" className="mt-4 sm:mt-8 bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[8px] sm:text-[10px] md:text-[12px] tracking-[0.2em] sm:tracking-[0.3em] uppercase py-4 sm:py-5 w-full mb-10 sm:mb-0">
                     Actualizar Perfil
                   </button>
               </form>
