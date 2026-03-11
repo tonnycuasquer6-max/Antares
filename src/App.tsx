@@ -132,7 +132,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => handleUserSession(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => handleUserSession(session?.user ?? null));
     
-    // CONTROL DE TOQUES FUERA PARA CERRAR MENUS EN MOVILES
+    // CERRAR MENÚS AL TOCAR FUERA (SOPORTE TÁCTIL)
     const handleClickOutside = () => {
       setMenuAbierto(null);
       setUserMenuAbierto(false);
@@ -767,8 +767,7 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-md py-6 px-8 shadow-none border-none"; 
-  const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white transition-all duration-300";
-
+  
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
   if (activeCategory === 'Acero Fino') {
@@ -849,18 +848,14 @@ export default function App() {
                 </button>
               )}
 
-              <div 
-                className="relative" 
-                onMouseEnter={() => setUserMenuAbierto(true)} 
-                onMouseLeave={() => setUserMenuAbierto(false)}
-              >
+              <div className="group relative">
                 <button 
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
+                  onClick={(e) => { e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
                   className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none"
                 >
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
-                <div className={`absolute top-full right-0 pt-4 z-[100] ${userMenuAbierto ? 'block' : 'hidden'}`}>
+                <div className={`absolute top-full right-0 pt-4 z-[100] ${userMenuAbierto ? 'block' : 'hidden lg:group-hover:block'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
                     <button onClick={() => { setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full">Mi Perfil</button>
                     
@@ -894,20 +889,15 @@ export default function App() {
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
-                    <li 
-                      key={menu} 
-                      className="relative cursor-pointer py-2 border-none bg-transparent" 
-                      onMouseEnter={() => setMenuAbierto(menu)} 
-                      onMouseLeave={() => setMenuAbierto(null)}
-                    >
+                    <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
                       <span 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
-                        className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                        onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
+                        className={`inline-block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
                       >
                         {menu}
-                        <div className={`${menuUnderlineClass} ${menuAbierto === menu ? 'w-full left-0' : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'}`}></div>
+                        <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-px bg-white transition-all duration-300 ${menuAbierto === menu ? 'w-full' : 'w-0 lg:group-hover:w-full'}`}></div>
                       </span>
-                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
+                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden lg:group-hover:block'}`}>
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
@@ -916,7 +906,7 @@ export default function App() {
                             return (
                               <span 
                                 key={sub} 
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
+                                onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
                                 className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
                               >
                                 {sub}
@@ -930,24 +920,20 @@ export default function App() {
                 })}
                 
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
-                  <li 
-                    className="relative cursor-pointer py-2 border-none bg-transparent" 
-                    onMouseEnter={() => setMenuAbierto('Obsequios')} 
-                    onMouseLeave={() => setMenuAbierto(null)}
-                  >
+                  <li className="group relative cursor-pointer py-2 border-none bg-transparent">
                     <span 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
-                      className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                      onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
+                      className={`inline-block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
                     >
                       Obsequios
-                      <div className={`${menuUnderlineClass} ${menuAbierto === 'Obsequios' ? 'w-full left-0' : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'}`}></div>
+                      <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-px bg-white transition-all duration-300 ${menuAbierto === 'Obsequios' ? 'w-full' : 'w-0 lg:group-hover:w-full'}`}></div>
                     </span>
-                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden lg:group-hover:block'}`}>
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
                           <span 
                             key={p} 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
+                            onClick={(e) => { e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
                             className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs"
                           >
                             $ {p}.00 USD
