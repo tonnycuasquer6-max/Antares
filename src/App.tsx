@@ -78,6 +78,10 @@ export default function App() {
   const [sizeOffset, setSizeOffset] = useState(0); 
   const [yOffset, setYOffset] = useState(0); 
 
+  // NUEVOS ESTADOS PARA SOPORTE TÁCTIL (CELULARES/IPAD)
+  const [menuAbierto, setMenuAbierto] = useState(null);
+  const [userMenuAbierto, setUserMenuAbierto] = useState(false);
+
   const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
   const sectoresQuito = [
     { nombre: 'Quito Centro', precio: 1.00 },
@@ -127,7 +131,23 @@ export default function App() {
     fetchConfiguracion();
     supabase.auth.getSession().then(({ data: { session } }) => handleUserSession(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => handleUserSession(session?.user ?? null));
-    return () => subscription.unsubscribe();
+    
+    // CONTROL DE TOQUES FUERA PARA CERRAR MENUS EN MOVILES
+    const handleClickOutside = () => {
+      setMenuAbierto(null);
+      setUserMenuAbierto(false);
+      setOpenFilter(null);
+      setOpenFormSelect(null);
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -211,6 +231,7 @@ export default function App() {
     setOrdenPrecio('');
     setOpenFilter(null);
     setOpenFormSelect(null);
+    setMenuAbierto(null);
   };
 
   const handleCheckbox = (categoria) => setCategoriasDescarga(prev => prev.includes(categoria) ? prev.filter(c => c !== categoria) : [...prev, categoria]);
@@ -746,7 +767,7 @@ export default function App() {
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
   const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-md py-6 px-8 shadow-none border-none"; 
-  const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white group-hover:w-full group-hover:left-0 transition-all duration-300";
+  const menuUnderlineClass = "absolute bottom-0 left-1/2 w-0 h-px bg-white transition-all duration-300";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
@@ -828,28 +849,35 @@ export default function App() {
                 </button>
               )}
 
-              <div className="group relative">
-                <button className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none">
+              <div 
+                className="relative" 
+                onMouseEnter={() => setUserMenuAbierto(true)} 
+                onMouseLeave={() => setUserMenuAbierto(false)}
+              >
+                <button 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(!userMenuAbierto); setMenuAbierto(null); setOpenFilter(null); setOpenFormSelect(null); }}
+                  className="text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none"
+                >
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
                 </button>
-                <div className="absolute top-full right-0 pt-4 hidden group-hover:block z-[100]">
+                <div className={`absolute top-full right-0 pt-4 z-[100] ${userMenuAbierto ? 'block' : 'hidden'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-right`}>
-                    <button onClick={() => setActiveView('perfil')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block">Mi Perfil</button>
+                    <button onClick={() => { setUserMenuAbierto(false); setActiveView('perfil'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full">Mi Perfil</button>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Gestionar Pedidos</button>
-                        <button onClick={() => setActiveView('inventario')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold">Inventario / Finanzas</button>
+                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 w-full">Gestionar Pedidos</button>
+                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 font-bold w-full">Inventario / Finanzas</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => setActiveView('pedidos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5">Mis Pedidos</button>
-                        <button onClick={() => setActiveView('deseos')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5">Deseos ({favoritos.length})</button>
+                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 w-full">Mis Pedidos</button>
+                        <button onClick={() => { setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-5 mb-5 w-full">Deseos ({favoritos.length})</button>
                       </>
                     )}
 
                     <hr className="border-white/10 my-4" />
-                    <button onClick={handleLogout} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block">Cerrar Sesión</button>
+                    <button onClick={() => { setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -866,19 +894,31 @@ export default function App() {
                   if (userRole !== 'admin' && isMenuHidden) return null;
 
                   return (
-                    <li key={menu} className="group relative cursor-pointer py-2 border-none bg-transparent">
-                      <span className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                    <li 
+                      key={menu} 
+                      className="relative cursor-pointer py-2 border-none bg-transparent" 
+                      onMouseEnter={() => setMenuAbierto(menu)} 
+                      onMouseLeave={() => setMenuAbierto(null)}
+                    >
+                      <span 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
+                        className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                      >
                         {menu}
-                        <div className={menuUnderlineClass}></div>
+                        <div className={`${menuUnderlineClass} ${menuAbierto === menu ? 'w-full left-0' : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'}`}></div>
                       </span>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
+                      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
                         <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[220px] text-center`}>
                           {estructuraCatalogo[menu].map(sub => {
                             const isSubHidden = hiddenItems.includes(sub);
                             if (userRole !== 'admin' && isSubHidden) return null;
                             
                             return (
-                              <span key={sub} onClick={() => irACategoria(sub)} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}>
+                              <span 
+                                key={sub} 
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
+                                className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
+                              >
                                 {sub}
                               </span>
                             );
@@ -890,15 +930,28 @@ export default function App() {
                 })}
                 
                 {(!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
-                  <li className="group relative cursor-pointer py-2 border-none bg-transparent">
-                    <span className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                  <li 
+                    className="relative cursor-pointer py-2 border-none bg-transparent" 
+                    onMouseEnter={() => setMenuAbierto('Obsequios')} 
+                    onMouseLeave={() => setMenuAbierto(null)}
+                  >
+                    <span 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
+                      className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                    >
                       Obsequios
-                      <div className={menuUnderlineClass}></div>
+                      <div className={`${menuUnderlineClass} ${menuAbierto === 'Obsequios' ? 'w-full left-0' : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'}`}></div>
                     </span>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 hidden group-hover:block z-[100]">
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
                       <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[180px] text-center max-h-64 overflow-y-auto`}>
                         {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                          <span key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs">$ {p}.00 USD</span>
+                          <span 
+                            key={p} 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
+                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs"
+                          >
+                            $ {p}.00 USD
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1350,7 +1403,7 @@ export default function App() {
                     <div className="flex flex-wrap justify-center gap-6 sm:gap-8 md:gap-16 w-full text-[8px] sm:text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
                        
                        <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                          <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} onMouseEnter={() => setOpenFilter('color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                             Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
                           </div>
                           {openFilter === 'color' && (
@@ -1368,7 +1421,7 @@ export default function App() {
                        
                        {['Todo', 'Anillos'].includes(activeSubCategory) && (
                          <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                            <div onClick={() => setOpenFilter(openFilter === 'talla' ? null : 'talla')} className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} onMouseEnter={() => setOpenFilter('talla')} className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                               Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
                             </div>
                             {openFilter === 'talla' && (
@@ -1387,7 +1440,7 @@ export default function App() {
                        )}
 
                        <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                          <div onClick={() => setOpenFilter(openFilter === 'precio' ? null : 'precio')} className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
+                          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} onMouseEnter={() => setOpenFilter('precio')} className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                             Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
                           </div>
                           {openFilter === 'precio' && (
@@ -1436,7 +1489,7 @@ export default function App() {
                      
                      {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                        <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div onClick={() => setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
+                         <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} onMouseEnter={() => setOpenFormSelect('subcat')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
                            {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
                          </div>
                          {openFormSelect === 'subcat' && (
@@ -1454,7 +1507,7 @@ export default function App() {
 
                      {activeCategory === 'Acero Fino' && (
                        <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div onClick={() => setOpenFormSelect(openFormSelect === 'color' ? null : 'color')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
+                         <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} onMouseEnter={() => setOpenFormSelect('color')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
                            {nuevaPieza.color || 'COLOR (OPCIONAL)'}
                          </div>
                          {openFormSelect === 'color' && (
@@ -1685,295 +1738,6 @@ export default function App() {
             </div>
           )}
 
-          {/* CARRITO */}
-          {userRole !== 'admin' && user && activeView === 'bag' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] uppercase text-white mb-8 sm:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
-              
-              {carrito.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] sm:text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
-              ) : (
-                <div className="bg-white/5 backdrop-blur-3xl p-4 sm:p-6 md:p-10 shadow-2xl relative border border-none w-full overflow-hidden">
-                  
-                  {checkoutPaso === 1 && (
-                    <>
-                      <h3 className="text-[7px] sm:text-[8px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
-                      {carrito.map(item => (
-                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative w-full">
-                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-lg sm:text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4 z-50">×</button>
-                          <img src={item.imagen_url} alt={item.titulo} className="w-20 h-20 sm:w-24 sm:h-24 object-contain bg-black/20" />
-                          <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
-                            <h4 className="text-[8px] sm:text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words px-4 sm:px-0">{item.titulo}</h4>
-                            <p className="text-[7px] sm:text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-2 mb-2 px-2 sm:px-0">
-                              {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
-                            </p>
-                            <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
-                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
-                              <span className="text-[8px] sm:text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
-                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
-                            </div>
-                          </div>
-                          <span className="text-[8px] sm:text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
-                        </div>
-                      ))}
-                      
-                      <div className="mt-8 border-t border-white/10 pt-6 w-full">
-                        <label className="text-[7px] sm:text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mb-8 w-full">
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`w-full sm:w-auto px-4 sm:px-6 py-3 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
-                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`w-full sm:w-auto px-4 sm:px-6 py-3 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
-                        </div>
-
-                        {envioConfig.tipo === 'domicilio' && (
-                          <div className="flex flex-col items-center sm:items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
-                            <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
-                              <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[8px] sm:text-[10px] tracking-[0.1em] py-3 cursor-pointer text-center sm:text-right hover:border-white/50 transition-colors uppercase">
-                                {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
-                              </div>
-                              {openFormSelect === 'envio' && (
-                                <div className="absolute top-full right-0 w-full pt-1 z-[300]">
-                                  <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
-                                    {sectoresQuito.map(sector => (
-                                      <span key={sector.nombre} onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-center sm:text-right px-4 text-gray-500 hover:text-white text-[8px] sm:text-[10px] tracking-[0.1em] uppercase">
-                                        {sector.nombre} - ${sector.precio.toFixed(2)} USD
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            <input 
-                              type="url" 
-                              placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
-                              value={envioConfig.linkMaps}
-                              onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[7px] sm:text-[8px] tracking-[0.1em] py-3 outline-none text-center sm:text-right hover:border-white/50 transition-colors"
-                              required
-                            />
-                            <p className="text-[7px] sm:text-[8px] text-gray-500 tracking-[0.1em] text-center sm:text-right mt-2 max-w-xs sm:max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex flex-col items-center sm:items-end gap-3 text-[8px] sm:text-[10px] tracking-[0.1em] uppercase w-full">
-                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Subtotal:</span> <span className="text-white">$ {subtotalCarrito.toFixed(2)} USD</span></p>
-                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Envío:</span> <span className="text-white">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
-                        <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
-                        <p className="text-[10px] sm:text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end gap-4"><span>Total:</span> <span className="font-bold">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
-                      </div>
-                      
-                      <div className="flex justify-center mt-10 md:mt-16 w-full">
-                        <button onClick={handleContinuarCheckout} className="w-full sm:w-auto text-black text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">
-                          {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  {checkoutPaso === 2 && (
-                    <div className="flex flex-col items-center animate-fade-in w-full">
-                      <button onClick={() => setCheckoutPaso(1)} className="self-center sm:self-start text-[7px] sm:text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
-                      <h3 className="text-[8px] sm:text-[10px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-white mb-6 sm:mb-8 text-center font-light w-full">Confirmación de Pago</h3>
-                      <p className="text-[7px] sm:text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-xs sm:max-w-lg mb-6 sm:mb-8 leading-loose">
-                        Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
-                      </p>
-
-                      <div className="w-full max-w-[280px] sm:max-w-md border border-white/10 p-4 sm:p-6 mb-6 sm:mb-8 text-center bg-white/5">
-                        <p className="text-[7px] sm:text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[8px] sm:text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
-                          <div>
-                            <strong>Banco Pichincha / DeUna</strong><br/>
-                            Ahorros: 2205567890<br/>
-                            Tonny Cuasquer<br/>
-                            CI: 172XXXXXXX
-                          </div>
-                          <hr className="border-white/5 w-1/2 mx-auto my-4" />
-                          <div>
-                            <strong>Banco de Guayaquil</strong><br/>
-                            Ahorros: 10455678<br/>
-                            Tonny Cuasquer
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="w-full max-w-[280px] sm:max-w-md flex flex-col items-center gap-4 sm:gap-6">
-                         <label className="text-[7px] sm:text-[8px] tracking-[0.2em] uppercase text-gray-400 text-center">Adjuntar Captura de Transferencia</label>
-                         <input 
-                           type="file" 
-                           accept="image/*"
-                           onChange={e => setComprobantePago(e.target.files[0])} 
-                           className="text-[8px] sm:text-[10px] text-gray-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-4 sm:file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.1em] sm:file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
-                         />
-                      </div>
-
-                      <button 
-                        onClick={enviarPedidoWhatsApp} 
-                        disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                        className={`mt-8 sm:mt-12 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-10 py-4 sm:py-5 transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-transparent text-gray-400 cursor-not-allowed' : 'bg-transparent text-gray-500 hover:text-white'}`}
-                      >
-                        {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
-                      </button>
-                    </div>
-                  )}
-
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* DESEOS */}
-          {userRole !== 'admin' && user && activeView === 'deseos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
-              
-              {favoritos.length === 0 ? (
-                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 w-full">
-                  {productos.filter(p => favoritos.includes(p.id)).map(producto => {
-                    return (
-                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0 w-full">
-                      <div className="overflow-hidden aspect-square relative cursor-pointer w-full" onClick={() => setProductoSeleccionado(producto)}>
-                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
-                        {producto.vendido && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center w-full">
-                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
-                        <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
-                        
-                        <p className="text-[8px] sm:text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase w-full">{producto.descripcion}</p>
-                        <div className="flex gap-2 mt-auto w-full justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
-                            Quitar de lista de deseos ♥
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )})}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* PERFIL */}
-          {user && activeView === 'perfil' && (
-            <section className="w-full max-w-4xl mx-auto px-4 py-8 md:py-20 flex-grow animate-fade-in">
-              <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center w-full">
-                
-                <h2 className="text-[12px] sm:text-[14px] tracking-[0.3em] sm:tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
-                <div className="w-8 sm:w-12 h-px bg-white/20 mb-8 sm:mb-12"></div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 md:gap-16 w-full max-w-2xl mb-8 sm:mb-12 text-center md:text-center">
-                  <div className="flex flex-col items-center w-full">
-                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Nombres</label>
-                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase font-light break-words w-full px-2">
-                      {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center w-full">
-                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Apellidos</label>
-                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase font-light break-words w-full px-2">
-                      {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
-                    </p>
-                  </div>
-                  <div className="md:col-span-2 flex flex-col items-center w-full overflow-hidden">
-                    <label className="block text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-500 mb-2 sm:mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[10px] sm:text-[12px] tracking-[0.1em] font-light truncate w-full px-2" title={user.email}>
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="w-full border-t border-white/10 pt-8 sm:pt-10 mb-8 sm:mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
-                  <button 
-                    onClick={() => setShowCompleteProfile(true)} 
-                    className="w-full sm:w-auto text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white border border-white/20 px-6 sm:px-8 py-3 sm:py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
-                    Editar Información
-                  </button>
-                  <button 
-                    onClick={solicitarCambioContrasena} 
-                    className="w-full sm:w-auto text-[7px] sm:text-[8px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white border border-white/20 px-6 sm:px-8 py-3 sm:py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
-                    Cambiar Contraseña
-                  </button>
-                </div>
-
-                {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] sm:text-[14px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light px-4">Oculta o muestra secciones en la página principal.</p>
-                    
-                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-8 sm:mb-10 px-2 sm:px-0">
-                      {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
-                        <div key={menu} className="bg-transparent p-3 sm:p-4 border border-none w-full">
-                          <div className="flex justify-between items-center w-full">
-                            <span className={`text-[10px] sm:text-[12px] tracking-[0.1em] sm:tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-2 sm:px-3 py-1 sm:py-2 cursor-pointer transition-colors whitespace-nowrap ml-2">
-                              {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
-                            </button>
-                          </div>
-                          
-                          {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
-                            <div key={sub} className="flex justify-between items-center pl-4 sm:pl-6 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-white/5 w-full">
-                              <span className={`text-[8px] sm:text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[7px] sm:text-[8px] uppercase tracking-[0.1em] sm:tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors whitespace-nowrap ml-2">
-                                {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-4 sm:mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[12px] sm:text-[14px] tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light px-4">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
-                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto px-4 sm:px-0">
-                      {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
-                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4 w-full">
-                          <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-gray-300 group-hover:text-white text-[10px] sm:text-[12px] tracking-[0.2em] sm:tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
-                              {menuPrincipal}
-                            </button>
-                            <div className={`w-3 h-3 sm:w-3.5 sm:h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
-                              {isAllSelected(menuPrincipal) && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black"></div>}
-                            </div>
-                          </div>
-                          {menuPdfExpandido === menuPrincipal && (
-                            <div className="pt-3 sm:pt-4 md:pt-6 flex flex-col gap-2 sm:gap-3 md:gap-4 pl-2 animate-fade-in w-full">
-                              {submenus.map(cat => (
-                                <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
-                                  <div className={`w-3 h-3 sm:w-3.5 sm:h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                                    {categoriasDescarga.includes(cat) && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black"></div>}
-                                  </div>
-                                  <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-gray-400 group-hover:text-white text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-center w-full px-4 sm:px-0">
-                      <button onClick={() => window.print()} className="w-full sm:w-auto text-black text-[10px] sm:text-[12px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase px-6 sm:px-8 py-3 sm:py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
-                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Generar Catálogo PDF
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
         </main>
         
         <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[8px] sm:text-[10px] tracking-[0.3em] sm:tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
@@ -1997,7 +1761,7 @@ export default function App() {
               <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-8 sm:gap-10 w-full">
                   
                   <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                     <div onClick={() => setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 sm:py-3 cursor-pointer text-center transition-colors uppercase">
+                     <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento'); }} onMouseEnter={() => setOpenFormSelect('tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 sm:py-3 cursor-pointer text-center transition-colors uppercase">
                        {perfilForm.tratamiento || 'SELECCIONAR TRATAMIENTO*'}
                      </div>
                      {openFormSelect === 'tratamiento' && (
@@ -2065,7 +1829,7 @@ export default function App() {
 
                   <div className="flex justify-center items-end gap-4 sm:gap-6 mt-2 sm:mt-4 w-full max-w-[280px] sm:max-w-none mx-auto">
                     <div className="relative w-16 sm:w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={() => setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 sm:py-3 cursor-pointer text-center transition-colors">
+                       <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo'); }} onMouseEnter={() => setOpenFormSelect('prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-2 sm:py-3 cursor-pointer text-center transition-colors">
                          {perfilForm.prefijo}
                        </div>
                        {openFormSelect === 'prefijo' && (
