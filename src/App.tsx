@@ -62,6 +62,7 @@ export default function App() {
   });
 
   const [checkoutPaso, setCheckoutPaso] = useState(1);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('pichincha');
   const [envioConfig, setEnvioConfig] = useState({ tipo: 'local', sectorPrecio: 0, sectorNombre: 'Quito Centro', linkMaps: '' });
   const [comprobantePago, setComprobantePago] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -343,7 +344,7 @@ export default function App() {
     else enviarPedidoWhatsApp(); 
   };
 
-  const enviarPedidoWhatsApp = async (e) => {
+  const enviarPedidoWhatsApp = async (e?: any) => {
     if(e) e.preventDefault();
     setIsUploading(true);
 
@@ -1914,20 +1915,47 @@ export default function App() {
                       </p>
 
                       <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
-                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-4">Cuentas Autorizadas</p>
-                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light space-y-4">
-                          <div>
-                            <strong>Banco Pichincha / DeUna</strong><br/>
-                            Ahorros: 2205567890<br/>
-                            Tonny Cuasquer<br/>
-                            CI: 172XXXXXXX
-                          </div>
-                          <hr className="border-white/5 w-1/2 mx-auto my-4" />
-                          <div>
-                            <strong>Banco de Guayaquil</strong><br/>
-                            Ahorros: 10455678<br/>
-                            Tonny Cuasquer
-                          </div>
+                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-6">Cuentas Autorizadas</p>
+                        
+                        <div className="flex justify-center gap-4 mb-8 border-b border-white/10 pb-4">
+                          {['pichincha', 'guayaquil', 'deuna'].map((metodo) => (
+                            <button
+                              key={metodo}
+                              onClick={() => setMetodoPagoSeleccionado(metodo)}
+                              className={`text-[8px] tracking-[0.2em] uppercase px-3 py-2 transition-all duration-300 border-b-2 outline-none cursor-pointer bg-transparent ${metodoPagoSeleccionado === metodo ? 'text-white border-white' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            >
+                              {metodo === 'deuna' ? 'DeUna' : (metodo === 'pichincha' ? 'Pichincha' : 'Guayaquil')}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light min-h-[120px] flex items-center justify-center">
+                          {metodoPagoSeleccionado === 'pichincha' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Pichincha</strong>
+                              <p className="mb-1">Cuenta de ahorro transaccional</p>
+                              <p className="mb-1">Número: <span className="font-champagne">2206343568</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'guayaquil' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Guayaquil</strong>
+                              <p className="mb-1">Ahorro # <span className="font-champagne">0043005125</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'deuna' && (
+                            <div className="animate-fade-in flex flex-col items-center">
+                              <strong className="text-white block mb-4 uppercase tracking-widest">Escanea con DeUna</strong>
+                              <img 
+                                src="https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/qrPichincha_page-0001.jpg" 
+                                alt="QR DeUna" 
+                                className="w-40 h-auto object-contain border border-white/10 p-2 bg-white"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
 
