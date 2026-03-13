@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap');
-
 @import "tailwindcss";
 
 @layer base {
   body {
     @apply bg-black text-white;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+  
+  * {
+    font-family: 'Times New Roman', Times, serif !important;
   }
 }
 
 @theme {
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Playfair Display', serif;
-
-
+  --font-sans: 'Times New Roman', Times, serif;
+  --font-serif: 'Times New Roman', Times, serif;
 }
 

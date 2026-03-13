@@ -34,8 +34,16 @@ export default function App() {
     pulgar_der: '', indice_der: '', medio_der: '', anular_der: '', menique_der: ''
   });
   const [medidasCorporales, setMedidasCorporales] = useState({
-    cuello: '', hombros: '', pecho: '', cintura: '', cadera: '', largo_brazo: '', largo_pierna: '', espalda: ''
+    // Contorno
+    cuello: '', busto_pecho: '', torax: '', cintura: '', cadera_alta: '', cadera_asiento: '', brazo_biceps: '', codo: '', muneca: '', muslo: '', rodilla: '', bota_tobillo: '',
+    // Ancho
+    hombros: '', pecho_escote: '', espalda: '', separacion_busto: '',
+    // Largo
+    talle_delantero: '', talle_espalda: '', altura_busto: '', altura_cadera: '', largo_costado: '', largo_manga: '', largo_codo: '', largo_total: '', largo_falda_pantalon: '', entrepierna: '',
+    // Especiales
+    tiro_total: '', altura_tiro: '', caida_hombro: '', contorno_sisa: '', largo_hombro: '', profundidad_escote: ''
   });
+  const [tabMedidas, setTabMedidas] = useState('manos'); // 'manos' o 'cuerpo'
   const [editandoId, setEditandoId] = useState(null);
   
   const [nuevaPieza, setNuevaPieza] = useState({ 
@@ -773,8 +781,8 @@ export default function App() {
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
-  const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-md py-6 px-8 shadow-none border-none"; 
-  const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-300";
+  const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-xl py-6 px-8 shadow-none border border-white/10"; 
+  const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-500";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
@@ -911,7 +919,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[13pt] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -942,7 +950,7 @@ export default function App() {
                                 key={sub} 
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
                                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }}
-                                className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
+                                className={`cursor-pointer block mt-4 first:mt-0 text-[12pt] transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
                               >
                                 {sub}
                               </span>
@@ -975,7 +983,7 @@ export default function App() {
                             key={p} 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }}
-                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs py-2"
+                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12pt] py-2"
                           >
                             $ {p}.00 USD
                           </span>
@@ -1992,7 +2000,7 @@ export default function App() {
               {favoritos.length === 0 ? (
                 <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
                   {productos.filter(p => favoritos.includes(p.id)).map(producto => {
                     return (
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
