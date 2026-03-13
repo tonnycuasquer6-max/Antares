@@ -28,6 +28,14 @@ export default function App() {
   const [activeSubCategory, setActiveSubCategory] = useState('Todo');
   
   const [showInlineForm, setShowInlineForm] = useState(false);
+  const [showMedidasView, setShowMedidasView] = useState(false);
+  const [medidasAnillo, setMedidasAnillo] = useState({
+    pulgar_izq: '', indice_izq: '', medio_izq: '', anular_izq: '', menique_izq: '',
+    pulgar_der: '', indice_der: '', medio_der: '', anular_der: '', menique_der: ''
+  });
+  const [medidasCorporales, setMedidasCorporales] = useState({
+    cuello: '', hombros: '', pecho: '', cintura: '', cadera: '', largo_brazo: '', largo_pierna: '', espalda: ''
+  });
   const [editandoId, setEditandoId] = useState(null);
   
   const [nuevaPieza, setNuevaPieza] = useState({ 
@@ -796,8 +804,17 @@ export default function App() {
     <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
       
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Montserrat:wght@200;300;400&display=swap');
+        
         ::-webkit-scrollbar { display: none; }
         
+        .font-champagne {
+          font-family: 'Tenor Sans', sans-serif;
+        }
+
+        .font-montserrat {
+          font-family: 'Montserrat', sans-serif;
+        }
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
           -webkit-appearance: none;
@@ -1519,109 +1536,111 @@ export default function App() {
                )}
 
                {userRole === 'admin' && showInlineForm && (
-                 <form onSubmit={handlePublicarLocal} className="mb-8 bg-black/30 backdrop-blur-3xl p-4 md:p-6 shadow-2xl relative w-full rounded-none border border-white/5">
-                   <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
-                   <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-4 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
-                   
-                   {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-                     <div className="mb-4 flex justify-center bg-transparent p-0">
-                       <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
-                     </div>
-                   )}
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-4 text-center items-center justify-items-center">
-                     <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
+                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 overflow-y-auto">
+                   <form onSubmit={handlePublicarLocal} className="bg-zinc-900 p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-none border border-white/10 my-8">
+                     <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+                     <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-8 text-center drop-shadow-md font-bold">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
                      
-                     <div className="w-full relative">
-                       <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                     </div>
-
-                     <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
-                     
-                     {nuevaPieza.subcategoria !== 'Anillos' && (
-                       <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
+                     {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
+                       <div className="mb-8 flex justify-center bg-transparent p-0">
+                         <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
+                       </div>
                      )}
-                     
-                     {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                       <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div 
-                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
-                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
-                           className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
-                         >
-                           {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
-                         </div>
-                         {openFormSelect === 'subcat' && (
-                           <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                             <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none max-h-48 overflow-y-auto">
-                               <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                               {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                                 <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
-                               ))}
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center">
+                       <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
+                       
+                       <div className="w-full relative">
+                         <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                       </div>
+
+                       <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none font-champagne" required />
+                       
+                       {nuevaPieza.subcategoria !== 'Anillos' && (
+                         <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
+                       )}
+                       
+                       {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                         <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
+                           <div 
+                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                             className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
+                           >
+                             {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
+                           </div>
+                           {openFormSelect === 'subcat' && (
+                             <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10 max-h-48 overflow-y-auto">
+                                 <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                                 {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
+                                   <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
+                                 ))}
+                               </div>
                              </div>
-                           </div>
-                         )}
-                       </div>
-                     )}
-
-                     {activeCategory === 'Acero Fino' && (
-                       <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div 
-                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
-                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
-                           className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
-                         >
-                           {nuevaPieza.color || 'COLOR (OPCIONAL)'}
+                           )}
                          </div>
-                         {openFormSelect === 'color' && (
-                           <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                             <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
-                               <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                               {['Silver', 'Gold', 'Black'].map(c => (
-                                 <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
-                               ))}
-                             </div>
+                       )}
+
+                       {activeCategory === 'Acero Fino' && (
+                         <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
+                           <div 
+                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                             className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
+                           >
+                             {nuevaPieza.color || 'COLOR (OPCIONAL)'}
                            </div>
-                         )}
+                           {openFormSelect === 'color' && (
+                             <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10">
+                                 <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                                 {['Silver', 'Gold', 'Black'].map(c => (
+                                   <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+                     </div>
+
+                     {nuevaPieza.costo > 0 && (
+                       <div className="w-full flex flex-col items-center justify-center mb-8 pb-6 border-b border-white/5 mt-4">
+                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
+                            {[115, 100, 75, 50, 25].map(porcentaje => {
+                              const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
+                              return (
+                                <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2 font-champagne">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              );
+                            })}
+                         </div>
                        </div>
                      )}
-                   </div>
 
-                   {nuevaPieza.costo > 0 && (
-                     <div className="w-full flex flex-col items-center justify-center mb-6 pb-4 border-b border-white/5 mt-4">
-                       <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
-                          {[115, 100, 75, 50, 25].map(porcentaje => {
-                            const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
-                            return (
-                              <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
-                            );
-                          })}
+                     {nuevaPieza.subcategoria === 'Anillos' && (
+                       <div className="w-full flex flex-col items-center mt-4 mb-8 pb-6">
+                         <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+                           {tallasDisponibles.map(talla => (
+                             <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                               <span className="text-white text-[12px] md:text-sm font-light font-champagne">{talla}</span>
+                               <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0 font-champagne" />
+                             </div>
+                           ))}
+                         </div>
                        </div>
-                     </div>
-                   )}
+                     )}
 
-                   {nuevaPieza.subcategoria === 'Anillos' && (
-                     <div className="w-full flex flex-col items-center mt-4 mb-6 pb-4">
-                       <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
-                       <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
-                         {tallasDisponibles.map(talla => (
-                           <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
-                             <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                             <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0" />
-                           </div>
-                         ))}
-                       </div>
+                     <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-8 resize-none"></textarea>
+                     
+                     <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full">
+                       <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+                       <button type="submit" className="bg-white text-black hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
                      </div>
-                   )}
-
-                   <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="2" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-6 resize-none"></textarea>
-                   
-                   <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full">
-                     <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
-                     <button type="submit" className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-3 w-full md:w-auto">{editandoId ? 'Guardar Cambios' : 'Publicar'}</button>
-                   </div>
-                 </form>
+                   </form>
+                 </div>
                )}
 
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
@@ -1650,7 +1669,7 @@ export default function App() {
                        
                        <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
                          <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
-                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block font-champagne">${producto.precio} USD</span>
                          
                          {!isRing && (
                            <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
@@ -1671,11 +1690,11 @@ export default function App() {
                                        onClick={(e) => { 
                                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                                        }}
-                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none font-champagne ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                      >
                                        <span>{talla}</span>
                                      </button>
-                                     <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                     <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 font-champagne ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
                                        {stock}
                                      </span>
                                    </div>
@@ -1724,7 +1743,7 @@ export default function App() {
                 </div>
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
                   <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
-                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md">${productoSeleccionado.precio} USD</p>
+                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md font-champagne">${productoSeleccionado.precio} USD</p>
                   
                   {productoSeleccionado.subcategoria !== 'Anillos' && (
                     <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
@@ -1754,7 +1773,7 @@ export default function App() {
                                    e.preventDefault(); e.stopPropagation(); 
                                    if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
                                  }}
-                                 className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                 className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none font-champagne ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
                                >
                                  <span>{talla}</span>
                                </button>
@@ -1975,9 +1994,105 @@ export default function App() {
             </section>
           )}
 
-          {/* PERFIL */}
+          {/* CONFIGURAR MEDIDAS */}
+          {user && activeView === 'medidas' && (
+            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-5xl">
+              <div className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
+                <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* MEDIDAS DE ANILLO */}
+                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5">
+                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light">Medida de Anillo</h3>
+                  <div className="relative aspect-[4/3] w-full mb-10 flex items-center justify-center">
+                    {/* Silueta de manos (SVG) */}
+                    <svg viewBox="0 0 400 300" className="w-full h-full opacity-20 fill-white">
+                      <path d="M50,250 Q40,200 60,150 Q70,100 90,80 Q110,60 130,80 Q150,100 140,150 Q130,200 120,250 Z" /> {/* Mano Izq */}
+                      <path d="M350,250 Q360,200 340,150 Q330,100 310,80 Q290,60 270,80 Q250,100 260,150 Q270,200 280,250 Z" /> {/* Mano Der */}
+                      {/* Dedos Izq */}
+                      <circle cx="90" cy="80" r="15" /> <circle cx="110" cy="60" r="15" /> <circle cx="130" cy="50" r="15" /> <circle cx="150" cy="60" r="15" /> <circle cx="170" cy="100" r="15" />
+                      {/* Dedos Der */}
+                      <circle cx="310" cy="80" r="15" /> <circle cx="290" cy="60" r="15" /> <circle cx="270" cy="50" r="15" /> <circle cx="250" cy="60" r="15" /> <circle cx="230" cy="100" r="15" />
+                    </svg>
+                    
+                    {/* Inputs sobre los dedos */}
+                    <div className="absolute inset-0 grid grid-cols-5 gap-2 p-4">
+                      {/* Mano Izquierda */}
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Meñique</span>
+                        <input type="number" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Anular</span>
+                        <input type="number" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Medio</span>
+                        <input type="number" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Índice</span>
+                        <input type="number" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Pulgar</span>
+                        <input type="number" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+
+                      {/* Mano Derecha */}
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Pulgar</span>
+                        <input type="number" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Índice</span>
+                        <input type="number" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Medio</span>
+                        <input type="number" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Anular</span>
+                        <input type="number" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Meñique</span>
+                        <input type="number" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-gray-500 uppercase text-center tracking-widest">Ingrese el número de talla para cada dedo.</p>
+                </div>
+
+                {/* MEDIDAS CORPORALES */}
+                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5">
+                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light">Medidas Corporales (cm)</h3>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                    {Object.keys(medidasCorporales).map(medida => (
+                      <div key={medida} className="flex flex-col gap-2">
+                        <label className="text-[8px] tracking-[0.2em] uppercase text-gray-500">{medida.replace('_', ' ')}</label>
+                        <input 
+                          type="number" 
+                          value={medidasCorporales[medida]} 
+                          onChange={e => setMedidasCorporales({...medidasCorporales, [medida]: e.target.value})} 
+                          className="w-full bg-transparent border-b border-white/20 text-white text-[10px] py-2 outline-none hover:border-white/50 transition-colors font-champagne" 
+                          placeholder="0.0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
           {user && activeView === 'perfil' && (
-            <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
               <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
                 
                 <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
@@ -2010,6 +2125,12 @@ export default function App() {
                     className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Editar Información
+                  </button>
+                  <button 
+                    onClick={() => setActiveView('medidas')} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Configurar Medidas
                   </button>
                   <button 
                     onClick={solicitarCambioContrasena} 
