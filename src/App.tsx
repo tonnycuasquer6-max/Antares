@@ -163,6 +163,7 @@ export default function App() {
       subscription.unsubscribe();
       document.removeEventListener('click', handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -351,7 +352,7 @@ export default function App() {
     else enviarPedidoWhatsApp(); 
   };
 
-  const enviarPedidoWhatsApp = async (e) => {
+  const enviarPedidoWhatsApp = async (e?: any) => {
     if(e) e.preventDefault();
     setIsUploading(true);
 
@@ -564,6 +565,7 @@ export default function App() {
     }
   };
 
+  // FUNCIONES DEL CUSTOMIZADOR PRÊT-À-PORTER CON BORRADO DE FONDO
   const procesarInsigniaLogotipo = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -604,6 +606,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
+  // EFECTO PRINCIPAL DE RENDERIZADO DEL CUSTOMIZADOR (TEÑIDO REAL + OFFSETS DE TAMAÑO Y POSICIÓN DE 5 EN 5)
   useEffect(() => {
     if (activeCategory === 'Prêt-à-Porter' && activeView === 'categoria') {
       const canvas = document.createElement('canvas');
@@ -615,19 +618,24 @@ export default function App() {
         canvas.width = shirtImg.width;
         canvas.height = shirtImg.height;
         
+        // 1. Dibujamos la camiseta original primero
         ctx.drawImage(shirtImg, 0, 0);
         
         if(customColor !== '#ffffff') {
+           // 2. Pintamos el color encima de la ropa respetando la forma (source-atop)
            ctx.globalCompositeOperation = 'source-atop';
            ctx.fillStyle = customColor;
            ctx.fillRect(0, 0, canvas.width, canvas.height);
            
+           // 3. Multiplicamos la textura original para recuperar arrugas y sombras oscuras
            ctx.globalCompositeOperation = 'multiply';
            ctx.drawImage(shirtImg, 0, 0);
            
+           // Restauramos el comportamiento normal del canvas
            ctx.globalCompositeOperation = 'source-over'; 
         }
         
+        // 4. Imprimir Logo en la posición correcta + Ajustes finos
         if (customLogo) {
           const logoImg = new Image();
           logoImg.onload = () => {
@@ -635,23 +643,41 @@ export default function App() {
             const shirtWidth = canvas.width;
             const shirtHeight = canvas.height;
             
+            // COORDENADAS EXACTAS SOLICITADAS
             if (customVista === 'frente') {
                 switch(customPlacement) {
-                  case 'pecho-izq': x = shirtWidth * 0.65; y = shirtHeight * 0.35; baseSize = shirtWidth * 0.12; break;
-                  case 'pecho-der': x = shirtWidth * 0.35; y = shirtHeight * 0.35; baseSize = shirtWidth * 0.12; break;
-                  case 'centro-pecho': x = shirtWidth * 0.5; y = shirtHeight * 0.40; baseSize = shirtWidth * 0.35; break;
-                  case 'pecho-sup-centro': x = shirtWidth * 0.5; y = shirtHeight * 0.25; baseSize = shirtWidth * 0.35; break;
-                  default: x = shirtWidth * 0.5; y = shirtHeight * 0.40; baseSize = shirtWidth * 0.35;
+                  case 'pecho-izq': 
+                      x = shirtWidth * 0.65; y = shirtHeight * 0.35; baseSize = shirtWidth * 0.12; 
+                      break;
+                  case 'pecho-der': 
+                      x = shirtWidth * 0.35; y = shirtHeight * 0.35; baseSize = shirtWidth * 0.12; 
+                      break;
+                  case 'centro-pecho': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.40; baseSize = shirtWidth * 0.35; 
+                      break;
+                  case 'pecho-sup-centro': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.25; baseSize = shirtWidth * 0.35; 
+                      break;
+                  default: 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.40; baseSize = shirtWidth * 0.35;
                 }
             } else {
                 switch(customPlacement) {
-                  case 'espalda-sup': x = shirtWidth * 0.5; y = shirtHeight * 0.25; baseSize = shirtWidth * 0.20; break;
-                  case 'espalda-centro': x = shirtWidth * 0.5; y = shirtHeight * 0.45; baseSize = shirtWidth * 0.40; break;
-                  default: x = shirtWidth * 0.5; y = shirtHeight * 0.45; baseSize = shirtWidth * 0.40;
+                  case 'espalda-sup': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.25; baseSize = shirtWidth * 0.20; 
+                      break;
+                  case 'espalda-centro': 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.45; baseSize = shirtWidth * 0.40; 
+                      break;
+                  default: 
+                      x = shirtWidth * 0.5; y = shirtHeight * 0.45; baseSize = shirtWidth * 0.40;
                 }
             }
+            
+            // APLICAMOS LOS AJUSTES FINOS (+/- de 5 en 5 píxeles)
             const finalSize = Math.max(10, baseSize + sizeOffset);
             const finalY = y + yOffset;
+            
             const aspectLogo = logoImg.width / logoImg.height;
             ctx.drawImage(logoImg, x - finalSize/2, finalY - (finalSize/aspectLogo)/2, finalSize, finalSize/aspectLogo);
             setCustomRenderedImage(canvas.toDataURL());
@@ -661,7 +687,12 @@ export default function App() {
           setCustomRenderedImage(canvas.toDataURL());
         }
       };
-      shirtImg.onerror = () => { setCustomRenderedImage(null); };
+      
+      shirtImg.onerror = () => {
+        console.error("No se pudo cargar la imagen base de Supabase.");
+        setCustomRenderedImage(null);
+      };
+      
       shirtImg.src = getMockupUrl(customPrenda, customVista);
     }
   }, [activeCategory, activeView, customColor, customLogo, customPlacement, customVista, sizeOffset, yOffset, customPrenda]);
@@ -687,6 +718,7 @@ export default function App() {
        case 'Capucha': basePrice = 16.99; break;
        default: basePrice = 5.99;
      }
+
      let stampPrice = 0;
      if (customLogo) {
         if (customVista === 'frente') {
@@ -697,14 +729,18 @@ export default function App() {
            else if (customPlacement === 'espalda-sup') stampPrice = 2.00;
         }
      }
+     
      return (basePrice + stampPrice).toFixed(2);
   };
 
   const handleCustomAddToCart = (e) => {
     e.preventDefault(); e.stopPropagation();
     if(!customRenderedImage) return;
+
     triggerStarAnimation(e);
+    
     const finalPrice = parseFloat(getCalculatedPrice());
+
     const customItem = {
       id: `custom-${Date.now()}`,
       titulo: `PRÊT-À-PORTER: ${customPrenda} Diseño Exclusivo`,
@@ -717,6 +753,7 @@ export default function App() {
       tallaSeleccionada: 'A Medida',
       descripcion: `Prenda: ${customPrenda}, Tono: ${customColor}, Vista: ${customVista.toUpperCase()}, Ubicación: ${getPlacementLabel()}`
     };
+
     setCarrito(prev => [...prev, customItem]);
   };
 
@@ -743,12 +780,13 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
-  const cristalOpacoSubmenuClass = "flex flex-col bg-black/90 backdrop-blur-xl border border-white/20 py-6 px-8 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]"; 
-  const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-300";
+
+  const cristalOpacoSubmenuClass = "flex flex-col bg-white/5 backdrop-blur-xl py-6 px-8 shadow-none border border-white/10"; 
+  const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-500";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
-  if (activeCategory === 'Acero Fino' || activeCategory === 'Plata de Ley 925') {
+  if (activeCategory === 'Acero Fino') {
     if (filtroColor !== 'Todo') {
       productosMostrar = productosMostrar.filter(p => p.color === filtroColor);
     }
@@ -772,15 +810,35 @@ export default function App() {
   ];
 
   return (
-    <div className="bg-black text-white min-h-screen flex flex-col relative w-full overflow-x-hidden overflow-y-auto" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+    <div className="bg-black text-white min-h-screen font-serif flex flex-col relative w-full overflow-x-hidden">
       
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Montserrat:wght@200;300;400&display=swap');
+        
         ::-webkit-scrollbar { display: none; }
+        
+        .font-champagne {
+          font-family: 'Tenor Sans', sans-serif;
+        }
+
+        .font-montserrat {
+          font-family: 'Montserrat', sans-serif;
+        }
         input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
-        .auth-wrapper input, .auth-wrapper select { background-color: transparent !important; }
+        input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+
+        .auth-wrapper input, .auth-wrapper select {
+          background-color: transparent !important;
+        }
+
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
         @media print { 
           @page { margin: 0; size: auto; }
           html, body { background-color: #000000 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -797,10 +855,10 @@ export default function App() {
       ))}
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 sm:px-6 md:px-8" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
+        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
-            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+            <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase">
               Volver
             </button>
           )}
@@ -811,7 +869,7 @@ export default function App() {
               {userRole !== 'admin' && (
                 <button onClick={() => { setActiveView('bag'); setCheckoutPaso(1); }} className={`text-white hover:text-gray-400 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-100'}`}>
                   <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-                  <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full" style={{ fontFamily: 'sans-serif' }}>{carrito.length}</span>
+                  <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[4px] md:px-[5px] py-[1px] rounded-full">{carrito.length}</span>
                 </button>
               )}
 
@@ -832,26 +890,25 @@ export default function App() {
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} 
                       onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('perfil'); }} 
-                      className="text-[12px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2 mb-2"
-                      style={{ fontFamily: '"Times New Roman", Times, serif' }}
+                      className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block w-full py-2"
                     >
                       Mi Perfil
                     </button>
                     
                     {userRole === 'admin' ? (
                       <>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[12px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2" style={{ fontFamily: '"Times New Roman", Times, serif' }}>Gestionar Pedidos</button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[12px] tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 font-bold w-full py-2" style={{ fontFamily: '"Times New Roman", Times, serif' }}>Inventario / Finanzas</button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Gestionar Pedidos</button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('inventario'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white hover:text-gray-100 transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 font-bold w-full py-2">Inventario / Finanzas</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[12px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2" style={{ fontFamily: '"Times New Roman", Times, serif' }}>Mis Pedidos</button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[12px] tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 w-full py-2" style={{ fontFamily: '"Times New Roman", Times, serif' }}>Deseos ({favoritos.length})</button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('pedidos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 w-full py-2">Mis Pedidos</button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); setActiveView('deseos'); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-300 hover:text-white transition-colors cursor-pointer text-right bg-transparent border-none p-0 outline-none block mt-3 mb-3 w-full py-2">Deseos ({favoritos.length})</button>
                       </>
                     )}
 
-                    <hr className="border-[#333333] my-2" />
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} className="text-[12px] tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full py-2 mt-2" style={{ fontFamily: '"Times New Roman", Times, serif' }}>Cerrar Sesión</button>
+                    <hr className="border-white/10 my-2" />
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setUserMenuAbierto(false); handleLogout(); }} className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-red-500 hover:text-red-400 transition-colors text-right bg-transparent border-none p-0 cursor-pointer outline-none block w-full py-2">Cerrar Sesión</button>
                   </div>
                 </div>
               </div>
@@ -862,7 +919,7 @@ export default function App() {
 
           {user && activeView === 'home' && (
             <nav className="w-full mt-4 mb-2 relative z-[100] px-2 md:px-6 pt-0 animate-fade-in">
-              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 uppercase border-none bg-transparent px-4 md:px-0" style={{ fontSize: '13px', letterSpacing: '0.2em' }}>
+              <ul className="flex flex-wrap justify-center gap-y-4 gap-x-6 md:gap-x-16 py-2 text-[13pt] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent px-4 md:px-0">
                 {Object.keys(estructuraCatalogo).map(menu => {
                   const isMenuHidden = hiddenItems.includes(menu);
                   if (userRole !== 'admin' && isMenuHidden) return null;
@@ -877,7 +934,7 @@ export default function App() {
                       <span 
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
                         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setUserMenuAbierto(false); }}
-                        className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-[#aaaaaa] hover:text-white'}`}
+                        className={`block relative transition-colors ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
                       >
                         {menu}
                         <div className={menuUnderlineClass} style={{ width: menuAbierto === menu ? '100%' : '0%', left: menuAbierto === menu ? '0' : '50%' }}></div>
@@ -893,8 +950,7 @@ export default function App() {
                                 key={sub} 
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }} 
                                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(sub); }}
-                                className={`cursor-pointer block mt-4 first:mt-0 transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-[#aaaaaa] hover:text-white'}`}
-                                style={{ fontSize: '12px' }}
+                                className={`cursor-pointer block mt-4 first:mt-0 text-[12pt] transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-gray-300'}`}
                               >
                                 {sub}
                               </span>
@@ -915,7 +971,7 @@ export default function App() {
                     <span 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
                       onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setUserMenuAbierto(false); }}
-                      className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-[#aaaaaa] hover:text-white'}`}
+                      className={`block relative transition-colors ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
                     >
                       Obsequios
                       <div className={menuUnderlineClass} style={{ width: menuAbierto === 'Obsequios' ? '100%' : '0%', left: menuAbierto === 'Obsequios' ? '0' : '50%' }}></div>
@@ -927,8 +983,7 @@ export default function App() {
                             key={p} 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }} 
                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuAbierto(null); irACategoria(`Obsequios $${p}`); }}
-                            className="text-[#aaaaaa] hover:text-white transition-colors cursor-pointer block mt-4 first:mt-0 py-2"
-                            style={{ fontSize: '12px' }}
+                            className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer block mt-4 first:mt-0 text-[12pt] py-2"
                           >
                             $ {p}.00 USD
                           </span>
@@ -952,660 +1007,41 @@ export default function App() {
 
         <main className="flex-grow flex flex-col items-center w-full px-4 md:px-0">
           
+          {/* HOME */}
           {(!user || activeView === 'home') && (
-            <div className="w-full animate-fade-in flex flex-col items-center pb-20 px-4">
-               <section className="w-full text-center py-16 md:py-32">
+            <div className="w-full animate-fade-in flex flex-col items-center pb-20">
+               <section className="w-full text-center py-16 md:py-32 px-4">
                  <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words">Elegancia Atemporal</h2>
                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
+
                <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
                    "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
+
                <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
-                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-[#111] hover:bg-[#1a1a1a] transition-colors duration-500 cursor-pointer">
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Sastrería a Medida</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.</p>
                    </div>
-                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-[#111] hover:bg-[#1a1a1a] transition-colors duration-500 cursor-pointer">
+                   <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Joyería Exclusiva')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Joyería Personalizada</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.</p>
                    </div>
-                   <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-[#111] hover:bg-[#1a1a1a] transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
+                   <div onClick={() => !user ? setShowLoginModal(true) : setActiveView('perfil')} className="p-8 md:p-10 bg-zinc-900/40 hover:bg-zinc-900 transition-colors duration-500 cursor-pointer sm:col-span-2 md:col-span-1">
                      <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6">Asesoría de Imagen</h4>
                      <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose">Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.</p>
                    </div>
                  </div>
                </section>
             </div>
-          )}
-
-          {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
-          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
-            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
-               <h2 className="text-[13px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words px-4">{activeCategory}</h2>
-               
-               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-6 border-b border-[#333333] pb-6">
-                   {subcategoriasJoyeria.map(sub => (
-                     <li key={sub} onClick={() => setActiveSubCategory(sub)} style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.3s', color: activeSubCategory === sub ? '#ffffff' : '#aaaaaa', fontWeight: activeSubCategory === sub ? 'bold' : 'normal' }}>
-                       {sub}
-                     </li>
-                   ))}
-                 </ul>
-               )}
-
-               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
-                    <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 w-full text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
-                       
-                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                          <div 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
-                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
-                            className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
-                          >
-                            Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
-                          </div>
-                          {openFilter === 'color' && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                               <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10">
-                                 {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
-                                   <span 
-                                     key={opt} 
-                                     onClick={(e) => { e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
-                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
-                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                   >
-                                     {opt === 'Todo' ? 'Todos' : opt}
-                                   </span>
-                                 ))}
-                               </div>
-                            </div>
-                          )}
-                       </div>
-                       
-                       {['Todo', 'Anillos'].includes(activeSubCategory) && (
-                         <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                            <div 
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
-                              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
-                              className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
-                            >
-                              Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
-                            </div>
-                            {openFilter === 'talla' && (
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
-                                 <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10 max-h-64 overflow-y-auto">
-                                   <span 
-                                     onClick={(e) => { e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
-                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
-                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                   >
-                                     Todas
-                                   </span>
-                                   {tallasDisponibles.map(t => (
-                                     <span 
-                                       key={t} 
-                                       onClick={(e) => { e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
-                                       onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
-                                       className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                     >
-                                       {t}
-                                     </span>
-                                   ))}
-                                 </div>
-                              </div>
-                            )}
-                         </div>
-                       )}
-
-                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
-                          <div 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
-                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
-                            className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
-                          >
-                            Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
-                          </div>
-                          {openFilter === 'precio' && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[160px]">
-                               <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10">
-                                 <span 
-                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
-                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
-                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                 >
-                                   Normal
-                                 </span>
-                                 <span 
-                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
-                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
-                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                 >
-                                   Menor a Mayor
-                                 </span>
-                                 <span 
-                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
-                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
-                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
-                                 >
-                                   Mayor a Menor
-                                 </span>
-                               </div>
-                            </div>
-                          )}
-                       </div>
-                    </div>
-                 </div>
-               )}
-
-               {userRole === 'admin' && (
-                 <div onClick={() => { setEditandoId(null); setShowInlineForm(true); }} className="mb-12 border border-dashed border-[#555555] mx-4 py-8 text-center hover:bg-[#111] transition-colors cursor-pointer w-auto">
-                   <span className="text-white tracking-[0.2em] text-[10px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
-                 </div>
-               )}
-
-               <div className="w-full px-4 sm:px-0">
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 w-full" style={{ borderTop: '1px solid #333333', borderLeft: '1px solid #333333' }}>
-                   {productosMostrar.map(producto => {
-                     const tallasObj = parseTallasseguro(producto.tallas);
-                     const isRing = producto.subcategoria === 'Anillos';
-                     const selectedSizes = tallasSeleccionadas[producto.id] || [];
-                     const canBuy = !isRing || selectedSizes.length > 0;
-
-                     return (
-                       <div key={producto.id} className="group relative bg-transparent flex flex-col p-6 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333' }}>
-                         
-                         <span className="absolute -bottom-[11px] -right-[9px] text-[18px] text-[#aaaaaa] z-50 bg-black leading-none px-1">✦</span>
-
-                         <div className={`overflow-hidden aspect-square relative w-full mb-6 flex items-center justify-center ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
-                           <img src={producto.imagen_url} alt={producto.titulo} loading="lazy" className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
-                           
-                           {producto.vendido && (
-                             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                               <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
-                             </div>
-                           )}
-                           
-                           {userRole === 'admin' && (
-                             <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20">
-                               <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                               <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                             </div>
-                           )}
-                         </div>
-                         
-                         <div className="flex flex-col flex-grow items-center text-center w-full">
-                           <h4 style={{ fontSize: '13px' }} className="tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
-                           <span style={{ fontSize: '13px' }} className="tracking-[0.1em] text-white font-light whitespace-nowrap mb-6 block">${producto.precio} USD</span>
-                           
-                           {!isRing && (
-                             <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
-                           )}
-
-                           {isRing && (
-                             <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
-                               <div className="flex flex-wrap justify-center gap-2 w-full">
-                                 {tallasDisponibles.map(talla => {
-                                   const stock = parseInt(tallasObj[talla] || 0);
-                                   const isAvailable = stock > 0;
-                                   const isSelected = selectedSizes.includes(talla);
-                                   
-                                   return (
-                                     <div key={talla} className="flex flex-col items-center gap-1">
-                                       <button 
-                                         type="button"
-                                         onClick={(e) => { 
-                                           if (isAvailable) handleSelectTalla(e, producto.id, talla); 
-                                         }}
-                                         style={{ fontSize: '12px', padding: '2px', minWidth: '24px', height: '24px' }}
-                                         className={`flex items-center justify-center tracking-[0.1em] transition-all duration-300 outline-none cursor-pointer ${isAvailable ? (isSelected ? 'bg-white text-black border border-white font-bold' : 'bg-transparent text-white border border-[#555555] hover:border-white') : 'border border-red-900/50 text-red-500 cursor-not-allowed opacity-50'}`}
-                                       >
-                                         {talla}
-                                       </button>
-                                       <span className={`text-[10px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-900'}`}>
-                                         {stock === 0 ? '0' : stock}
-                                       </span>
-                                     </div>
-                                   );
-                                 })}
-                               </div>
-                             </div>
-                           )}
-                           
-                           <p style={{ color: '#ffffff', opacity: 1 }} className="text-[12px] line-clamp-2 leading-relaxed mb-6 break-words uppercase w-full">{producto.descripcion}</p>
-
-                           {userRole === 'cliente' && !producto.vendido && (
-                             <div className="flex flex-col sm:flex-row gap-2 mt-auto w-full z-30 justify-center">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                                  style={{ border: canBuy ? '1px solid #ffffff' : '1px solid #333333' }}
-                                  className={`w-full sm:flex-grow py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors outline-none ${canBuy ? 'bg-transparent text-white hover:bg-white hover:text-black cursor-pointer' : 'bg-transparent text-[#555555] cursor-not-allowed'}`}
-                                >
-                                  {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} style={{ border: '1px solid #333333' }} className="w-full sm:w-auto px-4 py-3 text-[#aaaaaa] hover:text-white transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
-                             </div>
-                           )}
-
-                           {userRole === 'admin' && (
-                             <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} style={{ border: '1px solid #555555' }} className={`w-full py-3 mt-auto text-[10px] font-bold tracking-[0.2em] uppercase transition-colors cursor-pointer outline-none z-30 ${producto.vendido ? 'bg-transparent text-[#555555] hover:text-white hover:border-white' : 'bg-transparent text-white hover:border-white'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
-                           )}
-                         </div>
-                       </div>
-                     );
-                   })}
-                   {productosMostrar.length === 0 && (
-                      <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] col-span-full text-center py-10 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333' }}>No hay piezas en esta categoría aún.</p>
-                   )}
-                 </div>
-               </div>
-            </section>
-          )}
-
-          {/* PERFIL */}
-          {user && activeView === 'perfil' && (
-            <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl px-4">
-              <div className="bg-black border border-[#333333] p-8 md:p-16 shadow-2xl relative flex flex-col items-center">
-                
-                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
-                <div className="w-12 h-px bg-white/20 mb-12"></div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
-                  <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-[#aaaaaa] mb-3">Nombres</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
-                      {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-[#aaaaaa] mb-3">Apellidos</label>
-                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
-                      {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
-                    </p>
-                  </div>
-                  <div className="md:col-span-2 flex flex-col items-center">
-                    <label className="block text-[8px] tracking-[0.3em] uppercase text-[#aaaaaa] mb-3">Correo Electrónico</label>
-                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="w-full border-t border-[#333333] pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
-                  <button 
-                    onClick={() => setShowCompleteProfile(true)} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-[#333333] px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
-                    Editar Información
-                  </button>
-                  <button 
-                    onClick={() => setActiveView('medidas')} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-[#333333] px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
-                    Configurar Medidas
-                  </button>
-                  <button 
-                    onClick={solicitarCambioContrasena} 
-                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-[#333333] px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
-                  >
-                    Cambiar Contraseña
-                  </button>
-                </div>
-
-                {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-[#333333] mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
-                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
-                    
-                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
-                      {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
-                        <div key={menu} className="bg-transparent p-4 border border-none">
-                          <div className="flex justify-between items-center">
-                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
-                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-[#555555] text-[#aaaaaa] hover:text-white px-3 py-2 cursor-pointer transition-colors">
-                              {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
-                            </button>
-                          </div>
-                          
-                          {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
-                            <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
-                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-[#aaaaaa] font-light'}`}>{sub}</span>
-                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
-                                {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {userRole === 'admin' && (
-                  <div className="mb-4 pt-6 md:pt-8 border-t border-[#333333] mt-6 w-full flex flex-col items-center">
-                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
-                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
-                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
-                      {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
-                        <div key={menuPrincipal} className="border-b border-[#333333] pb-3 md:pb-4">
-                          <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
-                            <button className="text-[#aaaaaa] group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
-                              {menuPrincipal}
-                            </button>
-                            <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-[#555555]'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
-                              {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
-                            </div>
-                          </div>
-                          {menuPdfExpandido === menuPrincipal && (
-                            <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
-                              {submenus.map(cat => (
-                                <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
-                                  <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
-                                    {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
-                                  </div>
-                                  <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
-                                  <span className="text-[#aaaaaa] group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-center">
-                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
-                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Generar Catálogo PDF
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* EDITAR INFO PERFIL (MODAL) */}
-          {showCompleteProfile && user && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-               <div className="bg-black border border-[#333333] p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
-                 
-                 {(user.user_metadata?.first_name) && (
-                   <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
-                 )}
-
-                 <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
-
-                 <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
-                    
-                    <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                       <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento'); }} onMouseEnter={() => setOpenFormSelect('tratamiento')} className="w-full bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-3 cursor-pointer text-center transition-colors uppercase">
-                         {perfilForm.tratamiento || 'SELECCIONAR TRATAMIENTO*'}
-                       </div>
-                       {openFormSelect === 'tratamiento' && (
-                         <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                           <div className="bg-black border border-[#333333] w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
-                             {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
-                               <div key={t} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-[#aaaaaa] hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
-                             ))}
-                           </div>
-                         </div>
-                       )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center items-center justify-items-center w-full">
-                      <input 
-                        type="text" 
-                        value={perfilForm.nombre} 
-                        onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
-                        placeholder="DOS NOMBRES*" 
-                        className="w-full bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" 
-                        required
-                      />
-                      <input 
-                        type="text" 
-                        value={perfilForm.apellidos} 
-                        onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
-                        placeholder="DOS APELLIDOS*" 
-                        className="w-full bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" 
-                        required
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-6 items-center w-full">
-                      <label className="text-[10px] tracking-[0.3em] uppercase text-[#aaaaaa]">Fecha de Nacimiento*</label>
-                      <div className="flex justify-center gap-8 w-full max-w-[280px] sm:max-w-none mx-auto">
-                        <input 
-                          type="text" 
-                          maxLength={2} 
-                          value={perfilForm.dia} 
-                          onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
-                          placeholder="DD" 
-                          className="w-16 bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" 
-                          required
-                        />
-                        <input 
-                          type="text" 
-                          maxLength={2} 
-                          value={perfilForm.mes} 
-                          onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
-                          placeholder="MM" 
-                          className="w-16 bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" 
-                          required
-                        />
-                        <input 
-                          type="text" 
-                          maxLength={4} 
-                          value={perfilForm.anio} 
-                          onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
-                          placeholder="AAAA" 
-                          className="w-24 bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" 
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center items-end gap-4 sm:gap-6 mt-2 sm:mt-4 w-full max-w-[280px] sm:max-w-none mx-auto">
-                      <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                         <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo'); }} onMouseEnter={() => setOpenFormSelect('prefijo')} className="w-full bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.1em] py-2 sm:py-3 cursor-pointer text-center transition-colors">
-                           {perfilForm.prefijo}
-                         </div>
-                         {openFormSelect === 'prefijo' && (
-                           <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                             <div className="bg-black border border-[#333333] w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
-                               {['+593', '+34', '+1', '+52', '+57'].map(p => (
-                                 <div key={p} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-[#aaaaaa] hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
-                               ))}
-                             </div>
-                           </div>
-                         )}
-                      </div>
-                      <input 
-                        type="tel" 
-                        value={perfilForm.telefono} 
-                        onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
-                        placeholder="MÓVIL" 
-                        className="w-48 bg-transparent border-b border-[#555555] focus:border-white text-white text-[12px] tracking-[0.2em] py-2 sm:py-3 outline-none text-center transition-colors" 
-                      />
-                    </div>
-
-                    <label className="flex items-start gap-4 cursor-pointer mt-8 group justify-center px-4">
-                      <div className={`w-5 h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-[#555555] group-hover:border-white'}`}>
-                        {perfilForm.newsletter && <div className="w-3 h-3 bg-black"></div>}
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={perfilForm.newsletter} 
-                        onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
-                        className="hidden" 
-                      />
-                      <span className="text-[#aaaaaa] text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
-                        Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
-                      </span>
-                    </label>
-
-                    <button type="submit" className="mt-8 bg-transparent text-[#aaaaaa] hover:text-white transition-colors cursor-pointer outline-none border border-[#555555] hover:border-white text-[12px] tracking-[0.3em] uppercase py-5 w-full">
-                      Actualizar Perfil
-                    </button>
-                 </form>
-               </div>
-        </div>
-      )}
-
-          {/* VISTA CONFIGURAR MEDIDAS */}
-          {user && activeView === 'medidas' && (
-            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-5xl">
-              <div className="flex justify-between items-center mb-12 border-b border-[#333333] pb-6">
-                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
-                <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-[#aaaaaa] hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
-              </div>
-
-              <div className="flex justify-center gap-4 mb-12">
-                <button onClick={() => setSubVistaMedidas('anillo')} className={`px-8 py-3 text-[10px] tracking-[0.2em] uppercase transition-colors border outline-none cursor-pointer ${subVistaMedidas === 'anillo' ? 'bg-white text-black border-white' : 'bg-transparent text-[#aaaaaa] border-[#333333] hover:text-white hover:border-white'}`}>Medida de Anillo</button>
-                <button onClick={() => setSubVistaMedidas('corporal')} className={`px-8 py-3 text-[10px] tracking-[0.2em] uppercase transition-colors border outline-none cursor-pointer ${subVistaMedidas === 'corporal' ? 'bg-white text-black border-white' : 'bg-transparent text-[#aaaaaa] border-[#333333] hover:text-white hover:border-white'}`}>Medidas Corporales</button>
-              </div>
-
-              {subVistaMedidas === 'anillo' ? (
-                <div className="bg-black border border-[#333333] p-8 md:p-12 shadow-2xl flex flex-col items-center">
-                  <p className="text-[10px] tracking-[0.2em] text-[#aaaaaa] uppercase mb-12 text-center">Ingrese la medida para cada dedo (Talla Antares)</p>
-                  
-                  <div className="flex flex-col md:flex-row gap-16 items-center justify-center w-full">
-                    {/* MANO IZQUIERDA */}
-                    <div className="flex flex-col items-center gap-8">
-                      <p className="text-[8px] tracking-[0.3em] text-[#aaaaaa] uppercase">Mano Izquierda</p>
-                      <div className="relative w-64 h-64 opacity-80">
-                        <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-white/20" strokeWidth="1">
-                          <path d="M40,160 Q30,150 35,120 Q40,90 50,70 Q55,60 60,70 Q65,80 65,110" /> 
-                          <path d="M70,100 Q70,40 80,40 Q90,40 90,100" /> 
-                          <path d="M100,90 Q100,20 110,20 Q120,20 120,90" /> 
-                          <path d="M130,100 Q130,35 140,35 Q150,35 150,100" /> 
-                          <path d="M160,120 Q165,70 175,70 Q185,70 180,120" /> 
-                          <path d="M40,160 Q60,190 100,195 Q140,195 170,170 Q180,150 180,120" /> 
-                        </svg>
-                        <input type="number" placeholder="P" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="absolute top-[120px] left-[20px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
-                        <input type="number" placeholder="I" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="absolute top-[30px] left-[65px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
-                        <input type="number" placeholder="M" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="absolute top-[10px] left-[105px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
-                        <input type="number" placeholder="A" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="absolute top-[25px] left-[145px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
-                        <input type="number" placeholder="m" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="absolute top-[60px] left-[175px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
-                      </div>
-                    </div>
-
-                    {/* MANO DERECHA */}
-                    <div className="flex flex-col items-center gap-8">
-                      <p className="text-[8px] tracking-[0.3em] text-[#aaaaaa] uppercase">Mano Derecha</p>
-                      <div className="relative w-64 h-64 opacity-80 scale-x-[-1]">
-                        <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-white/20" strokeWidth="1">
-                          <path d="M40,160 Q30,150 35,120 Q40,90 50,70 Q55,60 60,70 Q65,80 65,110" />
-                          <path d="M70,100 Q70,40 80,40 Q90,40 90,100" />
-                          <path d="M100,90 Q100,20 110,20 Q120,20 120,90" />
-                          <path d="M130,100 Q130,35 140,35 Q150,35 150,100" />
-                          <path d="M160,120 Q165,70 175,70 Q185,70 180,120" />
-                          <path d="M40,160 Q60,190 100,195 Q140,195 170,170 Q180,150 180,120" />
-                        </svg>
-                        <input type="number" placeholder="P" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="absolute top-[120px] left-[20px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white scale-x-[-1]" />
-                        <input type="number" placeholder="I" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="absolute top-[30px] left-[65px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white scale-x-[-1]" />
-                        <input type="number" placeholder="M" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="absolute top-[10px] left-[105px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white scale-x-[-1]" />
-                        <input type="number" placeholder="A" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="absolute top-[25px] left-[145px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white scale-x-[-1]" />
-                        <input type="number" placeholder="m" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="absolute top-[60px] left-[175px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white scale-x-[-1]" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button className="mt-16 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase py-4 px-12 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Guardar Medidas de Anillo</button>
-                </div>
-              ) : (
-                <div className="bg-black border border-[#333333] p-8 md:p-12 shadow-2xl">
-                  <p className="text-[10px] tracking-[0.2em] text-[#aaaaaa] uppercase mb-12 text-center">Medidas para Sastrería y Prêt-à-Porter (cm)</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full">
-                    {/* Silueta Dinámica */}
-                    <div className="flex flex-col items-center justify-center opacity-80 border-r border-[#333333] pr-8 hidden md:flex">
-                      {perfilForm.tratamiento === 'Sra.' || perfilForm.tratamiento === 'Srta.' ? (
-                        <svg viewBox="0 0 100 300" className="w-48 h-full fill-none stroke-white/30" strokeWidth="1">
-                           <circle cx="50" cy="30" r="15" />
-                           <path d="M50,45 Q35,60 30,100 Q40,110 50,115 Q60,110 70,100 Q65,60 50,45" />
-                           <path d="M30,100 Q20,150 25,180 Q50,190 75,180 Q80,150 70,100" />
-                           <path d="M25,180 Q20,240 25,290" />
-                           <path d="M75,180 Q80,240 75,290" />
-                           <path d="M35,60 Q15,100 10,140" />
-                           <path d="M65,60 Q85,100 90,140" />
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 100 300" className="w-48 h-full fill-none stroke-white/30" strokeWidth="1">
-                           <circle cx="50" cy="30" r="15" />
-                           <path d="M50,45 L25,65 L25,120 L75,120 L75,65 Z" />
-                           <path d="M25,120 L30,170 L70,170 L75,120" />
-                           <path d="M30,170 L30,290" />
-                           <path d="M70,170 L70,290" />
-                           <path d="M25,65 L10,140" />
-                           <path d="M75,65 L90,140" />
-                        </svg>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-6 overflow-y-auto max-h-[500px] pr-4">
-                      {[
-                        { label: 'Contorno de cuello', key: 'cuello' },
-                        { label: 'Contorno de busto/pecho', key: 'busto_pecho' },
-                        { label: 'Contorno de tórax', key: 'torax' },
-                        { label: 'Contorno de cintura', key: 'cintura' },
-                        { label: 'Contorno de cadera alta', key: 'cadera_alta' },
-                        { label: 'Contorno de cadera/asiento', key: 'cadera_asiento' },
-                        { label: 'Contorno de brazo (bíceps)', key: 'brazo_biceps' },
-                        { label: 'Contorno de codo', key: 'codo' },
-                        { label: 'Contorno de muñeca', key: 'muneca' },
-                        { label: 'Contorno de muslo', key: 'muslo' },
-                        { label: 'Contorno de rodilla', key: 'rodilla' },
-                        { label: 'Contorno de bota/tobillo', key: 'bota_tobillo' },
-                        { label: 'Ancho de hombros', key: 'hombros' },
-                        { label: 'Ancho de pecho (Escote)', key: 'pecho_escote' },
-                        { label: 'Ancho de espalda', key: 'espalda' },
-                        { label: 'Separación de busto', key: 'separacion_busto' },
-                        { label: 'Talle delantero', key: 'talle_delantero' },
-                        { label: 'Talle espalda', key: 'talle_espalda' },
-                        { label: 'Altura de busto', key: 'altura_busto' },
-                        { label: 'Altura de cadera', key: 'altura_cadera' },
-                        { label: 'Largo de costado', key: 'largo_costado' },
-                        { label: 'Largo de manga', key: 'largo_manga' },
-                        { label: 'Largo de codo', key: 'largo_codo' },
-                        { label: 'Largo total de la prenda', key: 'largo_total' },
-                        { label: 'Largo de falda/pantalón', key: 'largo_falda_pantalon' },
-                        { label: 'Entrepierna', key: 'entrepierna' },
-                        { label: 'Tiro total', key: 'tiro_total' },
-                        { label: 'Altura de tiro (Sentado)', key: 'altura_tiro' },
-                        { label: 'Caída de hombro', key: 'caida_hombro' },
-                        { label: 'Contorno de sisa', key: 'contorno_sisa' },
-                        { label: 'Largo de hombro', key: 'largo_hombro' },
-                        { label: 'Profundidad de escote', key: 'profundidad_escote' }
-                      ].map(item => (
-                        <div key={item.key} className="flex flex-col gap-2">
-                          <label className="text-[10px] text-[#aaaaaa] uppercase tracking-widest">{item.label}</label>
-                          <input 
-                            type="number" 
-                            value={medidasCorporales[item.key]} 
-                            onChange={e => setMedidasCorporales({...medidasCorporales, [item.key]: e.target.value})} 
-                            placeholder="0.00"
-                            className="bg-transparent border-b border-[#555555] text-white text-[12px] py-2 outline-none focus:border-white transition-colors"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-16 flex justify-center border-t border-[#333333] pt-8">
-                    <button className="bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase py-4 px-12 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Guardar Medidas Corporales</button>
-                  </div>
-                </div>
-              )}
-            </section>
           )}
 
           {/* INVENTARIO */}
@@ -1739,7 +1175,7 @@ export default function App() {
                     }, {});
 
                     return Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
-                      const sortedMonthPedidos = [...(monthPedidos as any[])].sort((a,b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+                      const sortedMonthPedidos = [...monthPedidos].sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
                       const userGroups = {};
                       
                       sortedMonthPedidos.forEach(ped => {
@@ -1752,7 +1188,7 @@ export default function App() {
                         <div key={month} className="mb-12 w-full">
                           <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
                           <div className="flex flex-col gap-6">
-                            {Object.entries(userGroups).map(([clientKey, clientPedidos]: [string, any]) => {
+                            {Object.entries(userGroups).map(([clientKey, clientPedidos]) => {
                                const [nombre, telefono] = clientKey.split('|');
                                const expandKey = `${month}-${clientKey}`;
                                const isExpanded = pedidoExpandido === expandKey;
@@ -1784,7 +1220,7 @@ export default function App() {
                                                  </div>
                                                  
                                                  <div className="space-y-2 mb-4">
-                                                   {(JSON.parse(pedido.productos) as any[]).map((prod, i) => (
+                                                   {JSON.parse(pedido.productos).map((prod, i) => (
                                                      <div key={i} className="flex justify-between text-[10px] text-gray-300">
                                                        <span className="truncate pr-2">{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
                                                        <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
@@ -1981,112 +1417,1049 @@ export default function App() {
             </section>
           )}
 
+          {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
+          {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+               <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words">{activeCategory}</h2>
+               
+               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                 <ul className="flex flex-wrap justify-center gap-6 md:gap-12 mb-6 border-b border-white/10 pb-6">
+                   {subcategoriasJoyeria.map(sub => (
+                     <li key={sub} onClick={() => setActiveSubCategory(sub)} className={`text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors ${activeSubCategory === sub ? 'text-white font-bold' : 'text-gray-500 hover:text-gray-300'}`}>
+                       {sub}
+                     </li>
+                   ))}
+                 </ul>
+               )}
+
+               {activeCategory === 'Acero Fino' && (
+                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
+                    <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
+                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 w-full text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
+                       
+                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                          <div 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
+                            className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                          >
+                            Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
+                          </div>
+                          {openFilter === 'color' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
+                                 {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
+                                   <span 
+                                     key={opt} 
+                                     onClick={(e) => { e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
+                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
+                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                   >
+                                     {opt === 'Todo' ? 'Todos' : opt}
+                                   </span>
+                                 ))}
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                       
+                       {['Todo', 'Anillos'].includes(activeSubCategory) && (
+                         <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                            <div 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
+                              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
+                              className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                            >
+                              Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
+                            </div>
+                            {openFilter === 'talla' && (
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
+                                 <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none max-h-64 overflow-y-auto">
+                                   <span 
+                                     onClick={(e) => { e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
+                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
+                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                   >
+                                     Todas
+                                   </span>
+                                   {tallasDisponibles.map(t => (
+                                     <span 
+                                       key={t} 
+                                       onClick={(e) => { e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
+                                       onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
+                                       className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                     >
+                                       {t}
+                                     </span>
+                                   ))}
+                                 </div>
+                              </div>
+                            )}
+                         </div>
+                       )}
+
+                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                          <div 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
+                            className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                          >
+                            Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
+                          </div>
+                          {openFilter === 'precio' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[160px]">
+                               <div className="bg-transparent backdrop-blur-[30px] w-full flex flex-col items-center gap-4 py-4 shadow-none border-none">
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Normal
+                                 </span>
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Menor a Mayor
+                                 </span>
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Mayor a Menor
+                                 </span>
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                 </div>
+               )}
+
+               {userRole === 'admin' && !showInlineForm && (
+                 <div onClick={() => { setEditandoId(null); setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, color: '', imagen: null, imagen_url: '' }); setShowInlineForm(true); }} className="mb-8 md:mb-12 border border-dashed border-white/20 py-6 md:py-8 text-center hover:bg-white/5 transition-colors cursor-pointer mx-2 md:mx-0">
+                   <span className="text-white tracking-[0.2em] text-[10px] uppercase">+ Añadir nueva pieza a {activeCategory}</span>
+                 </div>
+               )}
+
+               {userRole === 'admin' && showInlineForm && (
+                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 overflow-y-auto">
+                   <form onSubmit={handlePublicarLocal} className="bg-zinc-900 p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-none border border-white/10 my-8">
+                     <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+                     <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-8 text-center drop-shadow-md font-bold">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+                     
+                     {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
+                       <div className="mb-8 flex justify-center bg-transparent p-0">
+                         <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
+                       </div>
+                     )}
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center">
+                       <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" required />
+                       
+                       <div className="w-full relative">
+                         <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                       </div>
+
+                       <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none font-champagne" required />
+                       
+                       {nuevaPieza.subcategoria !== 'Anillos' && (
+                         <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 transition-colors" />
+                       )}
+                       
+                       {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                         <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
+                           <div 
+                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                             className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
+                           >
+                             {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
+                           </div>
+                           {openFormSelect === 'subcat' && (
+                             <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10 max-h-48 overflow-y-auto">
+                                 <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                                 {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
+                                   <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+
+                       {activeCategory === 'Acero Fino' && (
+                         <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
+                           <div 
+                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                             className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase"
+                           >
+                             {nuevaPieza.color || 'COLOR (OPCIONAL)'}
+                           </div>
+                           {openFormSelect === 'color' && (
+                             <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10">
+                                 <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                                 {['Silver', 'Gold', 'Black'].map(c => (
+                                   <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+                     </div>
+
+                     {nuevaPieza.costo > 0 && (
+                       <div className="w-full flex flex-col items-center justify-center mb-8 pb-6 border-b border-white/5 mt-4">
+                         <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
+                            {[115, 100, 75, 50, 25].map(porcentaje => {
+                              const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
+                              return (
+                                <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2 font-champagne">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                              );
+                            })}
+                         </div>
+                       </div>
+                     )}
+
+                     {nuevaPieza.subcategoria === 'Anillos' && (
+                       <div className="w-full flex flex-col items-center mt-4 mb-8 pb-6">
+                         <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                         <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+                           {tallasDisponibles.map(talla => (
+                             <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                               <span className="text-white text-[12px] md:text-sm font-light font-champagne">{talla}</span>
+                               <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none m-0 font-champagne" />
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-8 resize-none"></textarea>
+                     
+                     <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full">
+                       <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+                       <button type="submit" className="bg-white text-black hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
+                     </div>
+                   </form>
+                 </div>
+               )}
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                 {productosMostrar.map(producto => {
+                   const tallasObj = parseTallasseguro(producto.tallas);
+                   const isRing = producto.subcategoria === 'Anillos';
+                   const selectedSizes = tallasSeleccionadas[producto.id] || [];
+                   const canBuy = !isRing || selectedSizes.length > 0;
+
+                   return (
+                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                       <div className={`overflow-hidden aspect-square relative ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
+                         <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                         {producto.vendido && (
+                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                             <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                           </div>
+                         )}
+                         {userRole === 'admin' && (
+                           <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20">
+                             <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                             <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                           </div>
+                         )}
+                       </div>
+                       
+                       <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
+                         <h4 className="text-[10px] md:text-sm tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                         <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block font-champagne">${producto.precio} USD</span>
+                         
+                         {!isRing && (
+                           <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
+                         )}
+
+                         {isRing && (
+                           <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
+                             <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                               {tallasDisponibles.map(talla => {
+                                 const stock = parseInt(tallasObj[talla] || 0);
+                                 const isAvailable = stock > 0;
+                                 const isSelected = selectedSizes.includes(talla);
+                                 
+                                 return (
+                                   <div key={talla} className="flex flex-col items-center gap-1.5">
+                                     <button 
+                                       type="button"
+                                       onClick={(e) => { 
+                                         if (isAvailable) handleSelectTalla(e, producto.id, talla); 
+                                       }}
+                                       className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none font-champagne ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                                     >
+                                       <span>{talla}</span>
+                                     </button>
+                                     <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 font-champagne ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                       {stock}
+                                     </span>
+                                   </div>
+                                 );
+                               })}
+                             </div>
+                           </div>
+                         )}
+                         
+                         <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+
+                         {userRole === 'cliente' && !producto.vendido && (
+                           <div className="flex gap-2 mt-auto w-full z-30 justify-center">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
+                                className={`flex-grow py-3 text-[8px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                              >
+                                {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="px-4 md:px-5 py-2 md:py-3 border border-white/20 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                           </div>
+                         )}
+
+                         {userRole === 'admin' && (
+                           <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} className={`w-full py-2.5 mt-auto text-[10px] font-bold tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                         )}
+                       </div>
+                     </div>
+                   );
+                 })}
+                 
+                 {productosMostrar.length === 0 && (
+                    <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] col-span-full text-center py-10">No hay piezas en esta categoría aún.</p>
+                 )}
+               </div>
+            </section>
+          )}
+
+          {/* MODAL PRODUCTO */}
+          {productoSeleccionado && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => setProductoSeleccionado(null)}>
+              <div className="w-full max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-hidden rounded-sm items-stretch bg-transparent" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setProductoSeleccionado(null)} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
+                <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex">
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover block m-0 p-0" />
+                </div>
+                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-3xl border-l border-white/5 m-0">
+                  <h2 className="text-[14px] md:text-[20px] tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md">{productoSeleccionado.titulo}</h2>
+                  <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8 drop-shadow-md font-champagne">${productoSeleccionado.precio} USD</p>
+                  
+                  {productoSeleccionado.subcategoria !== 'Anillos' && (
+                    <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                      {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
+                    </p>
+                  )}
+
+                  {productoSeleccionado.subcategoria === 'Anillos' && (() => {
+                     const modalTallasObj = parseTallasseguro(productoSeleccionado.tallas);
+                     const modalSelectedSizes = tallasSeleccionadas[productoSeleccionado.id] || [];
+                     const modalCanBuy = modalSelectedSizes.length > 0;
+
+                     return (
+                     <div className="flex flex-col items-center w-full mb-10 mt-2">
+                       <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
+                       <div className="flex flex-wrap justify-center gap-4">
+                         {tallasDisponibles.map(talla => {
+                           const stock = parseInt(modalTallasObj[talla] || 0);
+                           const isAvailable = stock > 0;
+                           const isSelected = modalSelectedSizes.includes(talla);
+                           
+                           return (
+                             <div key={talla} className="flex flex-col items-center gap-2">
+                               <button 
+                                 type="button"
+                                 onClick={(e) => { 
+                                   e.preventDefault(); e.stopPropagation(); 
+                                   if(isAvailable) handleSelectTalla(e, productoSeleccionado.id, talla); 
+                                 }}
+                                 className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none font-champagne ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500 cursor-not-allowed'}`}
+                               >
+                                 <span>{talla}</span>
+                               </button>
+                               <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-500/70'}`}>
+                                 {stock}
+                               </span>
+                             </div>
+                           );
+                         })}
+                       </div>
+
+                       {userRole === 'cliente' && !productoSeleccionado.vendido && (
+                         <div className="flex gap-4 mt-12 w-full justify-center">
+                           <button 
+                             onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
+                             className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/20 text-gray-400 cursor-not-allowed'}`}
+                           >
+                             {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
+                           </button>
+                           <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                         </div>
+                       )}
+                     </div>
+                     );
+                  })()}
+
+                  {productoSeleccionado.subcategoria !== 'Anillos' && (
+                    <>
+                      <div className="w-12 h-px bg-white/30 mb-8 mx-auto"></div>
+                      <p className="text-[10px] text-gray-200 leading-loose mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words">{productoSeleccionado.descripcion}</p>
+                      
+                      {userRole === 'cliente' && !productoSeleccionado.vendido ? (
+                        <div className="flex gap-4 mt-auto w-full justify-center">
+                          <button onClick={(e) => agregarAlCarrito(productoSeleccionado, e)} className="flex-grow bg-white text-black text-[8px] font-bold tracking-[0.3em] uppercase py-4 hover:bg-gray-200 transition-colors cursor-pointer border-none outline-none">Añadir al Bolso</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(productoSeleccionado.id); }} className="border border-white/20 px-6 text-white hover:bg-white/10 transition-colors cursor-pointer text-sm bg-transparent outline-none flex items-center justify-center">{favoritos.includes(productoSeleccionado.id) ? '♥' : '♡'}</button>
+                        </div>
+                      ) : userRole === 'cliente' && (
+                        <div className="mt-auto py-4 text-center border border-white/20 bg-black/20 w-full"><span className="text-gray-300 tracking-[0.4em] text-[8px] font-bold uppercase">Pieza Agotada</span></div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CARRITO */}
+          {userRole !== 'admin' && user && activeView === 'bag' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              
+              {carrito.length === 0 ? (
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
+              ) : (
+                <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
+                  
+                  {checkoutPaso === 1 && (
+                    <>
+                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      {carrito.map(item => (
+                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
+                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                          <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
+                          <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
+                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
+                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                              {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
+                            </p>
+                            <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
+                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
+                            </div>
+                          </div>
+                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                        </div>
+                      ))}
+                      
+                      <div className="mt-8 border-t border-white/10 pt-6">
+                        <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                        </div>
+
+                        {envioConfig.tipo === 'domicilio' && (
+                          <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
+                            <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
+                              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio'); }} onMouseEnter={() => setOpenFormSelect('envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors uppercase">
+                                {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
+                              </div>
+                              {openFormSelect === 'envio' && (
+                                <div className="absolute top-full right-0 w-full pt-1 z-[300]">
+                                  <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                                    {sectoresQuito.map(sector => (
+                                      <span key={sector.nombre} onClick={(e) => { e.stopPropagation(); setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-500 hover:text-white text-[10px] tracking-[0.1em] uppercase">
+                                        {sector.nombre} - ${sector.precio.toFixed(2)} USD
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <input 
+                              type="url" 
+                              placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
+                              value={envioConfig.linkMaps}
+                              onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              required
+                            />
+                            <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
+                        <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
+                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                      </div>
+                      
+                      <div className="flex justify-center mt-10 md:mt-16">
+                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                          {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {checkoutPaso === 2 && (
+                    <div className="flex flex-col items-center animate-fade-in">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
+                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                        Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
+                      </p>
+
+                      <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
+                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-6">Cuentas Autorizadas</p>
+                        
+                        <div className="flex justify-center gap-4 mb-8 border-b border-white/10 pb-4">
+                          {['pichincha', 'guayaquil', 'deuna'].map((metodo) => (
+                            <button
+                              key={metodo}
+                              onClick={() => setMetodoPagoSeleccionado(metodo)}
+                              className={`text-[8px] tracking-[0.2em] uppercase px-3 py-2 transition-all duration-300 border-b-2 outline-none cursor-pointer bg-transparent ${metodoPagoSeleccionado === metodo ? 'text-white border-white' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            >
+                              {metodo === 'deuna' ? 'DeUna' : (metodo === 'pichincha' ? 'Pichincha' : 'Guayaquil')}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light min-h-[120px] flex items-center justify-center">
+                          {metodoPagoSeleccionado === 'pichincha' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Pichincha</strong>
+                              <p className="mb-1">Cuenta de ahorro transaccional</p>
+                              <p className="mb-1">Número: <span className="font-champagne">2206343568</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'guayaquil' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Guayaquil</strong>
+                              <p className="mb-1">Ahorro # <span className="font-champagne">0043005125</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'deuna' && (
+                            <div className="animate-fade-in flex flex-col items-center">
+                              <strong className="text-white block mb-4 uppercase tracking-widest">Escanea con DeUna</strong>
+                              <img 
+                                src="https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/qrPichincha_page-0001.jpg" 
+                                alt="QR DeUna" 
+                                className="w-40 h-auto object-contain border border-white/10 p-2 bg-white"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full max-w-md flex flex-col items-center gap-6">
+                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <input 
+                           type="file" 
+                           accept="image/*"
+                           onChange={e => setComprobantePago(e.target.files[0])} 
+                           className="text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
+                         />
+                      </div>
+
+                      <button 
+                        onClick={enviarPedidoWhatsApp} 
+                        disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
+                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-transparent text-gray-400 cursor-not-allowed' : 'bg-transparent text-gray-500 hover:text-white'}`}
+                      >
+                        {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* DESEOS */}
+          {userRole !== 'admin' && user && activeView === 'deseos' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              
+              {favoritos.length === 0 ? (
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+                  {productos.filter(p => favoritos.includes(p.id)).map(producto => {
+                    return (
+                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                      <div className="overflow-hidden aspect-square relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                        {producto.vendido && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
+                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                        <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        
+                        <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <div className="flex gap-2 mt-auto w-full justify-center">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                            Quitar de lista de deseos ♥
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )})}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* CONFIGURAR MEDIDAS */}
+          {user && activeView === 'medidas' && (
+            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-5xl">
+              <div className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
+                <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* MEDIDAS DE ANILLO */}
+                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5">
+                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light">Medida de Anillo</h3>
+                  <div className="relative aspect-[4/3] w-full mb-10 flex items-center justify-center">
+                    {/* Silueta de manos (SVG) */}
+                    <svg viewBox="0 0 400 300" className="w-full h-full opacity-20 fill-white">
+                      <path d="M50,250 Q40,200 60,150 Q70,100 90,80 Q110,60 130,80 Q150,100 140,150 Q130,200 120,250 Z" /> {/* Mano Izq */}
+                      <path d="M350,250 Q360,200 340,150 Q330,100 310,80 Q290,60 270,80 Q250,100 260,150 Q270,200 280,250 Z" /> {/* Mano Der */}
+                      {/* Dedos Izq */}
+                      <circle cx="90" cy="80" r="15" /> <circle cx="110" cy="60" r="15" /> <circle cx="130" cy="50" r="15" /> <circle cx="150" cy="60" r="15" /> <circle cx="170" cy="100" r="15" />
+                      {/* Dedos Der */}
+                      <circle cx="310" cy="80" r="15" /> <circle cx="290" cy="60" r="15" /> <circle cx="270" cy="50" r="15" /> <circle cx="250" cy="60" r="15" /> <circle cx="230" cy="100" r="15" />
+                    </svg>
+                    
+                    {/* Inputs sobre los dedos */}
+                    <div className="absolute inset-0 grid grid-cols-5 gap-2 p-4">
+                      {/* Mano Izquierda */}
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Meñique</span>
+                        <input type="number" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Anular</span>
+                        <input type="number" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Medio</span>
+                        <input type="number" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Índice</span>
+                        <input type="number" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Pulgar</span>
+                        <input type="number" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+
+                      {/* Mano Derecha */}
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Pulgar</span>
+                        <input type="number" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Índice</span>
+                        <input type="number" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Medio</span>
+                        <input type="number" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Anular</span>
+                        <input type="number" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-[8px] text-gray-500 uppercase">Meñique</span>
+                        <input type="number" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-gray-500 uppercase text-center tracking-widest">Ingrese el número de talla para cada dedo.</p>
+                </div>
+
+                {/* MEDIDAS CORPORALES */}
+                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5">
+                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light">Medidas Corporales (cm)</h3>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                    {Object.keys(medidasCorporales).map(medida => (
+                      <div key={medida} className="flex flex-col gap-2">
+                        <label className="text-[8px] tracking-[0.2em] uppercase text-gray-500">{medida.replace('_', ' ')}</label>
+                        <input 
+                          type="number" 
+                          value={medidasCorporales[medida]} 
+                          onChange={e => setMedidasCorporales({...medidasCorporales, [medida]: e.target.value})} 
+                          className="w-full bg-transparent border-b border-white/20 text-white text-[10px] py-2 outline-none hover:border-white/50 transition-colors font-champagne" 
+                          placeholder="0.0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+          {user && activeView === 'perfil' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
+                
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <div className="w-12 h-px bg-white/20 mb-12"></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
+                  <div className="flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.first_name || 'NO ESPECIFICADO'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                      {user.user_metadata?.last_name || 'NO ESPECIFICADO'}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user.email}>
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
+                  <button 
+                    onClick={() => setShowCompleteProfile(true)} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Editar Información
+                  </button>
+                  <button 
+                    onClick={() => setActiveView('medidas')} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Configurar Medidas
+                  </button>
+                  <button 
+                    onClick={solicitarCambioContrasena} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Cambiar Contraseña
+                  </button>
+                </div>
+
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    
+                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
+                      {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
+                        <div key={menu} className="bg-transparent p-4 border border-none">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
+                              {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
+                            </button>
+                          </div>
+                          
+                          {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
+                            <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
+                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                                {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
+                      {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
+                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
+                          <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                              {menuPrincipal}
+                            </button>
+                            <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
+                              {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+                            </div>
+                          </div>
+                          {menuPdfExpandido === menuPrincipal && (
+                            <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
+                              {submenus.map(cat => (
+                                <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
+                                  <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                                    {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
+                                  </div>
+                                  <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-center">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Generar Catálogo PDF
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
         </main>
         
-        <footer className="bg-black py-12 text-center text-[#666666] text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+        <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* MODAL EMERGENTE DE ADMINISTRADOR - AÑADIR/EDITAR PRODUCTO CON FONDO CRISTAL BORROSO */}
-      {userRole === 'admin' && showInlineForm && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
-          <form onSubmit={handlePublicarLocal} className="p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-none my-8" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(40px)' }}>
-            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-6 text-gray-400 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50">×</button>
-            <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-8 text-center drop-shadow-md font-bold">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
-            
-            {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-              <div className="mb-4 flex justify-center bg-transparent p-0">
-                <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-32 sm:h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
-              </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center w-full">
-              <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors" required />
-              <div className="w-full relative">
-                <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/30 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-              </div>
-              <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
+      <div className="auth-wrapper">
+      {showCompleteProfile && user && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+           <div className="bg-white/5 backdrop-blur-3xl border border-none p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
               
-              {nuevaPieza.subcategoria !== 'Anillos' && (
-                <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors" />
+              {(user.user_metadata?.first_name) && (
+                <button onClick={() => setShowCompleteProfile(false)} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl bg-transparent border-none cursor-pointer outline-none">×</button>
               )}
+
+              <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-12 text-center font-light">Complete su Perfil</h2>
+
+              <form onSubmit={handleGuardarPerfil} className="flex flex-col gap-10">
+                  
+                  <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
+                     <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'tratamiento' ? null : 'tratamiento'); }} onMouseEnter={() => setOpenFormSelect('tratamiento')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-3 cursor-pointer text-center transition-colors uppercase">
+                       {perfilForm.tratamiento || 'SELECCIONAR TRATAMIENTO*'}
+                     </div>
+                     {openFormSelect === 'tratamiento' && (
+                       <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                         <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                           {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
+                             <div key={t} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center items-center justify-items-center">
+                    <input 
+                      type="text" 
+                      value={perfilForm.nombre} 
+                      onChange={e => setPerfilForm({...perfilForm, nombre: e.target.value})} 
+                      placeholder="DOS NOMBRES*" 
+                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                      required
+                    />
+                    <input 
+                      type="text" 
+                      value={perfilForm.apellidos} 
+                      onChange={e => setPerfilForm({...perfilForm, apellidos: e.target.value})} 
+                      placeholder="DOS APELLIDOS*" 
+                      className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-6 items-center">
+                    <label className="text-[8px] md:text-[10px] tracking-[0.3em] uppercase text-gray-500">Fecha de Nacimiento*</label>
+                    <div className="flex justify-center gap-8 w-full">
+                      <input 
+                        type="text" 
+                        maxLength={2} 
+                        value={perfilForm.dia} 
+                        onChange={e => setPerfilForm({...perfilForm, dia: e.target.value.replace(/\D/g,'')})} 
+                        placeholder="DD" 
+                        className="w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        required
+                      />
+                      <input 
+                        type="text" 
+                        maxLength={2} 
+                        value={perfilForm.mes} 
+                        onChange={e => setPerfilForm({...perfilForm, mes: e.target.value.replace(/\D/g,'')})} 
+                        placeholder="MM" 
+                        className="w-16 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        required
+                      />
+                      <input 
+                        type="text" 
+                        maxLength={4} 
+                        value={perfilForm.anio} 
+                        onChange={e => setPerfilForm({...perfilForm, anio: e.target.value.replace(/\D/g,'')})} 
+                        placeholder="AAAA" 
+                        className="w-24 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-6 mt-4">
+                    <div className="relative w-24 z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
+                       <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'prefijo' ? null : 'prefijo'); }} onMouseEnter={() => setOpenFormSelect('prefijo')} className="w-full bg-transparent border-b border-white/20 text-gray-400 text-[10px] md:text-xs tracking-[0.1em] py-3 cursor-pointer text-center transition-colors">
+                         {perfilForm.prefijo}
+                       </div>
+                       {openFormSelect === 'prefijo' && (
+                         <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                           <div className="bg-black/60 backdrop-blur-2xl border border-white/10 w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
+                             {['+593', '+34', '+1', '+52', '+57'].map(p => (
+                               <div key={p} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, prefijo: p}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-gray-500 hover:text-white cursor-pointer text-center transition-colors w-full">{p}</div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+                    </div>
+                    <input 
+                      type="tel" 
+                      value={perfilForm.telefono} 
+                      onChange={e => setPerfilForm({...perfilForm, telefono: e.target.value.replace(/\D/g,'')})} 
+                      placeholder="MÓVIL" 
+                      className="w-48 bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-3 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors" 
+                    />
+                  </div>
+
+                  <label className="flex items-start gap-4 cursor-pointer mt-8 group justify-center px-4">
+                    <div className={`w-5 h-5 flex-shrink-0 border transition-colors flex items-center justify-center mt-0.5 ${perfilForm.newsletter ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                      {perfilForm.newsletter && <div className="w-3 h-3 bg-black"></div>}
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={perfilForm.newsletter} 
+                      onChange={e => setPerfilForm({...perfilForm, newsletter: e.target.checked})} 
+                      className="hidden" 
+                    />
+                    <span className="text-gray-400 text-[8px] md:text-[10px] tracking-[0.1em] leading-relaxed max-w-md text-center">
+                      Me gustaría recibir novedades acerca de ANTARES, actividades, productos exclusivos, servicios a medida y tener una experiencia personalizada basada en mis intereses.
+                    </span>
+                  </label>
+
+                  <p className="text-gray-500 text-[7px] tracking-[0.1em] leading-loose mt-4 pt-6 text-center max-w-md mx-auto">
+                    Al seleccionar "Actualizar Perfil", acepta nuestras <span className="text-white underline cursor-pointer">Condiciones de uso</span> y confirma que ha leído y comprendido nuestra <span className="text-white underline cursor-pointer">política de privacidad</span>.
+                  </p>
+
+                  <button type="submit" className="mt-8 bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white text-[10px] md:text-[12px] tracking-[0.3em] uppercase py-5 w-full">
+                    Actualizar Perfil
+                  </button>
+              </form>
+           </div>
+        </div>
+      )}
+      </div>
+
+      {/* CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO Y TALLAS ESTILO FOTO 2 */}
+      <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
+          <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
+        </header>
+
+        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
+          const piezasDeCategoria = productos.filter(p => p.categoria === cat);
+          const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
+
+          return (
+            <div key={cat} className="mb-24 page-break-after px-10" style={{ backgroundColor: '#000000' }}>
+              <h3 className="text-xl tracking-[0.3em] uppercase mb-2 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
+              <h2 className="text-4xl tracking-[0.2em] uppercase mb-16 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
               
-              {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                  <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} className="w-full bg-transparent border-b border-white/30 text-gray-300 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
-                    {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
-                  </div>
-                  {openFormSelect === 'subcat' && (
-                    <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-[#333333] max-h-48 overflow-y-auto">
-                        <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                        {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                          <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
-                        ))}
+              {piezasDeCategoria.length > 0 ? (
+                <div className="grid grid-cols-2 gap-12">
+                  {piezasDeCategoria.map(p => (
+                    <div key={p.id} className="flex flex-col items-center text-center relative border p-4 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: '#000000' }}>
+                      <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
+                        <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
+                        
+                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
+                        {p.vendido && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                      <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
+                      <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
+                      
+                      {/* 👇 CAMBIO: Tallas NO SE MUESTRAN en pulseras, collares, aretes, piercings 👇 */}
+                      {p.subcategoria === 'Anillos' ? (
+                        <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
+                           {tallasDisponibles.map(t => {
+                             const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
+                             const isAvailable = stock > 0;
+                             return (
+                               <div key={t} className="flex flex-col items-center gap-1">
+                                 <div style={{
+                                   border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.3)' : 'rgba(255,0,0,0.2)'}`,
+                                   color: isAvailable ? '#ffffff' : '#ff0000',
+                                   width: '40px', height: '40px',
+                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                   fontSize: '19px', fontWeight: 'bold'
+                                 }}>
+                                   {t}
+                                 </div>
+                                 <span style={{ fontSize: '18px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                   {stock}
+                                 </span>
+                               </div>
+                             );
+                           })}
+                        </div>
+                      ) : (
+                        <div style={{ height: '16px', marginBottom: '16px' }}></div> 
+                      )}
 
-              {activeCategory === 'Acero Fino' && (
-                <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                  <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} className="w-full bg-transparent border-b border-white/30 text-gray-300 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
-                    {nuevaPieza.color || 'COLOR (OPCIONAL)'}
-                  </div>
-                  {openFormSelect === 'color' && (
-                    <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10">
-                        <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                        {['Silver', 'Gold', 'Black'].map(c => (
-                          <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {nuevaPieza.costo > 0 && (
-              <div className="w-full flex flex-col items-center justify-center mb-8 pb-6 border-b border-white/20 mt-4">
-                <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-white uppercase">
-                   {[115, 100, 75, 50, 25].map(porcentaje => {
-                     const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
-                     return (
-                       <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-300 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
-                     );
-                   })}
-                </div>
-              </div>
-            )}
-
-            {nuevaPieza.subcategoria === 'Anillos' && (
-              <div className="w-full flex flex-col items-center mt-4 mb-8 pb-6">
-                <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
-                <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
-                  {tallasDisponibles.map(talla => (
-                    <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
-                      <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
-                      <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/30 placeholder-gray-400 transition-colors focus:border-white" />
+                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors mb-8 resize-none"></textarea>
-            
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-10 bg-transparent p-0 w-full">
-              <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-400 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-300 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
-              <button type="submit" className="bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer outline-none border-none text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
+              ) : (
+                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
+              )}
             </div>
-          </form>
-        </div>
-      )}
+          )
+        })}
+      </div>
 
     </div>
   );
