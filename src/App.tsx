@@ -5,7 +5,7 @@
 
 import Auth from './components/Auth';
 import { areSupabaseCredentialsSet, supabase } from './services/supabase';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png"; 
 const FONDO_HEADER_URL = "/fondo-header.png"; 
@@ -163,7 +163,6 @@ export default function App() {
       subscription.unsubscribe();
       document.removeEventListener('click', handleClickOutside);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -744,7 +743,7 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
-  const cristalOpacoSubmenuClass = "flex flex-col bg-white/10 backdrop-blur-md border border-white/20 py-6 px-8 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]"; 
+  const cristalOpacoSubmenuClass = "flex flex-col bg-black/90 backdrop-blur-xl border border-white/20 py-6 px-8 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]"; 
   const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-300";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
@@ -771,100 +770,6 @@ export default function App() {
     {name: 'Blanco Original', hex: '#ffffff'}, 
     {name: 'Negro', hex: '#111111'}
   ];
-
-  /* ------------------------------------------------------------------------------------------------ */
-  /* FUNCION DE TARJETA DE PRODUCTO CON CAMBIOS FORZADOS DE UI */
-  /* ------------------------------------------------------------------------------------------------ */
-  const renderProductoCard = (producto) => {
-    const tallasObj = parseTallasseguro(producto.tallas);
-    const isRing = producto.subcategoria === 'Anillos';
-    const selectedSizes = tallasSeleccionadas[producto.id] || [];
-    const canBuy = !isRing || selectedSizes.length > 0;
-
-    return (
-      <div key={producto.id} className="group relative flex flex-col p-6 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333', backgroundColor: 'transparent' }}>
-        
-        {/* ESTRELLA EN LA INTERSECCIÓN */}
-        <span className="absolute -bottom-[9px] -right-[8px] z-50 bg-black leading-none" style={{ fontSize: '16px', color: '#aaaaaa', padding: '0 2px' }}>✦</span>
-
-        <div className={`overflow-hidden aspect-square relative w-full mb-6 flex items-center justify-center ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
-          <img src={producto.imagen_url} alt={producto.titulo} loading="lazy" className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
-          
-          {producto.vendido && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-              <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
-            </div>
-          )}
-          
-          {userRole === 'admin' && (
-            <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20">
-              <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-              <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex flex-col flex-grow items-center text-center w-full">
-          <h4 style={{ fontSize: '13px' }} className="tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
-          <span style={{ fontSize: '13px' }} className="tracking-[0.1em] text-white font-light whitespace-nowrap mb-6 block">${producto.precio} USD</span>
-          
-          {!isRing && (
-            <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
-          )}
-
-          {isRing && (
-            <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
-              <div className="flex flex-wrap justify-center gap-2 w-full">
-                {tallasDisponibles.map(talla => {
-                  const stock = parseInt(tallasObj[talla] || 0);
-                  const isAvailable = stock > 0;
-                  const isSelected = selectedSizes.includes(talla);
-                  
-                  return (
-                    <div key={talla} className="flex flex-col items-center gap-1">
-                      <button 
-                        type="button"
-                        onClick={(e) => { 
-                          if (isAvailable) handleSelectTalla(e, producto.id, talla); 
-                        }}
-                        style={{ fontSize: '12px', padding: '2px', minWidth: '24px', height: '24px' }}
-                        className={`flex items-center justify-center tracking-[0.1em] transition-all duration-300 outline-none cursor-pointer ${isAvailable ? (isSelected ? 'bg-white text-black border border-white font-bold' : 'bg-transparent text-white border border-[#555555] hover:border-white') : 'border border-red-900/50 text-red-500 cursor-not-allowed opacity-50'}`}
-                      >
-                        {talla}
-                      </button>
-                      <span className={`text-[10px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-900'}`}>
-                        {stock === 0 ? '0' : stock}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          
-          <p style={{ color: '#ffffff', opacity: 1 }} className="text-[12px] line-clamp-2 leading-relaxed mb-6 break-words uppercase w-full">{producto.descripcion}</p>
-
-          {userRole === 'cliente' && !producto.vendido && (
-            <div className="flex flex-col sm:flex-row gap-2 mt-auto w-full z-30 justify-center">
-               <button 
-                 onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
-                 style={{ border: canBuy ? '1px solid #ffffff' : '1px solid #333333' }}
-                 className={`w-full sm:flex-grow py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors outline-none ${canBuy ? 'bg-transparent text-white hover:bg-white hover:text-black cursor-pointer' : 'bg-transparent text-[#555555] cursor-not-allowed'}`}
-               >
-                 {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
-               </button>
-               <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} style={{ border: '1px solid #333333' }} className="w-full sm:w-auto px-4 py-3 text-[#aaaaaa] hover:text-white transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
-            </div>
-          )}
-
-          {userRole === 'admin' && (
-            <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} style={{ border: '1px solid #555555' }} className={`w-full py-3 mt-auto text-[10px] font-bold tracking-[0.2em] uppercase transition-colors cursor-pointer outline-none z-30 ${producto.vendido ? 'bg-transparent text-[#555555] hover:text-white' : 'bg-transparent text-white hover:border-white'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
-          )}
-        </div>
-      </div>
-    );
-  };
-  /* ------------------------------------------------------------------------------------------------ */
 
   return (
     <div className="bg-black text-white min-h-screen flex flex-col relative w-full overflow-x-hidden overflow-y-auto" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
@@ -1081,6 +986,7 @@ export default function App() {
             </div>
           )}
 
+          {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
           {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
                <h2 className="text-[13px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words px-4">{activeCategory}</h2>
@@ -1209,7 +1115,94 @@ export default function App() {
 
                <div className="w-full px-4 sm:px-0">
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 w-full" style={{ borderTop: '1px solid #333333', borderLeft: '1px solid #333333' }}>
-                   {productosMostrar.map(producto => renderProductoCard(producto))}
+                   {productosMostrar.map(producto => {
+                     const tallasObj = parseTallasseguro(producto.tallas);
+                     const isRing = producto.subcategoria === 'Anillos';
+                     const selectedSizes = tallasSeleccionadas[producto.id] || [];
+                     const canBuy = !isRing || selectedSizes.length > 0;
+
+                     return (
+                       <div key={producto.id} className="group relative bg-transparent flex flex-col p-6 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333' }}>
+                         
+                         <span className="absolute -bottom-[11px] -right-[9px] text-[18px] text-[#aaaaaa] z-50 bg-black leading-none px-1">✦</span>
+
+                         <div className={`overflow-hidden aspect-square relative w-full mb-6 flex items-center justify-center ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
+                           <img src={producto.imagen_url} alt={producto.titulo} loading="lazy" className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                           
+                           {producto.vendido && (
+                             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                               <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
+                             </div>
+                           )}
+                           
+                           {userRole === 'admin' && (
+                             <div className="absolute top-2 right-2 md:top-4 md:right-4 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20">
+                               <button onClick={(e) => { e.stopPropagation(); prepararEdicion(producto); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-white/80"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                               <button onClick={(e) => { e.stopPropagation(); handleBorrarLocal(producto.id); }} className="bg-black/80 backdrop-blur-md p-2 text-white border border-white/10 rounded-full cursor-pointer hover:text-red-500"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                             </div>
+                           )}
+                         </div>
+                         
+                         <div className="flex flex-col flex-grow items-center text-center w-full">
+                           <h4 style={{ fontSize: '13px' }} className="tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full">{producto.titulo}</h4>
+                           <span style={{ fontSize: '13px' }} className="tracking-[0.1em] text-white font-light whitespace-nowrap mb-6 block">${producto.precio} USD</span>
+                           
+                           {!isRing && (
+                             <p className="text-[8px] tracking-[0.2em] text-gray-400 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
+                           )}
+
+                           {isRing && (
+                             <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
+                               <div className="flex flex-wrap justify-center gap-2 w-full">
+                                 {tallasDisponibles.map(talla => {
+                                   const stock = parseInt(tallasObj[talla] || 0);
+                                   const isAvailable = stock > 0;
+                                   const isSelected = selectedSizes.includes(talla);
+                                   
+                                   return (
+                                     <div key={talla} className="flex flex-col items-center gap-1">
+                                       <button 
+                                         type="button"
+                                         onClick={(e) => { 
+                                           if (isAvailable) handleSelectTalla(e, producto.id, talla); 
+                                         }}
+                                         style={{ fontSize: '12px', padding: '2px', minWidth: '24px', height: '24px' }}
+                                         className={`flex items-center justify-center tracking-[0.1em] transition-all duration-300 outline-none cursor-pointer ${isAvailable ? (isSelected ? 'bg-white text-black border border-white font-bold' : 'bg-transparent text-white border border-[#555555] hover:border-white') : 'border border-red-900/50 text-red-500 cursor-not-allowed opacity-50'}`}
+                                       >
+                                         {talla}
+                                       </button>
+                                       <span className={`text-[10px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-400' : 'text-red-900'}`}>
+                                         {stock === 0 ? '0' : stock}
+                                       </span>
+                                     </div>
+                                   );
+                                 })}
+                               </div>
+                             </div>
+                           )}
+                           
+                           <p style={{ color: '#ffffff', opacity: 1 }} className="text-[12px] line-clamp-2 leading-relaxed mb-6 break-words uppercase w-full">{producto.descripcion}</p>
+
+                           {userRole === 'cliente' && !producto.vendido && (
+                             <div className="flex flex-col sm:flex-row gap-2 mt-auto w-full z-30 justify-center">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); if(canBuy) agregarAlCarrito(producto, e); }} 
+                                  style={{ border: canBuy ? '1px solid #ffffff' : '1px solid #333333' }}
+                                  className={`w-full sm:flex-grow py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors outline-none ${canBuy ? 'bg-transparent text-white hover:bg-white hover:text-black cursor-pointer' : 'bg-transparent text-[#555555] cursor-not-allowed'}`}
+                                >
+                                  {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} style={{ border: '1px solid #333333' }} className="w-full sm:w-auto px-4 py-3 text-[#aaaaaa] hover:text-white transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none">{favoritos.includes(producto.id) ? '♥' : '♡'}</button>
+                             </div>
+                           )}
+
+                           {userRole === 'admin' && (
+                             <button onClick={(e) => handleToggleVendidoAdmin(e, producto)} style={{ border: '1px solid #555555' }} className={`w-full py-3 mt-auto text-[10px] font-bold tracking-[0.2em] uppercase transition-colors cursor-pointer outline-none z-30 ${producto.vendido ? 'bg-transparent text-[#555555] hover:text-white hover:border-white' : 'bg-transparent text-white hover:border-white'}`}>{producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}</button>
+                           )}
+                         </div>
+                       </div>
+                     );
+                   })}
                    {productosMostrar.length === 0 && (
                       <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] col-span-full text-center py-10 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333' }}>No hay piezas en esta categoría aún.</p>
                    )}
@@ -1361,7 +1354,7 @@ export default function App() {
                          <div className="absolute top-full left-0 w-full pt-1 z-[300]">
                            <div className="bg-black border border-[#333333] w-full flex flex-col gap-4 py-4 shadow-2xl rounded-sm">
                              {['Sr.', 'Sra.', 'Srta.', 'Prefiero no decirlo'].map(t => (
-                               <div key={t} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-[#aaaaaa] hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
+                               <div key={t} onClick={(e) => { e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPerfilForm({...perfilForm, tratamiento: t}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.1em] text-[#aaaaaa] hover:text-white cursor-pointer text-center transition-colors uppercase w-full">{t}</div>
                              ))}
                            </div>
                          </div>
@@ -1615,108 +1608,405 @@ export default function App() {
             </section>
           )}
 
+          {/* INVENTARIO */}
+          {userRole === 'admin' && activeView === 'inventario' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
+              
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
+                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
+                <div className="min-w-[800px]">
+                  <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                    <div className="col-span-2 text-left">Pieza</div>
+                    <div>Talla</div>
+                    <div>Stock</div>
+                    <div>Costo</div>
+                    <div>Precio</div>
+                    <div>Ganancia Potencial</div>
+                  </div>
+                  {productos.reduce((acc, p) => {
+                    if (!p.vendido) {
+                      if (p.subcategoria === 'Anillos') {
+                        const tallasObj = parseTallasseguro(p.tallas);
+                        const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
+                        activeTallas.forEach(([talla, cantidad]) => {
+                          acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad) });
+                        });
+                      } else {
+                        const disp = parseInt(p.disponibilidad);
+                        if (!isNaN(disp) && disp > 0) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: disp });
+                        else if (isNaN(disp)) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: p.disponibilidad });
+                      }
+                    }
+                    return acc;
+                  }, []).map((item, idx) => {
+                    const costo = parseFloat(item.costo) || 0;
+                    const precio = parseFloat(item.precio) || 0;
+                    const stockNum = parseInt(item.stock_especifico);
+                    const ganancia = !isNaN(stockNum) ? (precio - costo) * stockNum : 0;
+                    
+                    return (
+                      <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                        <div className="col-span-2 flex items-center gap-4 text-left">
+                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
+                          <div className="flex flex-col truncate">
+                            <span className="uppercase truncate">{item.titulo}</span>
+                            <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                          </div>
+                        </div>
+                        <div className="text-white font-bold">{item.talla_especifica}</div>
+                        <div className="text-white">{item.stock_especifico}</div>
+                        <div className="text-gray-400">${costo.toFixed(2)}</div>
+                        <div className="text-white font-bold">${precio.toFixed(2)}</div>
+                        <div className="text-green-400">{ganancia > 0 ? `+$${ganancia.toFixed(2)}` : 'N/A'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
+                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
+                <div className="min-w-[800px]">
+                  <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+                    <div className="col-span-2 text-left">Pieza Vendida</div>
+                    <div>Talla</div>
+                    <div>Costo</div>
+                    <div>Precio Venta</div>
+                    <div>Ganancia Neta</div>
+                  </div>
+                  {(() => {
+                    const ventasDesglosadas = [];
+                    listaPedidos.filter(ped => ped.estado === 'Completado').forEach(ped => {
+                      const items = JSON.parse(ped.productos || '[]');
+                      items.forEach(item => {
+                        const qty = parseInt(item.cantidad) || 1;
+                        for (let i = 0; i < qty; i++) {
+                          ventasDesglosadas.push({
+                            id: item.id,
+                            titulo: item.titulo,
+                            categoria: item.categoria,
+                            subcategoria: item.subcategoria,
+                            imagen_url: item.imagen_url,
+                            talla_especifica: item.tallaSeleccionada || 'N/A',
+                            costo: parseFloat(item.costo) || 0,
+                            precio: parseFloat(item.precio) || 0
+                          });
+                        }
+                      });
+                    });
+
+                    return ventasDesglosadas.map((item, idx) => {
+                      const ganancia = item.precio - item.costo;
+                      return (
+                        <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
+                          <div className="col-span-2 flex items-center gap-4 text-left">
+                            <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
+                            <div className="flex flex-col truncate">
+                              <span className="uppercase truncate text-gray-300">{item.titulo}</span>
+                              <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
+                            </div>
+                          </div>
+                          <div className="text-white font-bold">{item.talla_especifica}</div>
+                          <div className="text-gray-400">${item.costo.toFixed(2)}</div>
+                          <div className="text-white font-bold">${item.precio.toFixed(2)}</div>
+                          <div className="text-green-400 font-bold">+${ganancia.toFixed(2)}</div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* PEDIDOS */}
+          {activeView === 'pedidos' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
+                {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
+              </h2>
+              
+              {userRole === 'admin' ? (
+                <div className="flex flex-col gap-6 w-full">
+                  {(() => {
+                    const groupedOrdersByMonth = listaPedidos.reduce((acc, pedido) => {
+                      let dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
+                      const month = dateObj.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+                      if (!acc[month]) acc[month] = [];
+                      acc[month].push(pedido);
+                      return acc;
+                    }, {});
+
+                    return Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
+                      const sortedMonthPedidos = [...(monthPedidos as any[])].sort((a,b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+                      const userGroups = {};
+                      
+                      sortedMonthPedidos.forEach(ped => {
+                        const clientKey = `${ped.cliente_nombre}|${ped.cliente_telefono}`;
+                        if(!userGroups[clientKey]) userGroups[clientKey] = [];
+                        userGroups[clientKey].push({...ped, orderNumber: (userGroups[clientKey].length + 1).toString().padStart(3, '0')});
+                      });
+
+                      return (
+                        <div key={month} className="mb-12 w-full">
+                          <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
+                          <div className="flex flex-col gap-6">
+                            {Object.entries(userGroups).map(([clientKey, clientPedidos]: [string, any]) => {
+                               const [nombre, telefono] = clientKey.split('|');
+                               const expandKey = `${month}-${clientKey}`;
+                               const isExpanded = pedidoExpandido === expandKey;
+                               
+                               return (
+                                 <div key={clientKey} className="bg-black/30 backdrop-blur-xl p-4 md:p-6 shadow-2xl rounded-sm border border-white/5 w-full">
+                                     <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
+                                        <div className="flex items-center gap-4">
+                                           <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-lg rounded-full uppercase">{nombre.charAt(0)}</div>
+                                           <div>
+                                             <p className="text-white text-[10px] tracking-[0.1em] uppercase font-bold">{nombre}</p>
+                                             <p className="text-gray-400 text-[8px] tracking-[0.1em] mt-1">📞 {telefono}</p>
+                                           </div>
+                                        </div>
+                                        <div className="text-right text-gray-400 text-[8px] tracking-[0.2em] uppercase">
+                                           {clientPedidos.length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
+                                        </div>
+                                     </div>
+
+                                     {isExpanded && (
+                                        <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
+                                           {[...clientPedidos].reverse().map(pedido => (
+                                              <div key={pedido.id} className="bg-black/20 p-4 border border-white/5">
+                                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/5 pb-2 gap-2 sm:gap-0">
+                                                    <span className="text-white font-bold text-[10px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
+                                                    <span className={`text-[8px] md:text-[10px] px-3 py-1 font-bold uppercase tracking-[0.1em] text-center w-fit ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
+                                                      {pedido.estado}
+                                                    </span>
+                                                 </div>
+                                                 
+                                                 <div className="space-y-2 mb-4">
+                                                   {(JSON.parse(pedido.productos) as any[]).map((prod, i) => (
+                                                     <div key={i} className="flex justify-between text-[10px] text-gray-300">
+                                                       <span className="truncate pr-2">{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
+                                                       <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
+                                                     </div>
+                                                   ))}
+                                                   <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[10px] font-bold text-white">
+                                                     <span>Envío:</span>
+                                                     <span>${parseFloat(pedido.total_envio).toFixed(2)}</span>
+                                                   </div>
+                                                 </div>
+
+                                                 {pedido.link_maps && (
+                                                   <div className="pt-2 text-[10px] text-blue-400 mb-2">
+                                                     <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
+                                                   </div>
+                                                 )}
+
+                                                 {pedido.comprobante_url && (
+                                                   <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[10px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
+                                                 )}
+
+                                                 {pedido.estado === 'En progreso' && (
+                                                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 pt-4 border-t border-white/5">
+                                                     <button onClick={() => completarPedido(pedido)} className="w-full sm:flex-grow py-3 bg-white text-black text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
+                                                       Completar (Descuenta Stock)
+                                                     </button>
+                                                     <button onClick={() => cancelarPedido(pedido.id)} className="w-full sm:w-auto py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
+                                                       Cancelar
+                                                     </button>
+                                                   </div>
+                                                 )}
+                                              </div>
+                                           ))}
+                                        </div>
+                                     )}
+                                 </div>
+                               )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    });
+                  })()}
+                  {listaPedidos.length === 0 && <p className="text-gray-500 text-center text-[10px] uppercase">No hay pedidos registrados.</p>}
+                </div>
+              ) : (
+                <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm w-full">
+                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* PRÊT-À-PORTER */}
+          {user && activeView === 'categoria' && activeCategory === 'Prêt-à-Porter' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-6 break-words">Prêt-à-Porter Personalizado</h2>
+              
+              <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start w-full">
+                 
+                 {/* Visualizador Programático (Canvas Render) */}
+                 <div className="w-full lg:w-1/2 flex flex-col gap-4">
+                     <div className="flex justify-center gap-4 mb-2">
+                       <button type="button" onClick={() => { setCustomView('frente'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'frente' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Frente</button>
+                       <button type="button" onClick={() => { setCustomView('espalda'); setSizeOffset(0); setYOffset(0); }} className={`px-6 py-2 text-[10px] tracking-[0.2em] uppercase transition-colors outline-none cursor-pointer border ${customVista === 'espalda' ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-gray-500 hover:text-white'}`}>Espalda</button>
+                     </div>
+                     <div className="w-full relative bg-transparent backdrop-blur-[30px] aspect-[3/4] flex items-center justify-center overflow-hidden group shadow-2xl border-none">
+                       <img 
+                          src={customRenderedImage || getMockupUrl(customPrenda, customVista)} 
+                          alt="Renderizado Prêt-à-Porter" 
+                          className="w-full h-full object-contain z-10 transition-opacity duration-300" 
+                       />
+                       {!customRenderedImage && <p className="absolute text-[10px] text-gray-600 uppercase tracking-[0.2em] z-50">Cargando Lienzo...</p>}
+                     </div>
+                 </div>
+
+                 {/* Controles de Configuración Sartorial */}
+                 <div className="w-full lg:w-1/2 flex flex-col gap-10">
+
+                   {/* Selector de Prenda Base */}
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">1. Seleccione la Prenda</p>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                       {['Camiseta', 'Buso', 'Hoodie', 'Capucha'].map(prenda => (
+                         <button 
+                           key={prenda}
+                           type="button" 
+                           onClick={() => setCustomPrenda(prenda)} 
+                           className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPrenda === prenda ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/20 hover:text-white hover:border-white/50'}`}
+                         >
+                           {prenda}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+                   
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">2. Tono de Prenda</p>
+                     <div className="flex gap-4 flex-wrap items-center">
+                       {coloresPredeterminados.map(color => (
+                         <div 
+                           key={color.name} 
+                           onClick={() => setCustomColor(color.hex)} 
+                           className={`w-10 h-10 cursor-pointer rounded-full border-2 transition-transform ${customColor === color.hex ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`} 
+                           style={{ backgroundColor: color.hex, boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
+                           title={color.name}
+                         />
+                       ))}
+                       {/* Selector de gama libre de colores (Gradiente circular) */}
+                       <label 
+                         className={`relative w-10 h-10 cursor-pointer rounded-full border-2 transition-transform flex items-center justify-center overflow-hidden ${!coloresPredeterminados.map(c=>c.hex).includes(customColor) ? 'border-white scale-110' : 'border-transparent hover:scale-110'}`}
+                         style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
+                         title="Elegir otro color"
+                       >
+                         <input 
+                           type="color" 
+                           value={customColor}
+                           onChange={(e) => setCustomColor(e.target.value)}
+                           className="absolute opacity-0 w-full h-full cursor-pointer"
+                         />
+                       </label>
+                     </div>
+                   </div>
+
+                   <div className="flex flex-col gap-4">
+                     <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">3. Insignia Personal</p>
+                     <div className="flex flex-col gap-2">
+                       <input 
+                         type="file" 
+                         accept="image/*"
+                         onChange={procesarInsigniaLogotipo}
+                         className="text-[10px] text-gray-500 file:mr-4 file:py-3 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full"
+                       />
+                       {isRemovingBg && <p className="text-[8px] text-blue-400 tracking-[0.1em] uppercase animate-pulse mt-2">Procesando transparencia y renderizando...</p>}
+                     </div>
+                   </div>
+
+                   {customLogo && (
+                     <div className="flex flex-col gap-4 animate-fade-in">
+                       <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">4. Ubicación ({customVista})</p>
+                       <div className="grid grid-cols-2 gap-4">
+                         {customVista === 'frente' ? (
+                           <>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-izq'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-izq' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Izquierdo</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-der'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'pecho-der' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Derecho</button>
+                             <button type="button" onClick={() => { setCustomPlacement('pecho-sup-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'pecho-sup-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Pecho Sup. Centro</button>
+                             <button type="button" onClick={() => { setCustomPlacement('centro-pecho'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border col-span-2 ${customPlacement === 'centro-pecho' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Pecho</button>
+                           </>
+                         ) : (
+                           <>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-sup'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-sup' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Espalda Superior</button>
+                             <button type="button" onClick={() => { setCustomPlacement('espalda-centro'); setSizeOffset(0); setYOffset(0); }} className={`py-3 px-2 text-[8px] md:text-[10px] tracking-[0.1em] uppercase transition-colors cursor-pointer outline-none border ${customPlacement === 'espalda-centro' ? 'bg-white/10 text-white border-white/30' : 'bg-transparent text-gray-500 border-white/10 hover:text-white hover:border-white/30'}`}>Centro Espalda</button>
+                           </>
+                         )}
+                       </div>
+
+                       <div className="flex flex-col gap-4 mt-2">
+                         <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold uppercase">5. Ajuste Fino</p>
+                         <div className="flex gap-8">
+                           <div className="flex flex-col items-center gap-2">
+                             <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Tamaño</span>
+                             <div className="flex gap-2">
+                               <button type="button" onClick={() => setSizeOffset(s => s - 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">-</button>
+                               <button type="button" onClick={() => setSizeOffset(s => s + 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-lg font-bold outline-none">+</button>
+                             </div>
+                           </div>
+                           <div className="flex flex-col items-center gap-2">
+                             <span className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">Posición Vertical</span>
+                             <div className="flex gap-2">
+                               <button type="button" onClick={() => setYOffset(y => y - 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▲</button>
+                               <button type="button" onClick={() => setYOffset(y => y + 5)} className="w-10 h-10 flex items-center justify-center bg-transparent border border-white/20 text-white hover:bg-white/10 cursor-pointer text-sm font-bold outline-none">▼</button>
+                             </div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
+                     <div className="flex justify-between items-end">
+                        <span className="text-[14px] text-white tracking-[0.2em] font-light">VALOR A MEDIDA</span>
+                        <span className="text-[18px] text-white font-bold tracking-[0.1em]">${getCalculatedPrice()} USD</span>
+                     </div>
+                     <button 
+                       onClick={handleCustomAddToCart}
+                       className="w-full bg-white text-black text-[10px] font-bold tracking-[0.3em] uppercase py-5 hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl"
+                     >
+                       Añadir Diseño al Bolso
+                     </button>
+                   </div>
+
+                 </div>
+              </div>
+            </section>
+          )}
+
         </main>
         
-        <footer className="bg-black py-12 text-center text-[#666666] text-[10px] tracking-[0.3em] uppercase w-full">
+        <footer className="bg-black py-12 text-center text-[#666666] text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
           &copy; {new Date().getFullYear()} ANTARES. Elegancia Atemporal.
         </footer>
       </div>
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* MODAL DEL PRODUCTO PARA CLIC EN MÓVIL/PC */}
-      {productoSeleccionado && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => {setProductoSeleccionado(null); setTallasSeleccionadasModal([]);}}>
-          <div className="w-full max-w-md md:max-w-4xl flex flex-col md:flex-row relative shadow-2xl border border-[#333333] rounded-none bg-[#0a0a0a] max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <button onClick={() => {setProductoSeleccionado(null); setTallasSeleccionadasModal([]);}} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
-            <div className="w-full md:w-1/2 p-6 flex flex-col justify-center min-h-[300px]">
-              <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain" />
-            </div>
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-[#0a0a0a] border-t md:border-t-0 md:border-l border-[#333333]">
-              <h2 className="text-[14px] md:text-[16px] tracking-[0.2em] uppercase text-white mb-2">{productoSeleccionado.titulo}</h2>
-              <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8">${productoSeleccionado.precio} USD</p>
-              
-              {productoSeleccionado.subcategoria !== 'Anillos' && (
-                <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
-                  {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
-                </p>
-              )}
-
-              {productoSeleccionado.subcategoria === 'Anillos' && (() => {
-                 const modalTallasObj = typeof productoSeleccionado.tallas === 'string' ? JSON.parse(productoSeleccionado.tallas || '{}') : (productoSeleccionado.tallas || {});
-                 const modalCanBuy = tallasSeleccionadasModal.length > 0;
-
-                 return (
-                 <div className="flex flex-col items-center w-full mb-10 mt-2">
-                   <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
-                   <div className="flex flex-wrap justify-center gap-4">
-                     {tallasDisponibles.map(talla => {
-                       const stock = parseInt(modalTallasObj[talla] || 0);
-                       const isAvailable = stock > 0;
-                       const isSelected = tallasSeleccionadasModal.includes(talla);
-                       
-                       return (
-                         <div key={talla} className="flex flex-col items-center gap-2">
-                           <button 
-                             type="button"
-                             onClick={(e) => { 
-                               e.preventDefault(); e.stopPropagation(); 
-                               if(isAvailable) handleSelectTallaModal(e, talla); 
-                             }}
-                             className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-[#555555] hover:border-white cursor-pointer') : 'border-red-900/50 text-red-500 cursor-not-allowed'}`}
-                           >
-                             <span>{talla}</span>
-                           </button>
-                           <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-[#aaaaaa]' : 'text-red-900'}`}>
-                             {stock}
-                           </span>
-                         </div>
-                       );
-                     })}
-                   </div>
-
-                   {userRole === 'cliente' && !productoSeleccionado.vendido && (
-                     <div className="flex gap-4 mt-12 w-full justify-center">
-                       <button 
-                         onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
-                         className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#555555] cursor-not-allowed'}`}
-                       >
-                         {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
-                       </button>
-                     </div>
-                   )}
-                 </div>
-                 );
-              })()}
-
-              <p className="text-[12px] leading-loose mb-8 uppercase tracking-[0.1em] text-gray-300 w-full" style={{ color: '#ffffff' }}>
-                {productoSeleccionado.descripcion}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL EMERGENTE DE ADMINISTRADOR - AÑADIR/EDITAR PRODUCTO CON FONDO CRISTAL BORROSO */}
       {userRole === 'admin' && showInlineForm && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
           <form onSubmit={handlePublicarLocal} className="p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-none my-8" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(40px)' }}>
-            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-6 text-gray-400 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50">×</button>
             <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-8 text-center drop-shadow-md font-bold">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-              <div className="mb-8 flex justify-center bg-transparent p-0">
-                <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
+              <div className="mb-4 flex justify-center bg-transparent p-0">
+                <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-32 sm:h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
               </div>
             )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center w-full">
               <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors" required />
-              
               <div className="w-full relative">
                 <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/30 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
-
               <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
               
               {nuevaPieza.subcategoria !== 'Anillos' && (
@@ -1725,16 +2015,12 @@ export default function App() {
               
               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
                 <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                  <div 
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
-                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
-                    className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white transition-colors uppercase"
-                  >
+                  <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} className="w-full bg-transparent border-b border-white/30 text-gray-300 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
                     {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
                   </div>
                   {openFormSelect === 'subcat' && (
                     <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20 max-h-48 overflow-y-auto">
+                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-[#333333] max-h-48 overflow-y-auto">
                         <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
                         {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                           <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
@@ -1747,16 +2033,12 @@ export default function App() {
 
               {activeCategory === 'Acero Fino' && (
                 <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                  <div 
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
-                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
-                    className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white transition-colors uppercase"
-                  >
+                  <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} className="w-full bg-transparent border-b border-white/30 text-gray-300 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
                     {nuevaPieza.color || 'COLOR (OPCIONAL)'}
                   </div>
                   {openFormSelect === 'color' && (
                     <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20">
+                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/10">
                         <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
                         {['Silver', 'Gold', 'Black'].map(c => (
                           <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
@@ -1805,76 +2087,6 @@ export default function App() {
           </form>
         </div>
       )}
-
-      {/* IMPRESION PDF */}
-      <div className="hidden print-only w-full min-h-screen font-serif pb-20" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-        <header className="w-full flex flex-col items-center mt-0 relative pt-10 pb-6 mb-16 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
-          <img src={LOGO_URL} alt="ANTARES" className="h-24 w-auto object-contain z-10" />
-        </header>
-
-        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
-          const piezasDeCategoria = productos.filter(p => p.categoria === cat);
-          const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
-
-          return (
-            <div key={cat} className="mb-24 page-break-after px-10" style={{ backgroundColor: '#000000' }}>
-              <h3 className="text-xl tracking-[0.3em] uppercase mb-2 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
-              <h2 className="text-4xl tracking-[0.2em] uppercase mb-16 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
-              
-              {piezasDeCategoria.length > 0 ? (
-                <div className="grid grid-cols-2 gap-12">
-                  {piezasDeCategoria.map(p => (
-                    <div key={p.id} className="flex flex-col items-center text-center relative border p-4 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: '#000000' }}>
-                      <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
-                        <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
-                        
-                        {p.vendido && (
-                          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                            <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
-                          </div>
-                        )}
-                      </div>
-                      <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
-                      <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
-                      
-                      {p.subcategoria === 'Anillos' ? (
-                        <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
-                           {tallasDisponibles.map(t => {
-                             const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
-                             const isAvailable = stock > 0;
-                             return (
-                               <div key={t} className="flex flex-col items-center gap-1">
-                                 <div style={{
-                                   border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.3)' : 'rgba(255,0,0,0.2)'}`,
-                                   color: isAvailable ? '#ffffff' : '#ff0000',
-                                   width: '40px', height: '40px',
-                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                   fontSize: '19px', fontWeight: 'bold'
-                                 }}>
-                                   {t}
-                                 </div>
-                                 <span style={{ fontSize: '18px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
-                                   {stock}
-                                 </span>
-                               </div>
-                             );
-                           })}
-                        </div>
-                      ) : (
-                        <div style={{ height: '16px', marginBottom: '16px' }}></div> 
-                      )}
-
-                      <p className="text-[12px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#888888' }}>{p.descripcion}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
-              )}
-            </div>
-          )
-        })}
-      </div>
 
     </div>
   );
