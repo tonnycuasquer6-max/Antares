@@ -28,7 +28,7 @@ export default function App() {
   const [activeSubCategory, setActiveSubCategory] = useState('Todo');
   
   const [showInlineForm, setShowInlineForm] = useState(false);
-  
+  const [showMedidasView, setShowMedidasView] = useState(false);
   const [medidasAnillo, setMedidasAnillo] = useState({
     pulgar_izq: '', indice_izq: '', medio_izq: '', anular_izq: '', menique_izq: '',
     pulgar_der: '', indice_der: '', medio_der: '', anular_der: '', menique_der: ''
@@ -43,7 +43,7 @@ export default function App() {
     // Especiales
     tiro_total: '', altura_tiro: '', caida_hombro: '', contorno_sisa: '', largo_hombro: '', profundidad_escote: ''
   });
-  const [subVistaMedidas, setSubVistaMedidas] = useState('anillo');
+  const [tabMedidas, setTabMedidas] = useState('manos'); // 'manos' o 'cuerpo'
   const [editandoId, setEditandoId] = useState(null);
   
   const [nuevaPieza, setNuevaPieza] = useState({ 
@@ -138,10 +138,10 @@ export default function App() {
     if (data && data.menus_ocultos) setHiddenItems(data.menus_ocultos);
   };
 
-  const fetchPedidosAdmin = useCallback(async () => {
+  const fetchPedidosAdmin = async () => {
     const { data } = await supabase.from('pedidos').select('*').order('id', { ascending: false });
     if (data) setListaPedidos(data);
-  }, []);
+  };
 
   useEffect(() => {
     fetchProductos();
@@ -149,6 +149,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => handleUserSession(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => handleUserSession(session?.user ?? null));
     
+    // CERRAR MENÚS AL TOCAR FUERA (SOPORTE TÁCTIL)
     const handleClickOutside = () => {
       setMenuAbierto(null);
       setUserMenuAbierto(false);
@@ -162,13 +163,14 @@ export default function App() {
       subscription.unsubscribe();
       document.removeEventListener('click', handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (userRole === 'admin' && (activeView === 'pedidos' || activeView === 'inventario')) {
       fetchPedidosAdmin();
     }
-  }, [userRole, activeView, fetchPedidosAdmin]);
+  }, [userRole, activeView]);
 
   const handleUserSession = (currentUser) => {
     setUser(currentUser);
@@ -742,7 +744,7 @@ export default function App() {
   };
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
-  const cristalOpacoSubmenuClass = "flex flex-col bg-black/90 backdrop-blur-xl border border-[#333333] py-6 px-8 shadow-2xl z-50"; 
+  const cristalOpacoSubmenuClass = "flex flex-col bg-white/10 backdrop-blur-md border border-white/20 py-6 px-8 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]"; 
   const menuUnderlineClass = "absolute bottom-0 h-px bg-white transition-all duration-300";
 
   let productosMostrar = productos.filter(p => p.categoria === activeCategory && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
@@ -771,7 +773,7 @@ export default function App() {
   ];
 
   /* ------------------------------------------------------------------------------------------------ */
-  /* FUNCION DE TARJETA DE PRODUCTO */
+  /* FUNCION DE TARJETA DE PRODUCTO CON CAMBIOS FORZADOS DE UI */
   /* ------------------------------------------------------------------------------------------------ */
   const renderProductoCard = (producto) => {
     const tallasObj = parseTallasseguro(producto.tallas);
@@ -780,10 +782,10 @@ export default function App() {
     const canBuy = !isRing || selectedSizes.length > 0;
 
     return (
-      <div key={producto.id} className="group relative bg-transparent flex flex-col p-6 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333' }}>
+      <div key={producto.id} className="group relative flex flex-col p-6 w-full" style={{ borderRight: '1px solid #333333', borderBottom: '1px solid #333333', backgroundColor: 'transparent' }}>
         
         {/* ESTRELLA EN LA INTERSECCIÓN */}
-        <span className="absolute -bottom-[11px] -right-[9px] text-[18px] text-[#aaaaaa] z-50 bg-black leading-none px-1">✦</span>
+        <span className="absolute -bottom-[9px] -right-[8px] z-50 bg-black leading-none" style={{ fontSize: '16px', color: '#aaaaaa', padding: '0 2px' }}>✦</span>
 
         <div className={`overflow-hidden aspect-square relative w-full mb-6 flex items-center justify-center ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
           <img src={producto.imagen_url} alt={producto.titulo} loading="lazy" className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
@@ -826,7 +828,7 @@ export default function App() {
                           if (isAvailable) handleSelectTalla(e, producto.id, talla); 
                         }}
                         style={{ fontSize: '12px', padding: '2px', minWidth: '24px', height: '24px' }}
-                        className={`flex items-center justify-center tracking-[0.1em] transition-all duration-300 outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border border-white font-bold cursor-pointer' : 'bg-transparent text-white border border-[#555555] hover:border-white cursor-pointer') : 'border border-red-900/50 text-red-500 cursor-not-allowed opacity-50'}`}
+                        className={`flex items-center justify-center tracking-[0.1em] transition-all duration-300 outline-none cursor-pointer ${isAvailable ? (isSelected ? 'bg-white text-black border border-white font-bold' : 'bg-transparent text-white border border-[#555555] hover:border-white') : 'border border-red-900/50 text-red-500 cursor-not-allowed opacity-50'}`}
                       >
                         {talla}
                       </button>
@@ -890,7 +892,7 @@ export default function App() {
       ))}
 
       <div className="screen-only flex flex-col flex-grow w-full">
-        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 md:px-0" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
+        <header className="w-full h-auto flex flex-col items-center bg-cover bg-center mt-0 relative z-[100] pt-3 px-4 sm:px-6 md:px-8" style={{ backgroundImage: `url(${FONDO_HEADER_URL})` }}>
           
           {user && activeView !== 'home' && (
             <button onClick={() => setActiveView('home')} className="absolute top-6 left-4 md:left-12 flex items-center gap-1.5 text-white hover:text-gray-400 transition-colors cursor-pointer bg-transparent border-none outline-none z-50 text-[10px] md:text-xs tracking-[0.2em] uppercase" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
@@ -1053,13 +1055,13 @@ export default function App() {
                    Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
                  </p>
                </section>
-               <section className="w-full max-w-5xl mx-auto py-12 md:py-20 text-center">
+               <section className="w-full max-w-5xl mx-auto py-12 md:py-20 px-4 md:px-6 text-center">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-8 md:mb-10">Sobre Nosotros</h3>
                  <p className="text-white text-base md:text-2xl leading-relaxed max-w-3xl mx-auto font-light">
                    "Fundada con la visión de redefinir el lujo contemporáneo, Antares fusiona la artesanía tradicional con una estética vanguardista. Cada una de nuestras piezas cuenta una historia de meticulosa atención al detalle y pasión inquebrantable por la perfección."
                  </p>
                </section>
-               <section className="w-full max-w-6xl mx-auto py-16 md:py-24">
+               <section className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4 md:px-6">
                  <h3 className="text-sm md:text-lg tracking-[0.3em] uppercase text-gray-500 mb-10 md:mb-16 text-center">Nuestros Servicios</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 text-center">
                    <div onClick={() => !user ? setShowLoginModal(true) : irACategoria('Sastrería a Medida')} className="p-8 md:p-10 bg-[#111] hover:bg-[#1a1a1a] transition-colors duration-500 cursor-pointer">
@@ -1079,7 +1081,6 @@ export default function App() {
             </div>
           )}
 
-          {/* OTRAS CATEGORIAS NORMALES (INCLUIDO SARTORIAL) */}
           {user && activeView === 'categoria' && activeCategory !== 'Prêt-à-Porter' && (
             <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-7xl">
                <h2 className="text-[13px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words px-4">{activeCategory}</h2>
@@ -1092,6 +1093,112 @@ export default function App() {
                      </li>
                    ))}
                  </ul>
+               )}
+
+               {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                 <div className="w-full max-w-3xl mx-auto mb-10 flex flex-col items-center relative z-[150]">
+                    <p className="text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-6 uppercase">Ordenar Por</p>
+                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 w-full text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
+                       
+                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                          <div 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'color' ? null : 'color'); }} 
+                            className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                          >
+                            Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
+                          </div>
+                          {openFilter === 'color' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10">
+                                 {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
+                                   <span 
+                                     key={opt} 
+                                     onClick={(e) => { e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
+                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroColor(opt); setOpenFilter(null); }} 
+                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                   >
+                                     {opt === 'Todo' ? 'Todos' : opt}
+                                   </span>
+                                 ))}
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                       
+                       {['Todo', 'Anillos'].includes(activeSubCategory) && (
+                         <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                            <div 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
+                              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'talla' ? null : 'talla'); }} 
+                              className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                            >
+                              Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
+                            </div>
+                            {openFilter === 'talla' && (
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px]">
+                                 <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10 max-h-64 overflow-y-auto">
+                                   <span 
+                                     onClick={(e) => { e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
+                                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla('Todo'); setOpenFilter(null); }} 
+                                     className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                   >
+                                     Todas
+                                   </span>
+                                   {tallasDisponibles.map(t => (
+                                     <span 
+                                       key={t} 
+                                       onClick={(e) => { e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
+                                       onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setFiltroTalla(t); setOpenFilter(null); }} 
+                                       className={`cursor-pointer transition-colors w-full text-center py-2 ${filtroTalla === t ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                     >
+                                       {t}
+                                     </span>
+                                   ))}
+                                 </div>
+                              </div>
+                            )}
+                         </div>
+                       )}
+
+                       <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+                          <div 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFilter(openFilter === 'precio' ? null : 'precio'); }} 
+                            className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}
+                          >
+                            Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
+                          </div>
+                          {openFilter === 'precio' && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[160px]">
+                               <div className="bg-black/90 backdrop-blur-xl flex flex-col items-center gap-4 py-4 shadow-2xl border border-white/10">
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio(''); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Normal
+                                 </span>
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Asc'); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Menor a Mayor
+                                 </span>
+                                 <span 
+                                   onClick={(e) => { e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
+                                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOrdenPrecio('Desc'); setOpenFilter(null); }} 
+                                   className={`cursor-pointer transition-colors w-full text-center py-2 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                                 >
+                                   Mayor a Menor
+                                 </span>
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                 </div>
                )}
 
                {userRole === 'admin' && (
@@ -1233,7 +1340,7 @@ export default function App() {
             </section>
           )}
 
-          {/* EDITAR INFO PERFIL (MODAL o VISTA) */}
+          {/* EDITAR INFO PERFIL (MODAL) */}
           {showCompleteProfile && user && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
                <div className="bg-black border border-[#333333] p-8 md:p-16 w-full max-w-2xl flex flex-col shadow-2xl relative my-8 rounded-none">
@@ -1382,16 +1489,14 @@ export default function App() {
                     <div className="flex flex-col items-center gap-8">
                       <p className="text-[8px] tracking-[0.3em] text-[#aaaaaa] uppercase">Mano Izquierda</p>
                       <div className="relative w-64 h-64 opacity-80">
-                        {/* Silueta simple de mano */}
                         <svg viewBox="0 0 200 200" className="w-full h-full fill-none stroke-white/20" strokeWidth="1">
-                          <path d="M40,160 Q30,150 35,120 Q40,90 50,70 Q55,60 60,70 Q65,80 65,110" /> {/* Pulgar */}
-                          <path d="M70,100 Q70,40 80,40 Q90,40 90,100" /> {/* Indice */}
-                          <path d="M100,90 Q100,20 110,20 Q120,20 120,90" /> {/* Medio */}
-                          <path d="M130,100 Q130,35 140,35 Q150,35 150,100" /> {/* Anular */}
-                          <path d="M160,120 Q165,70 175,70 Q185,70 180,120" /> {/* Menique */}
-                          <path d="M40,160 Q60,190 100,195 Q140,195 170,170 Q180,150 180,120" /> {/* Palma base */}
+                          <path d="M40,160 Q30,150 35,120 Q40,90 50,70 Q55,60 60,70 Q65,80 65,110" /> 
+                          <path d="M70,100 Q70,40 80,40 Q90,40 90,100" /> 
+                          <path d="M100,90 Q100,20 110,20 Q120,20 120,90" /> 
+                          <path d="M130,100 Q130,35 140,35 Q150,35 150,100" /> 
+                          <path d="M160,120 Q165,70 175,70 Q185,70 180,120" /> 
+                          <path d="M40,160 Q60,190 100,195 Q140,195 170,170 Q180,150 180,120" /> 
                         </svg>
-                        {/* Inputs posicionados sobre los dedos */}
                         <input type="number" placeholder="P" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="absolute top-[120px] left-[20px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
                         <input type="number" placeholder="I" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="absolute top-[30px] left-[65px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
                         <input type="number" placeholder="M" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="absolute top-[10px] left-[105px] w-10 bg-black/60 border border-white/20 text-white text-center text-xs py-1 rounded-full outline-none focus:border-white" />
@@ -1510,236 +1615,6 @@ export default function App() {
             </section>
           )}
 
-          {/* INVENTARIO */}
-          {userRole === 'admin' && activeView === 'inventario' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
-              <h2 className="text-[12px] md:text-sm tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4">Inventario y Contabilidad</h2>
-              
-              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto mb-16">
-                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6">Stock Disponible (Proyección)</h3>
-                <div className="min-w-[800px]">
-                  <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
-                    <div className="col-span-2 text-left">Pieza</div>
-                    <div>Talla</div>
-                    <div>Stock</div>
-                    <div>Costo</div>
-                    <div>Precio</div>
-                    <div>Ganancia Potencial</div>
-                  </div>
-                  {productos.reduce((acc, p) => {
-                    if (!p.vendido) {
-                      if (p.subcategoria === 'Anillos') {
-                        const tallasObj = parseTallasseguro(p.tallas);
-                        const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
-                        activeTallas.forEach(([talla, cantidad]) => {
-                          acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad) });
-                        });
-                      } else {
-                        const disp = parseInt(p.disponibilidad);
-                        if (!isNaN(disp) && disp > 0) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: disp });
-                        else if (isNaN(disp)) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: p.disponibilidad });
-                      }
-                    }
-                    return acc;
-                  }, []).map((item, idx) => {
-                    const costo = parseFloat(item.costo) || 0;
-                    const precio = parseFloat(item.precio) || 0;
-                    const stockNum = parseInt(item.stock_especifico);
-                    const ganancia = !isNaN(stockNum) ? (precio - costo) * stockNum : 0;
-                    
-                    return (
-                      <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
-                        <div className="col-span-2 flex items-center gap-4 text-left">
-                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
-                          <div className="flex flex-col truncate">
-                            <span className="uppercase truncate">{item.titulo}</span>
-                            <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
-                          </div>
-                        </div>
-                        <div className="text-white font-bold">{item.talla_especifica}</div>
-                        <div className="text-white">{item.stock_especifico}</div>
-                        <div className="text-gray-400">${costo.toFixed(2)}</div>
-                        <div className="text-white font-bold">${precio.toFixed(2)}</div>
-                        <div className="text-green-400">{ganancia > 0 ? `+$${ganancia.toFixed(2)}` : 'N/A'}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="bg-white/5 backdrop-blur-3xl border border-white/5 p-4 md:p-8 w-full overflow-x-auto">
-                <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6">Historial de Ventas (Ganancia Real)</h3>
-                <div className="min-w-[800px]">
-                  <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
-                    <div className="col-span-2 text-left">Pieza Vendida</div>
-                    <div>Talla</div>
-                    <div>Costo</div>
-                    <div>Precio Venta</div>
-                    <div>Ganancia Neta</div>
-                  </div>
-                  {(() => {
-                    const ventasDesglosadas = [];
-                    listaPedidos.filter(ped => ped.estado === 'Completado').forEach(ped => {
-                      const items = JSON.parse(ped.productos || '[]');
-                      items.forEach(item => {
-                        const qty = parseInt(item.cantidad) || 1;
-                        for (let i = 0; i < qty; i++) {
-                          ventasDesglosadas.push({
-                            id: item.id,
-                            titulo: item.titulo,
-                            categoria: item.categoria,
-                            subcategoria: item.subcategoria,
-                            imagen_url: item.imagen_url,
-                            talla_especifica: item.tallaSeleccionada || 'N/A',
-                            costo: parseFloat(item.costo) || 0,
-                            precio: parseFloat(item.precio) || 0
-                          });
-                        }
-                      });
-                    });
-
-                    return ventasDesglosadas.map((item, idx) => {
-                      const ganancia = item.precio - item.costo;
-                      return (
-                        <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
-                          <div className="col-span-2 flex items-center gap-4 text-left">
-                            <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
-                            <div className="flex flex-col truncate">
-                              <span className="uppercase truncate text-gray-300">{item.titulo}</span>
-                              <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
-                            </div>
-                          </div>
-                          <div className="text-white font-bold">{item.talla_especifica}</div>
-                          <div className="text-gray-400">${item.costo.toFixed(2)}</div>
-                          <div className="text-white font-bold">${item.precio.toFixed(2)}</div>
-                          <div className="text-green-400 font-bold">+${ganancia.toFixed(2)}</div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* PEDIDOS */}
-          {activeView === 'pedidos' && (
-            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
-              <h2 className="text-[10px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">
-                {userRole === 'admin' ? 'Gestión de Pedidos' : 'Mis Pedidos'}
-              </h2>
-              
-              {userRole === 'admin' ? (
-                <div className="flex flex-col gap-6 w-full">
-                  {(() => {
-                    const groupedOrdersByMonth = listaPedidos.reduce((acc, pedido) => {
-                      let dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
-                      const month = dateObj.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
-                      if (!acc[month]) acc[month] = [];
-                      acc[month].push(pedido);
-                      return acc;
-                    }, {});
-
-                    return Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
-                      const sortedMonthPedidos = [...(monthPedidos as any[])].sort((a,b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
-                      const userGroups = {};
-                      
-                      sortedMonthPedidos.forEach(ped => {
-                        const clientKey = `${ped.cliente_nombre}|${ped.cliente_telefono}`;
-                        if(!userGroups[clientKey]) userGroups[clientKey] = [];
-                        userGroups[clientKey].push({...ped, orderNumber: (userGroups[clientKey].length + 1).toString().padStart(3, '0')});
-                      });
-
-                      return (
-                        <div key={month} className="mb-12 w-full">
-                          <h3 className="text-[10px] md:text-[14px] font-bold text-gray-500 tracking-[0.3em] uppercase mb-6 border-b border-white/10 pb-2">{month}</h3>
-                          <div className="flex flex-col gap-6">
-                            {Object.entries(userGroups).map(([clientKey, clientPedidos]: [string, any]) => {
-                               const [nombre, telefono] = clientKey.split('|');
-                               const expandKey = `${month}-${clientKey}`;
-                               const isExpanded = pedidoExpandido === expandKey;
-                               
-                               return (
-                                 <div key={clientKey} className="bg-black/30 backdrop-blur-xl p-4 md:p-6 shadow-2xl rounded-sm border border-white/5 w-full">
-                                     <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
-                                        <div className="flex items-center gap-4">
-                                           <div className="w-10 h-10 bg-white text-black flex items-center justify-center font-bold text-lg rounded-full uppercase">{nombre.charAt(0)}</div>
-                                           <div>
-                                             <p className="text-white text-[10px] tracking-[0.1em] uppercase font-bold">{nombre}</p>
-                                             <p className="text-gray-400 text-[8px] tracking-[0.1em] mt-1">📞 {telefono}</p>
-                                           </div>
-                                        </div>
-                                        <div className="text-right text-gray-400 text-[8px] tracking-[0.2em] uppercase">
-                                           {clientPedidos.length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
-                                        </div>
-                                     </div>
-
-                                     {isExpanded && (
-                                        <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
-                                           {[...clientPedidos].reverse().map(pedido => (
-                                              <div key={pedido.id} className="bg-black/20 p-4 border border-white/5">
-                                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/5 pb-2 gap-2 sm:gap-0">
-                                                    <span className="text-white font-bold text-[10px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
-                                                    <span className={`text-[8px] md:text-[10px] px-3 py-1 font-bold uppercase tracking-[0.1em] text-center w-fit ${pedido.estado === 'Completado' ? 'bg-green-500/20 text-green-500' : pedido.estado === 'Cancelado' ? 'bg-red-500/20 text-red-500' : 'bg-white/20 text-white'}`}>
-                                                      {pedido.estado}
-                                                    </span>
-                                                 </div>
-                                                 
-                                                 <div className="space-y-2 mb-4">
-                                                   {(JSON.parse(pedido.productos) as any[]).map((prod, i) => (
-                                                     <div key={i} className="flex justify-between text-[10px] text-gray-300">
-                                                       <span className="truncate pr-2">{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
-                                                       <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
-                                                     </div>
-                                                   ))}
-                                                   <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[10px] font-bold text-white">
-                                                     <span>Envío:</span>
-                                                     <span>${parseFloat(pedido.total_envio).toFixed(2)}</span>
-                                                   </div>
-                                                 </div>
-
-                                                 {pedido.link_maps && (
-                                                   <div className="pt-2 text-[10px] text-blue-400 mb-2">
-                                                     <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
-                                                   </div>
-                                                 )}
-
-                                                 {pedido.comprobante_url && (
-                                                   <a href={pedido.comprobante_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-white text-[10px] tracking-[0.1em] underline block mb-4">Ver Comprobante de Pago</a>
-                                                 )}
-
-                                                 {pedido.estado === 'En progreso' && (
-                                                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 pt-4 border-t border-white/5">
-                                                     <button onClick={() => completarPedido(pedido)} className="w-full sm:flex-grow py-3 bg-white text-black text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 cursor-pointer outline-none border-none">
-                                                       Completar (Descuenta Stock)
-                                                     </button>
-                                                     <button onClick={() => cancelarPedido(pedido.id)} className="w-full sm:w-auto py-3 px-6 bg-transparent text-red-500 border border-red-500/30 hover:bg-red-500/10 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer outline-none">
-                                                       Cancelar
-                                                     </button>
-                                                   </div>
-                                                 )}
-                                              </div>
-                                           ))}
-                                        </div>
-                                     )}
-                                 </div>
-                               )
-                            })}
-                          </div>
-                        </div>
-                      )
-                    });
-                  })()}
-                  {listaPedidos.length === 0 && <p className="text-gray-500 text-center text-[10px] uppercase">No hay pedidos registrados.</p>}
-                </div>
-              ) : (
-                <div className="bg-white/5 backdrop-blur-xl p-6 md:p-10 shadow-2xl rounded-sm w-full">
-                  <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] text-center py-6 md:py-10">Aún no hay un historial de pedidos en su cuenta.</p>
-                </div>
-              )}
-            </section>
-          )}
-
         </main>
         
         <footer className="bg-black py-12 text-center text-[#666666] text-[10px] tracking-[0.3em] uppercase w-full">
@@ -1749,104 +1624,185 @@ export default function App() {
 
       {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
 
-      {/* REQUISITO 4: MODAL AÑADIR/EDITAR PRODUCTO CON FONDO CRISTAL BORROSO */}
-      {userRole === 'admin' && showInlineForm && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
-          <div className="p-8 shadow-2xl relative w-full max-w-4xl rounded-none my-8" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-6 text-white hover:text-gray-300 text-3xl cursor-pointer bg-transparent border-none outline-none z-50">×</button>
-            <h3 className="text-[12px] md:text-[14px] tracking-[0.3em] uppercase text-white mb-8 text-center">{editandoId ? 'EDITAR PIEZA' : 'AÑADIR NUEVA PIEZA'}</h3>
-            <form onSubmit={(e) => { e.preventDefault(); handlePublicarLocal(e); }} className="flex flex-col gap-6">
+      {/* MODAL DEL PRODUCTO PARA CLIC EN MÓVIL/PC */}
+      {productoSeleccionado && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 screen-only animate-fade-in" onClick={() => {setProductoSeleccionado(null); setTallasSeleccionadasModal([]);}}>
+          <div className="w-full max-w-md md:max-w-4xl flex flex-col md:flex-row relative shadow-2xl border border-[#333333] rounded-none bg-[#0a0a0a] max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <button onClick={() => {setProductoSeleccionado(null); setTallasSeleccionadasModal([]);}} className="absolute top-4 right-4 text-white hover:text-gray-300 z-[210] text-3xl cursor-pointer bg-transparent border-none outline-none">×</button>
+            <div className="w-full md:w-1/2 p-6 flex flex-col justify-center min-h-[300px]">
+              <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-contain" />
+            </div>
+            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center bg-[#0a0a0a] border-t md:border-t-0 md:border-l border-[#333333]">
+              <h2 className="text-[14px] md:text-[16px] tracking-[0.2em] uppercase text-white mb-2">{productoSeleccionado.titulo}</h2>
+              <p className="text-[14px] tracking-[0.1em] text-white font-light mb-8">${productoSeleccionado.precio} USD</p>
               
-              {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
-                <div className="mb-4 flex justify-center bg-transparent p-0">
-                  <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-32 sm:h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
-                </div>
+              {productoSeleccionado.subcategoria !== 'Anillos' && (
+                <p className="text-[12px] tracking-[0.2em] text-gray-300 mb-8 uppercase drop-shadow-md">
+                  {productoSeleccionado.disponibilidad ? productoSeleccionado.disponibilidad : 'Bajo Pedido'}
+                </p>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-4 text-center items-center justify-items-center w-full">
-                <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" required />
-                <div className="w-full relative">
-                  <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" />
-                </div>
-                <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" required />
-                
-                {nuevaPieza.subcategoria !== 'Anillos' && (
-                  <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors" />
-                )}
+              {productoSeleccionado.subcategoria === 'Anillos' && (() => {
+                 const modalTallasObj = typeof productoSeleccionado.tallas === 'string' ? JSON.parse(productoSeleccionado.tallas || '{}') : (productoSeleccionado.tallas || {});
+                 const modalCanBuy = tallasSeleccionadasModal.length > 0;
 
-                {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
-                  <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
-                    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
-                      {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
-                    </div>
-                    {openFormSelect === 'subcat' && (
-                      <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                        <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20 max-h-48 overflow-y-auto">
-                          <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[12px] tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                          {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
-                            <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[12px] tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeCategory === 'Acero Fino' && (
-                  <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
-                    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
-                      {nuevaPieza.color || 'COLOR (OPCIONAL)'}
-                    </div>
-                    {openFormSelect === 'color' && (
-                      <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                        <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20">
-                          <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[12px] tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
-                          {['Silver', 'Gold', 'Black'].map(c => (
-                            <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[12px] tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {nuevaPieza.costo > 0 && (
-                <div className="w-full flex flex-col items-center justify-center mb-6 pb-6 border-b border-white/10 mt-4">
-                  <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
-                  <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[10px] tracking-[0.2em] text-white uppercase">
-                     {[115, 100, 75, 50, 25].map(porcentaje => {
-                       const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
+                 return (
+                 <div className="flex flex-col items-center w-full mb-10 mt-2">
+                   <p className="text-[10px] tracking-[0.2em] text-gray-400 mb-6 uppercase">Seleccione su talla</p>
+                   <div className="flex flex-wrap justify-center gap-4">
+                     {tallasDisponibles.map(talla => {
+                       const stock = parseInt(modalTallasObj[talla] || 0);
+                       const isAvailable = stock > 0;
+                       const isSelected = tallasSeleccionadasModal.includes(talla);
+                       
                        return (
-                         <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-white hover:bg-white hover:text-black transition-colors cursor-pointer outline-none border border-white/30 px-4 py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                         <div key={talla} className="flex flex-col items-center gap-2">
+                           <button 
+                             type="button"
+                             onClick={(e) => { 
+                               e.preventDefault(); e.stopPropagation(); 
+                               if(isAvailable) handleSelectTallaModal(e, talla); 
+                             }}
+                             className={`w-10 h-10 flex items-center justify-center text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 cursor-pointer' : 'bg-transparent text-white border-[#555555] hover:border-white cursor-pointer') : 'border-red-900/50 text-red-500 cursor-not-allowed'}`}
+                           >
+                             <span>{talla}</span>
+                           </button>
+                           <span className={`text-[12px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-[#aaaaaa]' : 'text-red-900'}`}>
+                             {stock}
+                           </span>
+                         </div>
                        );
                      })}
-                  </div>
-                </div>
-              )}
+                   </div>
 
-              {nuevaPieza.subcategoria === 'Anillos' && (
-                <div className="w-full flex flex-col items-center mt-4 mb-6 pb-6">
-                  <p className="text-[12px] tracking-[0.2em] text-white mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
-                  <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
-                    {tallasDisponibles.map(talla => (
-                      <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
-                        <span className="text-white text-[12px] font-light">{talla}</span>
-                        <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[12px] py-1 outline-none border-b border-white/30 transition-colors focus:border-white" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                   {userRole === 'cliente' && !productoSeleccionado.vendido && (
+                     <div className="flex gap-4 mt-12 w-full justify-center">
+                       <button 
+                         onClick={(e) => { if(modalCanBuy) agregarAlCarrito(productoSeleccionado, e); }} 
+                         className={`flex-grow text-[10px] font-bold tracking-[0.3em] uppercase py-4 transition-colors cursor-pointer border-none outline-none ${modalCanBuy ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#555555] cursor-not-allowed'}`}
+                       >
+                         {modalCanBuy ? 'AÑADIR AL BOLSO' : 'ELIJA TALLA'}
+                       </button>
+                     </div>
+                   )}
+                 </div>
+                 );
+              })()}
 
-              <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/30 text-white text-[12px] tracking-[0.2em] py-2 outline-none text-center transition-colors resize-none"></textarea>
-              
-              <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full mt-4">
-                <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-white file:mr-4 file:py-2 file:px-6 file:border file:border-white/30 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-white transition-colors cursor-pointer w-full md:w-auto" />
-                <button type="submit" className="bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer outline-none border-none text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
-              </div>
-            </form>
+              <p className="text-[12px] leading-loose mb-8 uppercase tracking-[0.1em] text-gray-300 w-full" style={{ color: '#ffffff' }}>
+                {productoSeleccionado.descripcion}
+              </p>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* MODAL EMERGENTE DE ADMINISTRADOR - AÑADIR/EDITAR PRODUCTO CON FONDO CRISTAL BORROSO */}
+      {userRole === 'admin' && showInlineForm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
+          <form onSubmit={handlePublicarLocal} className="p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-none my-8" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(40px)' }}>
+            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-4 text-white hover:text-gray-300 cursor-pointer bg-transparent border-none text-2xl md:text-3xl outline-none drop-shadow-md">×</button>
+            <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-8 text-center drop-shadow-md font-bold">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+            
+            {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
+              <div className="mb-8 flex justify-center bg-transparent p-0">
+                <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-2xl" />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-8 text-center items-center justify-items-center w-full">
+              <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors" required />
+              
+              <div className="w-full relative">
+                <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/30 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </div>
+
+              <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required />
+              
+              {nuevaPieza.subcategoria !== 'Anillos' && (
+                <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors" />
+              )}
+              
+              {['Acero Fino', 'Plata de Ley 925'].includes(activeCategory) && (
+                <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
+                  <div 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat'); }} 
+                    className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white transition-colors uppercase"
+                  >
+                    {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
+                  </div>
+                  {openFormSelect === 'subcat' && (
+                    <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20 max-h-48 overflow-y-auto">
+                        <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                        {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
+                          <div key={sub} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeCategory === 'Acero Fino' && (
+                <div className="relative w-full z-[150]" onMouseLeave={() => setOpenFormSelect(null)}>
+                  <div 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'color' ? null : 'color'); }} 
+                    className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center hover:border-white transition-colors uppercase"
+                  >
+                    {nuevaPieza.color || 'COLOR (OPCIONAL)'}
+                  </div>
+                  {openFormSelect === 'color' && (
+                    <div className="absolute top-full left-0 w-full pt-1 z-[300]">
+                      <div className="bg-black/90 backdrop-blur-xl flex flex-col gap-4 py-4 shadow-2xl border border-white/20">
+                        <div onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
+                        {['Silver', 'Gold', 'Black'].map(c => (
+                          <div key={c} onClick={(e) => { e.stopPropagation(); setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {nuevaPieza.costo > 0 && (
+              <div className="w-full flex flex-col items-center justify-center mb-8 pb-6 border-b border-white/20 mt-4">
+                <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-400 mb-4 uppercase">Estrategia de Precios (Haz clic para aplicar)</p>
+                <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-white uppercase">
+                   {[115, 100, 75, 50, 25].map(porcentaje => {
+                     const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
+                     return (
+                       <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-300 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2">{porcentaje}%: ${sugerido.toFixed(2)}</button>
+                     );
+                   })}
+                </div>
+              </div>
+            )}
+
+            {nuevaPieza.subcategoria === 'Anillos' && (
+              <div className="w-full flex flex-col items-center mt-4 mb-8 pb-6">
+                <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
+                <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+                  {tallasDisponibles.map(talla => (
+                    <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                      <span className="text-white text-[12px] md:text-sm font-light">{talla}</span>
+                      <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/30 placeholder-gray-400 transition-colors focus:border-white" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/30 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white transition-colors mb-8 resize-none"></textarea>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-10 bg-transparent p-0 w-full">
+              <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-300 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-400 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-300 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+              <button type="submit" className="bg-white text-black hover:bg-gray-300 transition-colors cursor-pointer outline-none border-none text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-xl">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
+            </div>
+          </form>
         </div>
       )}
 
