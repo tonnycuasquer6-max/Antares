@@ -1201,12 +1201,24 @@ export default function App() {
                                                     {pedido.estado}
                                                   </span>
                                                </div>
-                                               <div className="space-y-2 mb-4">
+                                               <div className="space-y-4 mb-4">
                                                  {JSON.parse(pedido.productos).map((prod, i) => (
-                                                   <div key={i} className="flex justify-between text-[8px] sm:text-[10px] text-gray-300">
-                                                     <span className="truncate pr-2">{prod.cantidad}x {prod.titulo} {prod.tallaSeleccionada ? `(Talla: ${prod.tallaSeleccionada})` : ''}</span>
-                                                     <span>${(prod.precio * prod.cantidad).toFixed(2)}</span>
+                                                   <div key={i} className="flex items-center justify-between text-[8px] sm:text-[10px] text-gray-300 border-b border-white/5 pb-2">
+                                                     <div className="flex items-center gap-3">
+                                                       <img src={prod.imagen_url} alt={prod.titulo} className="w-12 h-12 object-contain bg-black/20" />
+                                                       <div className="flex flex-col">
+                                                         <span className="truncate pr-2 uppercase text-white tracking-[0.1em]">{prod.cantidad}x {prod.titulo}</span>
+                                                         {prod.tallaSeleccionada && <span className="text-gray-500 mt-1 uppercase tracking-[0.1em]">Talla: {prod.tallaSeleccionada}</span>}
+                                                       </div>
+                                                     </div>
+                                                     <span className="font-champagne text-[12px]">${(prod.precio * prod.cantidad).toFixed(2)}</span>
                                                    </div>
+                                                 ))}
+                                                 <div className="pt-2 mt-2 flex justify-between text-[10px] sm:text-[12px] font-bold text-white tracking-[0.2em] uppercase">
+                                                   <span>Envío:</span>
+                                                   <span className="font-champagne">${parseFloat(pedido.total_envio).toFixed(2)}</span>
+                                                 </div>
+                                               </div>
                                                  ))}
                                                  <div className="pt-2 mt-2 border-t border-white/10 flex justify-between text-[8px] sm:text-[10px] font-bold text-white">
                                                    <span>Envío:</span>
@@ -2185,17 +2197,40 @@ export default function App() {
         {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
+          
+          if (piezasDeCategoria.length === 0) return null;
 
-          return (
-            <div key={cat} className="mb-24 page-break-after px-10" style={{ backgroundColor: '#000000' }}>
-              <h3 className="text-xl tracking-[0.3em] uppercase mb-2 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
-              <h2 className="text-4xl tracking-[0.2em] uppercase mb-16 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
-              
-              {piezasDeCategoria.length > 0 ? (
-                <div className="grid grid-cols-2 gap-12">
-                  {piezasDeCategoria.map(p => (
-                    <div key={p.id} className="flex flex-col items-center text-center relative border p-4 rounded-sm" style={{ borderColor: 'rgba(255,255,255,0.1)', backgroundColor: '#000000' }}>
-                      <div className="relative w-full mb-6 flex items-center justify-center h-80" style={{ backgroundColor: '#0a0a0a' }}>
+          // Agrupar piezas por subcategoría para mantener el orden
+          const piezasPorSub = {};
+          subcategoriasJoyeria.forEach(sub => {
+            const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
+            if (piezas.length > 0) piezasPorSub[sub] = piezas;
+          });
+          const piezasSinSub = piezasDeCategoria.filter(p => !subcategoriasJoyeria.includes(p.subcategoria));
+          if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
+
+          return Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
+             // Dividir en grupos de 4 (2x2) para forzar saltos de página
+             const gruposDe4 = [];
+             for (let i = 0; i < piezasDeSub.length; i += 4) {
+               gruposDe4.push(piezasDeSub.slice(i, i + 4));
+             }
+
+             return gruposDe4.map((grupo, indexGrupo) => (
+              <div key={`${cat}-${subcat}-${indexGrupo}`} className="mb-24 page-break-after px-10" style={{ backgroundColor: '#000000' }}>
+                <h3 className="text-xl tracking-[0.3em] uppercase mb-2 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
+                <h2 className="text-4xl tracking-[0.2em] uppercase mb-4 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
+                <h4 className="text-2xl tracking-[0.3em] uppercase mb-16 text-center" style={{ color: '#aaaaaa' }}>— {subcat} —</h4>
+                
+                <div className="grid grid-cols-2 w-full border-t border-l border-white/20">
+                  {grupo.map((p, index) => (
+                    <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/20 p-8" style={{ backgroundColor: '#000000' }}>
+                      {/* Estrella en la intersección inferior derecha */}
+                      <div className="absolute -bottom-[10px] -right-[10px] w-5 h-5 bg-black z-20 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
+                      </div>
+                      
+                      <div className="relative w-full mb-6 flex items-center justify-center h-80 bg-transparent">
                         <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
                         
                         {/* EFECTO AGOTADO PARA IMPRESIÓN */}
@@ -2205,10 +2240,10 @@ export default function App() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-sm tracking-[0.2em] uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
-                      <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold', letterSpacing: '0.1em', marginBottom: '16px' }}>${p.precio} USD</p>
+                      <h3 className="text-sm tracking-[0.2em] font-bold uppercase mb-2 break-words" style={{ color: '#ffffff' }}>{p.titulo}</h3>
+                      <p style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'light', letterSpacing: '0.1em', marginBottom: '16px' }} className="font-champagne">${p.precio} USD</p>
                       
-                      {/* 👇 CAMBIO: Tallas NO SE MUESTRAN en pulseras, collares, aretes, piercings 👇 */}
+                      {/* Tallas */}
                       {p.subcategoria === 'Anillos' ? (
                         <div className="flex gap-3 justify-center mb-6 flex-wrap mt-2">
                            {tallasDisponibles.map(t => {
@@ -2222,10 +2257,10 @@ export default function App() {
                                    width: '40px', height: '40px',
                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                                    fontSize: '19px', fontWeight: 'bold'
-                                 }}>
+                                 }} className="font-champagne">
                                    {t}
                                  </div>
-                                 <span style={{ fontSize: '18px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                 <span style={{ fontSize: '18px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }} className="font-champagne">
                                    {stock}
                                  </span>
                                </div>
@@ -2236,15 +2271,13 @@ export default function App() {
                         <div style={{ height: '16px', marginBottom: '16px' }}></div> 
                       )}
 
-                      <p className="text-[13px] leading-relaxed px-4 line-clamp-2 uppercase" style={{ color: '#ffffff' }}>{p.descripcion}</p>
+                      <p className="text-[13px] leading-relaxed px-4 line-clamp-2 uppercase mt-auto" style={{ color: '#ffffff' }}>{p.descripcion}</p>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-center tracking-[0.2em] text-[12px] uppercase" style={{ color: '#666666' }}>Colección en desarrollo</p>
-              )}
-            </div>
-          )
+              </div>
+             ));
+          });
         })}
       </div>
       )}
