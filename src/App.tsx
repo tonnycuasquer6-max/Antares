@@ -1873,77 +1873,11 @@ export default function App() {
                     onClick={() => setActiveView('medidas')} 
                     className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
-                    {/* CONFIGURAR MEDIDAS */}
-          {user && activeView === 'medidas' && (
-            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-5xl">
-              <div className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
-                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
-                <button onClick={() => setActiveView('perfil')} className="text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                
-                {/* MEDIDAS DE ANILLO */}
-                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5 w-full flex flex-col items-center">
-                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light w-full">Medida de Anillo</h3>
-                  
-                  <div className="relative w-full max-w-sm aspect-video mb-10 flex items-center justify-center mx-auto">
-                    {/* Silueta de manos (SVG simple sin desbordar) */}
-                    <div className="flex justify-center w-full h-full opacity-20 fill-white gap-8">
-                        <svg viewBox="0 0 512 512" style={{transform: 'scaleX(-1)'}} className="w-1/2 h-full"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
-                        <svg viewBox="0 0 512 512" className="w-1/2 h-full"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V64c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
-                    </div>
-                    
-                    {/* Inputs sobre los dedos - Mejor distribuidos para que no se salgan */}
-                    <div className="absolute inset-0 flex justify-between items-center px-2 w-full h-full pointer-events-none">
-                      
-                      {/* Mano Izquierda */}
-                      <div className="flex gap-2 sm:gap-4 h-full pointer-events-auto">
-                        <div className="flex flex-col items-center justify-end h-full pb-4 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-10 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-14 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-12 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-2 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                      </div>
-
-                      {/* Mano Derecha */}
-                      <div className="flex gap-2 sm:gap-4 h-full pointer-events-auto">
-                        <div className="flex flex-col items-center justify-end h-full pb-2 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-12 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-14 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-10 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                        <div className="flex flex-col items-center justify-end h-full pb-4 gap-1 z-10"><span className="text-[6px] sm:text-[8px] text-gray-400 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[8px] text-gray-500 uppercase text-center tracking-widest mt-auto">Ingrese el número de talla para cada dedo.</p>
-                </div>
-
-                {/* MEDIDAS CORPORALES */}
-                <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-10 border border-white/5 w-full flex flex-col h-full">
-                  <h3 className="text-[12px] tracking-[0.3em] uppercase text-white mb-8 text-center font-light w-full">Medidas Corporales (cm)</h3>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6 flex-grow">
-                    {Object.keys(medidasCorporales).map(medida => (
-                      <div key={medida} className="flex flex-col gap-2">
-                        <label className="text-[8px] tracking-[0.2em] uppercase text-gray-500">{medida.replace('_', ' ')}</label>
-                        <input 
-                          type="number" 
-                          value={medidasCorporales[medida]} 
-                          onChange={e => setMedidasCorporales({...medidasCorporales, [medida]: e.target.value})} 
-                          className="w-full bg-transparent border-b border-white/20 text-white text-[10px] py-2 outline-none hover:border-white/50 transition-colors font-champagne" 
-                          placeholder="0.0"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-              <div className="mt-12 flex justify-center w-full">
-                 <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
-              </div>
-            </section>
-          )}
+                    Configurar Medidas
+                  </button>
+                  <button 
+                    onClick={solicitarCambioContrasena} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
                   >
                     Cambiar Contraseña
                   </button>
