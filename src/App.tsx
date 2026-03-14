@@ -1833,6 +1833,85 @@ export default function App() {
             </section>
           )}
 
+          {/* CONFIGURAR MEDIDAS */}
+          {user && activeView === 'medidas' && (
+            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-4xl">
+              <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
+                <h2 className="text-[12px] md:text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
+                <button onClick={() => setActiveView('perfil')} className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
+              </div>
+
+              {/* TABS */}
+              <div className="flex justify-center gap-8 mb-10 border-b border-white/10 pb-0">
+                <button onClick={() => setTabMedidas('anillos')} className={`text-[10px] tracking-[0.2em] uppercase transition-colors pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'anillos' ? 'text-white border-white font-bold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>Tallas de Anillos</button>
+                <button onClick={() => setTabMedidas('cuerpo')} className={`text-[10px] tracking-[0.2em] uppercase transition-colors pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'cuerpo' ? 'text-white border-white font-bold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>Medidas Corporales</button>
+              </div>
+
+              {tabMedidas === 'anillos' && (
+                <div className="bg-white/5 backdrop-blur-3xl p-6 md:p-10 border border-white/5 max-w-3xl mx-auto animate-fade-in">
+                  <h3 className="text-[10px] md:text-[12px] tracking-[0.3em] uppercase text-white mb-10 text-center font-light">Medida de Anillo</h3>
+                  
+                  <div className="relative w-full max-w-2xl mx-auto flex items-center justify-center mb-10 min-h-[250px] sm:min-h-[300px]">
+                    {/* Silueta de manos */}
+                    <div className="absolute inset-0 flex justify-center items-end opacity-20 pointer-events-none gap-4 sm:gap-10 pb-4">
+                        <svg viewBox="0 0 512 512" style={{transform: 'scaleX(-1)'}} className="w-[40%] h-[80%] fill-white"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
+                        <svg viewBox="0 0 512 512" className="w-[40%] h-[80%] fill-white"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V64c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
+                    </div>
+                    
+                    {/* Inputs sobre los dedos */}
+                    <div className="absolute inset-0 flex justify-between items-end w-full h-full pb-8 sm:pb-12 px-2 sm:px-8">
+                      {/* Mano Izquierda */}
+                      <div className="flex gap-1 sm:gap-4 items-end w-1/2 justify-center">
+                        <div className="flex flex-col items-center gap-1 mb-8 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-20 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-0 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                      </div>
+
+                      {/* Mano Derecha */}
+                      <div className="flex gap-1 sm:gap-4 items-end w-1/2 justify-center">
+                        <div className="flex flex-col items-center gap-1 mb-0 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-20 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-8 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-gray-500 uppercase text-center tracking-widest mt-4">Ingrese el número de talla para cada dedo.</p>
+                  
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              )}
+
+              {tabMedidas === 'cuerpo' && (
+                <div className="bg-white/5 backdrop-blur-3xl p-6 md:p-10 border border-white/5 w-full animate-fade-in">
+                  <h3 className="text-[10px] md:text-[12px] tracking-[0.3em] uppercase text-white mb-10 text-center font-light">Medidas Corporales (cm)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-6 md:gap-y-8">
+                    {Object.keys(medidasCorporales).map(medida => (
+                      <div key={medida} className="flex flex-col gap-2">
+                        <label className="text-[7px] md:text-[8px] tracking-[0.2em] uppercase text-gray-500">{medida.replace('_', ' ')}</label>
+                        <input 
+                          type="number" 
+                          value={medidasCorporales[medida]} 
+                          onChange={e => setMedidasCorporales({...medidasCorporales, [medida]: e.target.value})} 
+                          className="w-full bg-transparent border-b border-white/20 text-white text-[10px] py-2 outline-none hover:border-white/50 transition-colors font-champagne" 
+                          placeholder="0.0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {/* PERFIL */}
           {user && activeView === 'perfil' && (
             <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
