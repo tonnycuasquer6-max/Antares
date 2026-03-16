@@ -909,7 +909,7 @@ export default function App() {
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         @media print { 
-          @page { margin: 1cm; size: A4 portrait; }
+          @page { margin: 0.5cm; size: A4 portrait; }
           html, body { background-color: #000000 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; height: 100%; }
           .screen-only { display: none !important; } 
           .print-only { display: block !important; background-color: #000000 !important; width: 100%; } 
@@ -2176,13 +2176,12 @@ export default function App() {
       {userRole === 'admin' && (
       <div className="hidden print-only w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         
-        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
+        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map((cat) => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
           
           if (piezasDeCategoria.length === 0) return null;
 
-          // Agrupar piezas por subcategoría para mantener el orden
           const piezasPorSub = {};
           subcategoriasJoyeria.forEach(sub => {
             const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
@@ -2192,79 +2191,71 @@ export default function App() {
           if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
 
           return Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
-             // Dividir en grupos de 4 (2x2) para forzar saltos de página
              const gruposDe4 = [];
              for (let i = 0; i < piezasDeSub.length; i += 4) {
                gruposDe4.push(piezasDeSub.slice(i, i + 4));
              }
 
              return (
-               <div key={`${cat}-${subcat}`}>
-                 
-                 {/* 1. PAGINA DE PORTADA (LOGO Y TITULOS CENTRADOS) */}
-                 <div className="break-after-page w-full flex flex-col items-center justify-center p-10 box-border" style={{ backgroundColor: '#000000', height: '100vh' }}>
-                   <img src={LOGO_URL} alt="ANTARES" className="h-32 w-auto object-contain mb-16" />
-                   <h3 className="text-xl tracking-[0.4em] uppercase mb-4 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
-                   <h2 className="text-5xl tracking-[0.2em] uppercase mb-8 text-center font-bold" style={{ color: '#ffffff' }}>{cat}</h2>
-                   <h4 className="text-2xl tracking-[0.4em] uppercase text-center" style={{ color: '#aaaaaa' }}>— {subcat} —</h4>
-                 </div>
+              <div key={`${cat}-${subcat}`}>
+                {/* PORTADA EXCLUSIVA DE LA CATEGORÍA/SUBCATEGORÍA */}
+                <div className="break-after-page w-full flex flex-col items-center justify-center p-10 box-border border-b-8 border-transparent" style={{ backgroundColor: '#000000', height: '280mm' }}>
+                  <img src={LOGO_URL} alt="ANTARES" className="h-32 w-auto object-contain mb-16" />
+                  <h3 className="text-2xl tracking-[0.4em] uppercase mb-4 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
+                  <h2 className="text-6xl tracking-[0.2em] uppercase mb-8 text-center font-bold" style={{ color: '#ffffff' }}>{cat}</h2>
+                  <h4 className="text-3xl tracking-[0.4em] uppercase text-center" style={{ color: '#aaaaaa' }}>— {subcat} —</h4>
+                </div>
 
-                 {/* 2. PAGINAS DE PRODUCTOS (EXACTAMENTE 4 POR HOJA) */}
-                 {gruposDe4.map((grupo, indexGrupo) => (
-                   <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page p-4 flex flex-col justify-center" style={{ backgroundColor: '#000000', height: '100vh', boxSizing: 'border-box' }}>
-                     <div className="grid grid-cols-2 w-full h-full border-t border-l border-white/20">
-                       {grupo.map((p) => (
-                         <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/20 p-6 h-full" style={{ backgroundColor: '#000000' }}>
-                           
-                           {/* Estrella en la intersección inferior derecha */}
-                           <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center">
-                             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
-                           </div>
-                           
-                           <div className="relative w-full flex-grow flex items-center justify-center bg-transparent mb-6 mt-4">
-                             <img src={p.imagen_url} className="max-w-full max-h-[30vh] object-contain" alt={p.titulo} />
-                             
-                             {/* EFECTO AGOTADO PARA IMPRESIÓN */}
-                             {p.vendido && (
-                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
-                                 <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2 bg-black/80 text-white border-white/50">Agotado</span>
-                               </div>
-                             )}
-                           </div>
-                           
-                           <h3 className="text-sm tracking-[0.2em] font-bold uppercase mb-2 break-words line-clamp-2 text-white">{p.titulo}</h3>
-                           <p className="text-white text-[20px] font-light tracking-[0.1em] mb-4 font-champagne">${p.precio} USD</p>
-                           
-                           {/* Tallas con mejor espaciado */}
-                           {p.subcategoria === 'Anillos' ? (
-                             <div className="flex gap-3 justify-center mb-6 flex-wrap">
-                                {tallasDisponibles.map(t => {
-                                  const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
-                                  const isAvailable = stock > 0;
-                                  return (
-                                    <div key={t} className="flex flex-col items-center gap-1">
-                                      <div className="font-champagne text-[14px] font-bold flex items-center justify-center w-9 h-9" style={{ border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.4)' : 'rgba(255,0,0,0.2)'}`, color: isAvailable ? '#ffffff' : '#ff0000' }}>
-                                        {t}
-                                      </div>
-                                      <span className="font-champagne text-[12px]" style={{ color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
-                                        {stock}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                             </div>
-                           ) : (
-                             <div className="h-6 mb-6"></div> 
-                           )}
+                {/* PÁGINAS DE PRODUCTOS (EXACTAMENTE 4 POR HOJA) */}
+                {gruposDe4.map((grupo, indexGrupo) => (
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page w-full flex flex-col box-border" style={{ backgroundColor: '#000000', height: '280mm' }}>
+                    <div className="grid grid-cols-2 grid-rows-2 w-full h-full border-t border-l border-white/20">
+                      {grupo.map((p) => (
+                        <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/20 p-4 h-full" style={{ backgroundColor: '#000000' }}>
+                          <div className="absolute -bottom-[6px] -right-[6px] w-3 h-3 bg-black z-20 flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" className="w-2 h-2 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
+                          </div>
+                          
+                          <div className="relative w-full h-[220px] flex items-center justify-center bg-transparent mb-2 mt-2">
+                            <img src={p.imagen_url} className="max-w-full max-h-full object-contain" alt={p.titulo} />
+                            {p.vendido && (
+                              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+                                <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2 bg-black/80 text-white border-white/50">Agotado</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <h3 className="text-[12px] tracking-[0.2em] font-bold uppercase mb-1 break-words line-clamp-2 text-white">{p.titulo}</h3>
+                          <p className="text-white text-lg font-light tracking-[0.1em] mb-2 font-champagne">${p.precio} USD</p>
+                          
+                          {p.subcategoria === 'Anillos' ? (
+                            <div className="flex gap-2 justify-center mb-2 flex-wrap">
+                               {tallasDisponibles.map(t => {
+                                 const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
+                                 const isAvailable = stock > 0;
+                                 return (
+                                   <div key={t} className="flex flex-col items-center gap-1">
+                                     <div className="font-champagne text-[11px] font-bold flex items-center justify-center w-7 h-7" style={{ border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.4)' : 'rgba(255,0,0,0.2)'}`, color: isAvailable ? '#ffffff' : '#ff0000' }}>
+                                       {t}
+                                     </div>
+                                     <span className="font-champagne text-[10px]" style={{ color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                       {stock}
+                                     </span>
+                                   </div>
+                                 );
+                               })}
+                            </div>
+                          ) : (
+                            <div className="h-4 mb-2"></div> 
+                          )}
 
-                           {/* Descripción en blanco y bien distribuida */}
-                           <p className="text-[11px] leading-relaxed px-4 line-clamp-3 uppercase mt-auto mb-4 text-white">{p.descripcion}</p>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 ))}
-               </div>
+                          <p className="text-[10px] leading-relaxed px-4 line-clamp-3 uppercase text-white mt-auto mb-2">{p.descripcion}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
              );
           });
         })}
