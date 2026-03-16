@@ -2175,10 +2175,7 @@ export default function App() {
       {/* CSS INLINE FUERTE PARA IMPRIMIR CON FONDO NEGRO Y TEXTO "AGOTADO" SOBRE LA FOTO Y TALLAS ESTILO FOTO 2 */}
       {userRole === 'admin' && (
       <div className="hidden print-only w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-        <header className="w-full flex flex-col items-center mt-0 relative pt-4 pb-4 mb-4 border-b border-white/10" style={{ backgroundColor: '#000000' }}>
-          <img src={LOGO_URL} alt="ANTARES" className="h-16 w-auto object-contain z-10" />
-        </header>
-
+        
         {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map(cat => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
           const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
@@ -2201,76 +2198,74 @@ export default function App() {
                gruposDe4.push(piezasDeSub.slice(i, i + 4));
              }
 
-             return gruposDe4.map((grupo, indexGrupo) => (
-              <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page px-2 py-4 flex flex-col" style={{ backgroundColor: '#000000', height: '100vh', boxSizing: 'border-box' }}>
-                
-                {/* SOLO SE MUESTRA EL TITULO EN EL PRIMER GRUPO DE LA SUBCATEGORIA */}
-                {indexGrupo === 0 && (
-                  <div className="mb-4 flex-shrink-0">
-                    <h3 className="text-sm tracking-[0.3em] uppercase mb-1 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
-                    <h2 className="text-2xl tracking-[0.2em] uppercase mb-2 text-center" style={{ color: '#ffffff' }}>{cat}</h2>
-                    <h4 className="text-lg tracking-[0.3em] uppercase text-center" style={{ color: '#aaaaaa' }}>— {subcat} —</h4>
-                  </div>
-                )}
-                
-                {/* ESPACIO DE RELLENO SI NO HAY TITULO PARA MANTENER ALINEACION */}
-                {indexGrupo !== 0 && <div className="h-6 flex-shrink-0"></div>}
-                
-                <div className="grid grid-cols-2 w-full border-t border-l border-white/20 flex-grow">
-                  {grupo.map((p, index) => (
-                    <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/20 p-4" style={{ backgroundColor: '#000000' }}>
-                      {/* Estrella en la intersección inferior derecha */}
-                      <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
-                      </div>
-                      
-                      <div className="relative w-full mb-3 flex items-center justify-center h-48 bg-transparent">
-                        <img src={p.imagen_url} className="w-full h-full object-contain" alt={p.titulo} />
-                        
-                        {/* EFECTO AGOTADO PARA IMPRESIÓN */}
-                        {p.vendido && (
-                          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                            <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-3 py-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.5)' }}>Agotado</span>
-                          </div>
-                        )}
-                      </div>
-                      <h3 className="text-xs tracking-[0.2em] font-bold uppercase mb-1 break-words line-clamp-2" style={{ color: '#ffffff' }}>{p.titulo}</h3>
-                      <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'light', letterSpacing: '0.1em', marginBottom: '8px' }} className="font-champagne">${p.precio} USD</p>
-                      
-                      {/* Tallas */}
-                      {p.subcategoria === 'Anillos' ? (
-                        <div className="flex gap-2 justify-center mb-4 flex-wrap mt-1">
-                           {tallasDisponibles.map(t => {
-                             const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
-                             const isAvailable = stock > 0;
-                             return (
-                               <div key={t} className="flex flex-col items-center gap-0.5">
-                                 <div style={{
-                                   border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.3)' : 'rgba(255,0,0,0.2)'}`,
-                                   color: isAvailable ? '#ffffff' : '#ff0000',
-                                   width: '26px', height: '26px',
-                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                   fontSize: '12px', fontWeight: 'bold'
-                                 }} className="font-champagne">
-                                   {t}
-                                 </div>
-                                 <span style={{ fontSize: '12px', color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }} className="font-champagne">
-                                   {stock}
-                                 </span>
-                               </div>
-                             );
-                           })}
-                        </div>
-                      ) : (
-                        <div style={{ height: '8px', marginBottom: '8px' }}></div> 
-                      )}
+             return (
+               <div key={`${cat}-${subcat}`}>
+                 
+                 {/* 1. PAGINA DE PORTADA (LOGO Y TITULOS CENTRADOS) */}
+                 <div className="break-after-page w-full flex flex-col items-center justify-center p-10 box-border" style={{ backgroundColor: '#000000', height: '100vh' }}>
+                   <img src={LOGO_URL} alt="ANTARES" className="h-32 w-auto object-contain mb-16" />
+                   <h3 className="text-xl tracking-[0.4em] uppercase mb-4 text-center" style={{ color: '#888888' }}>{parentMenu}</h3>
+                   <h2 className="text-5xl tracking-[0.2em] uppercase mb-8 text-center font-bold" style={{ color: '#ffffff' }}>{cat}</h2>
+                   <h4 className="text-2xl tracking-[0.4em] uppercase text-center" style={{ color: '#aaaaaa' }}>— {subcat} —</h4>
+                 </div>
 
-                      <p className="text-[9px] leading-relaxed px-2 line-clamp-3 uppercase mt-auto text-gray-400">{p.descripcion}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-             ));
+                 {/* 2. PAGINAS DE PRODUCTOS (EXACTAMENTE 4 POR HOJA) */}
+                 {gruposDe4.map((grupo, indexGrupo) => (
+                   <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page p-4 flex flex-col justify-center" style={{ backgroundColor: '#000000', height: '100vh', boxSizing: 'border-box' }}>
+                     <div className="grid grid-cols-2 w-full h-full border-t border-l border-white/20">
+                       {grupo.map((p) => (
+                         <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/20 p-6 h-full" style={{ backgroundColor: '#000000' }}>
+                           
+                           {/* Estrella en la intersección inferior derecha */}
+                           <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center">
+                             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
+                           </div>
+                           
+                           <div className="relative w-full flex-grow flex items-center justify-center bg-transparent mb-6 mt-4">
+                             <img src={p.imagen_url} className="max-w-full max-h-[30vh] object-contain" alt={p.titulo} />
+                             
+                             {/* EFECTO AGOTADO PARA IMPRESIÓN */}
+                             {p.vendido && (
+                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+                                 <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2 bg-black/80 text-white border-white/50">Agotado</span>
+                               </div>
+                             )}
+                           </div>
+                           
+                           <h3 className="text-sm tracking-[0.2em] font-bold uppercase mb-2 break-words line-clamp-2 text-white">{p.titulo}</h3>
+                           <p className="text-white text-[20px] font-light tracking-[0.1em] mb-4 font-champagne">${p.precio} USD</p>
+                           
+                           {/* Tallas con mejor espaciado */}
+                           {p.subcategoria === 'Anillos' ? (
+                             <div className="flex gap-3 justify-center mb-6 flex-wrap">
+                                {tallasDisponibles.map(t => {
+                                  const stock = parseInt(parseTallasseguro(p.tallas)[t] || 0);
+                                  const isAvailable = stock > 0;
+                                  return (
+                                    <div key={t} className="flex flex-col items-center gap-1">
+                                      <div className="font-champagne text-[14px] font-bold flex items-center justify-center w-9 h-9" style={{ border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.4)' : 'rgba(255,0,0,0.2)'}`, color: isAvailable ? '#ffffff' : '#ff0000' }}>
+                                        {t}
+                                      </div>
+                                      <span className="font-champagne text-[12px]" style={{ color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                        {stock}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                             </div>
+                           ) : (
+                             <div className="h-6 mb-6"></div> 
+                           )}
+
+                           {/* Descripción en blanco y bien distribuida */}
+                           <p className="text-[11px] leading-relaxed px-4 line-clamp-3 uppercase mt-auto mb-4 text-white">{p.descripcion}</p>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             );
           });
         })}
       </div>
