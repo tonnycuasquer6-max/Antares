@@ -914,7 +914,7 @@ export default function App() {
           .screen-only { display: none !important; } 
           .print-only { display: block !important; background-color: #000000 !important; width: 100%; } 
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .page-break-after { page-break-after: always; break-after: page; }
+          .break-after-page { page-break-after: always; break-after: page; }
         }
       `}</style>
 
@@ -1189,17 +1189,19 @@ export default function App() {
                                                     {pedido.estado}
                                                   </span>
                                                </div>
+                                               
+                                               {/* PRODUCTOS CON IMAGENES Y TEXTO ALINEADO */}
                                                <div className="space-y-4 mb-4">
                                                  {JSON.parse(pedido.productos).map((prod, i) => (
                                                    <div key={i} className="flex items-center justify-between text-[8px] sm:text-[10px] text-gray-300 border-b border-white/5 pb-2">
-                                                     <div className="flex items-center gap-3">
-                                                       <img src={prod.imagen_url} alt={prod.titulo} className="w-12 h-12 object-contain bg-black/20" />
-                                                       <div className="flex flex-col">
+                                                     <div className="flex items-center gap-3 text-left">
+                                                       <img src={prod.imagen_url} alt={prod.titulo} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-transparent" />
+                                                       <div className="flex flex-col text-left">
                                                          <span className="truncate pr-2 uppercase text-white tracking-[0.1em] font-bold">{prod.cantidad}x {prod.titulo}</span>
                                                          {prod.tallaSeleccionada && <span className="text-gray-500 mt-1 uppercase tracking-[0.1em]">Talla: {prod.tallaSeleccionada}</span>}
                                                        </div>
                                                      </div>
-                                                     <span className="font-champagne text-[12px] whitespace-nowrap">${(prod.precio * prod.cantidad).toFixed(2)}</span>
+                                                     <span className="font-champagne text-[10px] sm:text-[12px] whitespace-nowrap">${(prod.precio * prod.cantidad).toFixed(2)}</span>
                                                    </div>
                                                  ))}
                                                  <div className="pt-2 mt-2 flex justify-between text-[10px] sm:text-[12px] font-bold text-white tracking-[0.2em] uppercase">
@@ -1207,6 +1209,7 @@ export default function App() {
                                                    <span className="font-champagne">${parseFloat(pedido.total_envio).toFixed(2)}</span>
                                                  </div>
                                                </div>
+
                                                {pedido.link_maps && (
                                                  <div className="pt-2 text-[8px] sm:text-[10px] text-blue-400 mb-2">
                                                    <a href={pedido.link_maps} target="_blank" rel="noreferrer">Ver Ubicación (Maps)</a>
@@ -1626,6 +1629,408 @@ export default function App() {
             </div>
           )}
 
+          {/* CARRITO */}
+          {userRole !== 'admin' && user && activeView === 'bag' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-4xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Su Selección</h2>
+              
+              {carrito.length === 0 ? (
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[12px] text-center py-10">Su bolso está vacío en este momento.</p>
+              ) : (
+                <div className="bg-white/5 backdrop-blur-3xl p-4 md:p-10 shadow-2xl relative border border-none">
+                  
+                  {checkoutPaso === 1 && (
+                    <>
+                      <h3 className="text-[8px] tracking-[0.4em] uppercase text-gray-400 mb-6 md:mb-10 text-center">Detalle de su Pedido</h3>
+                      {carrito.map(item => (
+                        <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
+                          <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
+                          <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
+                          <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
+                            <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
+                            <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
+                              {item.categoria} {item.subcategoria === 'Anillos' && item.tallaSeleccionada ? ` | Talla: ${item.tallaSeleccionada}` : ''}
+                            </p>
+                            <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, -1)} className="text-white border border-white/20 w-6 h-6 flex items-center justify-center hover:bg-white/10 cursor-pointer bg-transparent outline-none">-</button>
+                              <span className="text-[10px] text-white w-4 text-center">{item.cantidad || 1}</span>
+                              <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>+</button>
+                            </div>
+                          </div>
+                          <span className="text-[10px] tracking-[0.1em] text-white whitespace-nowrap">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                        </div>
+                      ))}
+                      
+                      <div className="mt-8 border-t border-white/10 pt-6">
+                        <label className="text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-4 block text-center sm:text-right">MÉTODO DE ENTREGA</label>
+                        <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                          <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-colors outline-none cursor-pointer ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                        </div>
+
+                        {envioConfig.tipo === 'domicilio' && (
+                          <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
+                            <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
+                              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio'); }} onMouseEnter={() => setOpenFormSelect('envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors uppercase">
+                                {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
+                              </div>
+                              {openFormSelect === 'envio' && (
+                                <div className="absolute top-full right-0 w-full pt-1 z-[300]">
+                                  <div className="bg-transparent backdrop-blur-[30px] flex flex-col gap-4 py-4 shadow-none border-none">
+                                    {sectoresQuito.map(sector => (
+                                      <span key={sector.nombre} onClick={(e) => { e.stopPropagation(); setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} className="cursor-pointer transition-colors w-full text-right px-4 text-gray-500 hover:text-white text-[10px] tracking-[0.1em] uppercase">
+                                        {sector.nombre} - ${sector.precio.toFixed(2)} USD
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <input 
+                              type="url" 
+                              placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
+                              value={envioConfig.linkMaps}
+                              onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
+                              className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors"
+                              required
+                            />
+                            <p className="text-[8px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6">$ {subtotalCarrito.toFixed(2)} USD</span></p>
+                        <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
+                        <div className="w-full sm:w-64 h-px bg-white/10 my-2 md:my-4"></div>
+                        <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                      </div>
+                      
+                      <div className="flex justify-center mt-10 md:mt-16">
+                        <button onClick={handleContinuarCheckout} className="text-black text-[10px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl w-full sm:w-auto">
+                          {envioConfig.tipo === 'domicilio' ? 'Continuar al Pago' : 'Finalizar Pedido vía WhatsApp'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {checkoutPaso === 2 && (
+                    <div className="flex flex-col items-center animate-fade-in">
+                      <button onClick={() => setCheckoutPaso(1)} className="self-start text-[8px] tracking-[0.2em] uppercase text-gray-500 hover:text-white bg-transparent border-none cursor-pointer mb-6">Volver al carrito</button>
+                      <h3 className="text-[10px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light">Confirmación de Pago</h3>
+                      <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose">
+                        Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
+                      </p>
+
+                      <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-white/5">
+                        <p className="text-[8px] tracking-[0.2em] text-white uppercase mb-6">Cuentas Autorizadas</p>
+                        
+                        <div className="flex justify-center gap-4 mb-8 border-b border-white/10 pb-4">
+                          {['pichincha', 'guayaquil', 'deuna'].map((metodo) => (
+                            <button
+                              key={metodo}
+                              onClick={() => setMetodoPagoSeleccionado(metodo)}
+                              className={`text-[8px] tracking-[0.2em] uppercase px-3 py-2 transition-all duration-300 border-b-2 outline-none cursor-pointer bg-transparent ${metodoPagoSeleccionado === metodo ? 'text-white border-white' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            >
+                              {metodo === 'deuna' ? 'DeUna' : (metodo === 'pichincha' ? 'Pichincha' : 'Guayaquil')}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="text-[10px] tracking-[0.1em] text-gray-300 font-light min-h-[120px] flex items-center justify-center">
+                          {metodoPagoSeleccionado === 'pichincha' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Pichincha</strong>
+                              <p className="mb-1">Cuenta de ahorro transaccional</p>
+                              <p className="mb-1">Número: <span className="font-champagne">2206343568</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'guayaquil' && (
+                            <div className="animate-fade-in">
+                              <strong className="text-white block mb-2 uppercase tracking-widest">Banco Guayaquil</strong>
+                              <p className="mb-1">Ahorro # <span className="font-champagne">0043005125</span></p>
+                              <p>Nombre: Tonny Kevin Cuasquer Guerrero</p>
+                            </div>
+                          )}
+                          {metodoPagoSeleccionado === 'deuna' && (
+                            <div className="animate-fade-in flex flex-col items-center">
+                              <strong className="text-white block mb-4 uppercase tracking-widest">Escanea con DeUna</strong>
+                              <img 
+                                src="https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/qrPichincha_page-0001.jpg" 
+                                alt="QR DeUna" 
+                                className="w-40 h-auto object-contain border border-white/10 p-2 bg-white"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full max-w-md flex flex-col items-center gap-6">
+                         <label className="text-[8px] tracking-[0.2em] uppercase text-gray-400">Adjuntar Captura de Transferencia</label>
+                         <input 
+                           type="file" 
+                           accept="image/*"
+                           onChange={e => setComprobantePago(e.target.files[0])} 
+                           className="text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full text-center" 
+                         />
+                      </div>
+
+                      <button 
+                        onClick={enviarPedidoWhatsApp} 
+                        disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
+                        className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white shadow-xl w-full sm:w-auto ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-transparent text-gray-400 cursor-not-allowed' : 'bg-transparent text-gray-500 hover:text-white'}`}
+                      >
+                        {isUploading ? 'Procesando...' : 'Enviar Pedido vía WhatsApp'}
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* DESEOS */}
+          {userRole !== 'admin' && user && activeView === 'deseos' && (
+            <section className="container mx-auto px-2 md:px-4 py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl">
+              <h2 className="text-[14px] tracking-[0.3em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6">Lista de Deseos</h2>
+              
+              {favoritos.length === 0 ? (
+                <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px] text-center py-10">No hay piezas en su lista de deseos aún.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+                  {productos.filter(p => favoritos.includes(p.id)).map(producto => {
+                    return (
+                    <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
+                      <div className="overflow-hidden aspect-square relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
+                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
+                        {producto.vendido && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                            <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="bg-black/40 backdrop-blur-xl rounded-b-sm p-4 md:p-6 flex flex-col flex-grow items-center text-center">
+                        <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words">{producto.titulo}</h4>
+                        <span className="text-[10px] tracking-[0.1em] text-white font-light whitespace-nowrap mb-3 md:mb-4 block">${producto.precio} USD</span>
+                        
+                        <p className="text-[10px] text-white line-clamp-2 leading-relaxed mb-6 break-words uppercase">{producto.descripcion}</p>
+                        <div className="flex gap-2 mt-auto w-full justify-center">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} className="w-full px-4 md:px-5 py-2 md:py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm flex items-center justify-center bg-transparent outline-none rounded-sm" title="Quitar de deseos">
+                            Quitar de lista de deseos ♥
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )})}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* CONFIGURAR MEDIDAS */}
+          {user && activeView === 'medidas' && (
+            <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-4xl">
+              <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
+                <h2 className="text-[12px] md:text-[14px] tracking-[0.4em] uppercase text-white font-light">Configuración de Medidas</h2>
+                <button onClick={() => setActiveView('perfil')} className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none">Volver al Perfil</button>
+              </div>
+
+              {/* TABS */}
+              <div className="flex justify-center gap-8 mb-10 border-b border-white/10 pb-0">
+                <button onClick={() => setTabMedidas('anillos')} className={`text-[10px] tracking-[0.2em] uppercase transition-colors pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'anillos' ? 'text-white border-white font-bold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>Tallas de Anillos</button>
+                <button onClick={() => setTabMedidas('cuerpo')} className={`text-[10px] tracking-[0.2em] uppercase transition-colors pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'cuerpo' ? 'text-white border-white font-bold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>Medidas Corporales</button>
+              </div>
+
+              {tabMedidas === 'anillos' && (
+                <div className="bg-white/5 backdrop-blur-3xl p-6 md:p-10 border border-white/5 max-w-3xl mx-auto animate-fade-in">
+                  <h3 className="text-[10px] md:text-[12px] tracking-[0.3em] uppercase text-white mb-10 text-center font-light">Medida de Anillo</h3>
+                  
+                  <div className="relative w-full max-w-2xl mx-auto flex items-center justify-center mb-10 min-h-[250px] sm:min-h-[300px]">
+                    {/* Silueta de manos */}
+                    <div className="absolute inset-0 flex justify-center items-end opacity-20 pointer-events-none gap-4 sm:gap-10 pb-4">
+                        <svg viewBox="0 0 512 512" style={{transform: 'scaleX(-1)'}} className="w-[40%] h-[80%] fill-white"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
+                        <svg viewBox="0 0 512 512" className="w-[40%] h-[80%] fill-white"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V80c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V64c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 4.4-3.6 8-8 8s-8-3.6-8-8V144c0-17.7-14.3-32-32-32s-32 14.3-32 32V320c0 48-18.7 94.2-52.1 128.5c-15.6 16-35.1 28.5-56.5 36.6L36.6 492.2C15.1 499.7 0 519.8 0 542.5C0 571.4 23.4 594.8 52.3 594.8H187.1c83.4 0 163.5-32.5 223.5-90.8l56.5-55.2c27.1-26.5 45.4-62.1 52.1-100.8l20.4-118.4c5.1-29.6-14.8-57.8-44.5-62.9s-57.8 14.8-62.9 44.5L416 308.2V32c0-17.7-14.3-32-32-32z"/></svg>
+                    </div>
+                    
+                    {/* Inputs sobre los dedos */}
+                    <div className="absolute inset-0 flex justify-between items-end w-full h-full pb-8 sm:pb-12 px-2 sm:px-8">
+                      {/* Mano Izquierda */}
+                      <div className="flex gap-1 sm:gap-4 items-end w-1/2 justify-center">
+                        <div className="flex flex-col items-center gap-1 mb-8 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_izq} onChange={e => setMedidasAnillo({...medidasAnillo, menique_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_izq} onChange={e => setMedidasAnillo({...medidasAnillo, anular_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-20 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_izq} onChange={e => setMedidasAnillo({...medidasAnillo, medio_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_izq} onChange={e => setMedidasAnillo({...medidasAnillo, indice_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-0 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_izq} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_izq: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                      </div>
+
+                      {/* Mano Derecha */}
+                      <div className="flex gap-1 sm:gap-4 items-end w-1/2 justify-center">
+                        <div className="flex flex-col items-center gap-1 mb-0 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Pulgar</span><input type="number" value={medidasAnillo.pulgar_der} onChange={e => setMedidasAnillo({...medidasAnillo, pulgar_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Índice</span><input type="number" value={medidasAnillo.indice_der} onChange={e => setMedidasAnillo({...medidasAnillo, indice_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-20 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Medio</span><input type="number" value={medidasAnillo.medio_der} onChange={e => setMedidasAnillo({...medidasAnillo, medio_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-16 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Anular</span><input type="number" value={medidasAnillo.anular_der} onChange={e => setMedidasAnillo({...medidasAnillo, anular_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                        <div className="flex flex-col items-center gap-1 mb-8 z-10"><span className="text-[6px] sm:text-[8px] text-gray-300 font-bold uppercase drop-shadow-md">Meñique</span><input type="number" value={medidasAnillo.menique_der} onChange={e => setMedidasAnillo({...medidasAnillo, menique_der: e.target.value})} className="w-6 sm:w-10 bg-transparent border-b border-white/20 text-white text-center text-[10px] py-1 outline-none font-champagne" placeholder="0" /></div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-gray-500 uppercase text-center tracking-widest mt-4">Ingrese el número de talla para cada dedo.</p>
+                  
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              )}
+
+              {tabMedidas === 'cuerpo' && (
+                <div className="bg-white/5 backdrop-blur-3xl p-6 md:p-10 border border-white/5 w-full animate-fade-in">
+                  <h3 className="text-[10px] md:text-[12px] tracking-[0.3em] uppercase text-white mb-10 text-center font-light">Medidas Corporales (cm)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-6 md:gap-y-8">
+                    {Object.keys(medidasCorporales).map(medida => (
+                      <div key={medida} className="flex flex-col gap-2">
+                        <label className="text-[7px] md:text-[8px] tracking-[0.2em] uppercase text-gray-500">{medida.replace('_', ' ')}</label>
+                        <input 
+                          type="number" 
+                          value={medidasCorporales[medida]} 
+                          onChange={e => setMedidasCorporales({...medidasCorporales, [medida]: e.target.value})} 
+                          className="w-full bg-transparent border-b border-white/20 text-white text-[10px] py-2 outline-none hover:border-white/50 transition-colors font-champagne" 
+                          placeholder="0.0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-12 flex justify-center">
+                    <button onClick={() => alert('Medidas guardadas en su perfil local.')} className="text-black text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl">Guardar Medidas</button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* PERFIL */}
+          {user && activeView === 'perfil' && (
+            <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in">
+              <div className="bg-white/5 backdrop-blur-3xl p-8 md:p-16 shadow-2xl relative border border-none flex flex-col items-center">
+                
+                <h2 className="text-[14px] tracking-[0.4em] uppercase text-white mb-6 font-light text-center">Mi Perfil</h2>
+                <div className="w-12 h-px bg-white/20 mb-12"></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full max-w-2xl mb-12 text-center md:text-center">
+                  <div className="flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Nombres</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                      {user?.user_metadata?.first_name || 'NO ESPECIFICADO'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Apellidos</label>
+                    <p className="text-white text-[12px] tracking-[0.2em] uppercase font-light">
+                      {user?.user_metadata?.last_name || 'NO ESPECIFICADO'}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col items-center">
+                    <label className="block text-[8px] tracking-[0.3em] uppercase text-gray-500 mb-3">Correo Electrónico</label>
+                    <p className="text-white text-[12px] tracking-[0.1em] font-light truncate w-full" title={user?.email}>
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full border-t border-white/10 pt-10 mb-12 flex flex-col sm:flex-row justify-center gap-4 md:gap-8">
+                  <button 
+                    onClick={() => setShowCompleteProfile(true)} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Editar Información
+                  </button>
+                  <button 
+                    onClick={() => setActiveView('medidas')} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Configurar Medidas
+                  </button>
+                  <button 
+                    onClick={solicitarCambioContrasena} 
+                    className="text-[8px] tracking-[0.3em] uppercase text-white border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-500 outline-none cursor-pointer bg-transparent"
+                  >
+                    Cambiar Contraseña
+                  </button>
+                </div>
+
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Configuración de Menús</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Oculta o muestra secciones en la página principal.</p>
+                    
+                    <div className="flex flex-col gap-2 w-full max-w-md mx-auto mb-10">
+                      {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
+                        <div key={menu} className="bg-transparent p-4 border border-none">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-[12px] tracking-[0.2em] uppercase ${hiddenItems.includes(menu) ? 'text-red-500' : 'text-white font-light'}`}>{menu}</span>
+                            <button onClick={() => toggleMenuVisibility(menu)} className="text-[10px] uppercase tracking-[0.2em] bg-transparent border border-white/20 text-gray-300 hover:text-white px-3 py-2 cursor-pointer transition-colors">
+                              {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
+                            </button>
+                          </div>
+                          
+                          {estructuraCatalogo[menu] && estructuraCatalogo[menu].map(sub => (
+                            <div key={sub} className="flex justify-between items-center pl-6 mt-3 pt-3 border-t border-white/5">
+                              <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-400' : 'text-gray-400 font-light'}`}>{sub}</span>
+                              <button onClick={() => toggleMenuVisibility(sub)} className="text-[8px] uppercase tracking-[0.2em] bg-transparent border border-white/10 text-gray-500 hover:text-white px-2 py-1 cursor-pointer transition-colors">
+                                {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {userRole === 'admin' && (
+                  <div className="mb-4 pt-6 md:pt-8 border-t border-white/10 mt-6 w-full flex flex-col items-center">
+                    <label className="block text-[14px] tracking-[0.3em] uppercase text-white mb-4 md:mb-6 text-center font-light">Catálogo PDF</label>
+                    <p className="text-gray-400 text-[10px] tracking-[0.2em] uppercase text-center mb-6 md:mb-8 font-light">Seleccione las colecciones que desea incluir en su PDF interactivo.</p>
+                    <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10 w-full max-w-md mx-auto">
+                      {Object.entries(estructuraCatalogo).map(([menuPrincipal, submenus]) => (
+                        <div key={menuPrincipal} className="border-b border-white/10 pb-3 md:pb-4">
+                          <div className="w-full flex justify-between items-center bg-transparent border-none outline-none group cursor-pointer" onClick={() => setMenuPdfExpandido(menuPdfExpandido === menuPrincipal ? null : menuPrincipal)}>
+                            <button className="text-gray-300 group-hover:text-white text-[12px] tracking-[0.3em] uppercase bg-transparent border-none outline-none cursor-pointer transition-colors text-left flex-grow font-light">
+                              {menuPrincipal}
+                            </button>
+                            <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer ${isAllSelected(menuPrincipal) ? 'bg-white border-white' : 'border-gray-500'}`} onClick={(e) => { e.stopPropagation(); toggleAll(menuPrincipal); }}>
+                              {isAllSelected(menuPrincipal) && <div className="w-2 h-2 bg-black"></div>}
+                            </div>
+                          </div>
+                          {menuPdfExpandido === menuPrincipal && (
+                            <div className="pt-4 md:pt-6 flex flex-col gap-3 md:gap-4 pl-2 animate-fade-in">
+                              {submenus.map(cat => (
+                                <label key={cat} className="flex items-center gap-3 md:gap-4 cursor-pointer group w-full">
+                                  <div className={`w-3.5 h-3.5 border transition-colors flex items-center justify-center flex-shrink-0 ${categoriasDescarga.includes(cat) ? 'bg-white border-white' : 'border-gray-500 group-hover:border-white'}`}>
+                                    {categoriasDescarga.includes(cat) && <div className="w-2 h-2 bg-black"></div>}
+                                  </div>
+                                  <input type="checkbox" className="hidden" onChange={() => handleCheckbox(cat)} checked={categoriasDescarga.includes(cat)} />
+                                  <span className="text-gray-400 group-hover:text-white text-[10px] tracking-[0.2em] uppercase transition-colors font-light">{cat}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-center">
+                      <button onClick={() => window.print()} className="text-black text-[12px] font-bold tracking-[0.3em] uppercase px-8 py-4 bg-white hover:bg-gray-200 transition-colors cursor-pointer outline-none border-none shadow-xl flex items-center justify-center gap-3">
+                        <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Generar Catálogo PDF
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
         </main>
         
         <footer className="bg-black py-8 md:py-12 text-center text-gray-600 text-[10px] tracking-[0.5em] uppercase border-none mt-auto px-4 screen-only w-full">
@@ -1640,7 +2045,7 @@ export default function App() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-0 sm:p-4 animate-fade-in overflow-y-auto">
            <div className="bg-white/5 backdrop-blur-3xl border border-none p-6 sm:p-8 md:p-16 w-full h-full sm:h-auto max-w-2xl flex flex-col shadow-2xl relative my-0 sm:my-8 rounded-none overflow-y-auto sm:overflow-visible">
               
-              {(user.user_metadata?.first_name) && (
+              {(user?.user_metadata?.first_name) && (
                 <button onClick={() => setShowCompleteProfile(false)} className="absolute top-2 right-2 sm:top-4 sm:right-6 text-gray-500 hover:text-white text-2xl sm:text-3xl bg-black/50 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center border-none cursor-pointer outline-none z-50">×</button>
               )}
 
@@ -1797,7 +2202,7 @@ export default function App() {
              }
 
              return gruposDe4.map((grupo, indexGrupo) => (
-              <div key={`${cat}-${subcat}-${indexGrupo}`} className="page-break-after px-2 py-4 flex flex-col" style={{ backgroundColor: '#000000', height: '100vh', boxSizing: 'border-box' }}>
+              <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page px-2 py-4 flex flex-col" style={{ backgroundColor: '#000000', height: '100vh', boxSizing: 'border-box' }}>
                 
                 {/* SOLO SE MUESTRA EL TITULO EN EL PRIMER GRUPO DE LA SUBCATEGORIA */}
                 {indexGrupo === 0 && (
