@@ -210,7 +210,7 @@ export default function App() {
       }
     });
     if (error) alert('Hubo un error al actualizar su información.');
-    else { setUser(data.user as any); setShowCompleteProfile(false); }
+    else { setUser(data.user); setShowCompleteProfile(false); }
   };
 
   const solicitarCambioContrasena = async () => {
@@ -336,7 +336,7 @@ export default function App() {
 
   const handleContinuarCheckout = () => {
     if (envioConfig.tipo === 'domicilio') setCheckoutPaso(2);
-    else enviarPedidoWhatsApp({} as any); 
+    else enviarPedidoWhatsApp(); 
   };
 
   const enviarPedidoWhatsApp = async (e) => {
@@ -401,22 +401,22 @@ export default function App() {
       const { data: prodData } = await supabase.from('productos').select('*').eq('id', item.id).single();
       if (prodData) {
         let isRing = prodData.subcategoria === 'Anillos';
-        let updatePayload: any = { vendidos: (prodData.vendidos || 0) + item.cantidad };
+        let updatePayload = { vendidos: (prodData.vendidos || 0) + item.cantidad };
         
         if (isRing) {
           let currentTallas = parseTallasseguro(prodData.tallas);
           if (currentTallas[item.tallaSeleccionada] !== undefined) {
-            currentTallas[item.tallaSeleccionada] = Math.max(0, parseInt(currentTallas[item.tallaSeleccionada] as string) - item.cantidad);
+            currentTallas[item.tallaSeleccionada] = Math.max(0, parseInt(currentTallas[item.tallaSeleccionada]) - item.cantidad);
           }
           updatePayload.tallas = JSON.stringify(currentTallas);
-          let totalStock = Object.values(currentTallas).reduce((a: number, b: unknown) => a + Number(b), 0);
+          let totalStock = Object.values(currentTallas).reduce((a,b) => a + Number(b), 0);
           if (totalStock === 0) updatePayload.vendido = true;
         } else {
           let currentDisp = parseInt(prodData.disponibilidad);
           if (!isNaN(currentDisp)) {
             let newDisp = Math.max(0, currentDisp - item.cantidad);
-            (updatePayload as any).disponibilidad = newDisp.toString();
-            if (newDisp === 0) (updatePayload as any).vendido = true;
+            updatePayload.disponibilidad = newDisp.toString();
+            if (newDisp === 0) updatePayload.vendido = true;
           }
         }
         await supabase.from('productos').update(updatePayload).eq('id', item.id);
@@ -470,7 +470,7 @@ export default function App() {
       if (errorStock) return alert('Una de las tallas seleccionadas no tiene stock disponible para descontar.');
       nuevasTallas = JSON.stringify(tallasObj);
       cantidadVendida = selectedSizes.length; 
-      const totalStockRestante = Object.values(tallasObj).reduce((acc: number, val: unknown) => acc + Number(val), 0);
+      const totalStockRestante = Object.values(tallasObj).reduce((acc, val) => acc + Number(val), 0);
       if (totalStockRestante === 0) nuevoVendido = true;
       setTallasSeleccionadas(prev => ({ ...prev, [producto.id]: [] }));
     } else {
@@ -576,7 +576,7 @@ export default function App() {
         }
         setIsRemovingBg(false);
       };
-      img.src = event.target.result as string;
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -754,7 +754,7 @@ export default function App() {
           <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
         </div>
         <div className={`overflow-hidden aspect-square relative w-full mb-6 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={() => { if(userRole === 'cliente') setProductoSeleccionado(producto); }}>
-          <img loading="lazy" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700 will-change-opacity" />
+          <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
               <span className="text-white tracking-[0.4em] text-[10px] md:text-xs font-bold uppercase border border-white/50 px-4 py-2 bg-black/60">Agotado</span>
@@ -832,9 +832,9 @@ export default function App() {
       if (!p.vendido) {
         if (p.subcategoria === 'Anillos') {
           const tallasObj = parseTallasseguro(p.tallas);
-          const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty as string) > 0);
+          const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(qty) > 0);
           activeTallas.forEach(([talla, cantidad]) => {
-            acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad as string) });
+            acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(cantidad) });
           });
         } else {
           const disp = parseInt(p.disponibilidad);
@@ -1092,7 +1092,7 @@ export default function App() {
                     return (
                       <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
                         <div className="col-span-2 flex items-center gap-4 text-left">
-                          <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
+                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black" />
                           <div className="flex flex-col truncate">
                             <span className="uppercase truncate">{item.titulo}</span>
                             <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
@@ -1124,7 +1124,7 @@ export default function App() {
                     return (
                       <div key={`sold-${item.id}-${idx}`} className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors">
                         <div className="col-span-2 flex items-center gap-4 text-left">
-                          <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
+                          <img src={item.imagen_url} alt={item.titulo} className="w-10 h-10 object-cover bg-black opacity-50" />
                           <div className="flex flex-col truncate">
                             <span className="uppercase truncate text-gray-300">{item.titulo}</span>
                             <span className="text-[8px] text-gray-500 uppercase mt-1 truncate">{item.categoria}</span>
@@ -1151,7 +1151,7 @@ export default function App() {
               {userRole === 'admin' ? (
                 <div className="flex flex-col gap-6 w-full">
                   {Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
-                    const sortedMonthPedidos = [...(monthPedidos as any[])].sort((a: any,b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+                    const sortedMonthPedidos = [...monthPedidos].sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
                     const userGroups = {};
                     sortedMonthPedidos.forEach(ped => {
                       const clientKey = `${ped.cliente_nombre}|${ped.cliente_telefono}`;
@@ -1177,12 +1177,12 @@ export default function App() {
                                          </div>
                                       </div>
                                       <div className="text-right text-gray-400 text-[7px] sm:text-[8px] tracking-[0.2em] uppercase">
-                                         {(clientPedidos as any[]).length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
+                                         {clientPedidos.length} Pedido(s) {isExpanded ? '[-]' : '[+]'}
                                       </div>
                                    </div>
                                    {isExpanded && (
                                       <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
-                                         {[...(clientPedidos as any[])].reverse().map((pedido: any) => (
+                                         {[...clientPedidos].reverse().map(pedido => (
                                             <div key={pedido.id} className="bg-black/20 p-3 sm:p-4 border border-white/5">
                                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/5 pb-2 gap-2 sm:gap-0">
                                                   <span className="text-white font-bold text-[8px] sm:text-[10px] tracking-[0.2em]">PEDIDO #{pedido.orderNumber}</span>
@@ -1196,7 +1196,7 @@ export default function App() {
                                                  {JSON.parse(pedido.productos).map((prod, i) => (
                                                    <div key={i} className="flex items-center justify-between text-[8px] sm:text-[10px] text-gray-300 border-b border-white/5 pb-2">
                                                      <div className="flex items-center gap-3 text-left">
-                                                       <img loading="lazy" src={prod.imagen_url} alt={prod.titulo} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-transparent" />
+                                                       <img src={prod.imagen_url} alt={prod.titulo} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-transparent" />
                                                        <div className="flex flex-col text-left">
                                                          <span className="truncate pr-2 uppercase text-white tracking-[0.1em] font-bold">{prod.cantidad}x {prod.titulo}</span>
                                                          {prod.tallaSeleccionada && <span className="text-gray-500 mt-1 uppercase tracking-[0.1em]">Talla: {prod.tallaSeleccionada}</span>}
@@ -1495,12 +1495,12 @@ export default function App() {
                        )}
                      </div>
 
-                     {Number(nuevaPieza.costo) > 0 && (
+                     {nuevaPieza.costo > 0 && (
                        <div className="w-full flex flex-col items-center justify-center mb-8 pb-6 border-b border-white/5 mt-4">
                          <p className="text-[8px] md:text-[10px] tracking-[0.2em] text-gray-500 mb-4 uppercase">Estrategia de Precios</p>
                          <div className="flex gap-4 md:gap-8 flex-wrap justify-center text-[8px] md:text-[10px] tracking-[0.2em] text-gray-300 uppercase">
                             {[115, 100, 75, 50, 25].map(porcentaje => {
-                              const sugerido = Number(nuevaPieza.costo) * (1 + porcentaje / 100);
+                              const sugerido = nuevaPieza.costo * (1 + porcentaje / 100);
                               return (
                                 <button key={porcentaje} type="button" onClick={() => setNuevaPieza({...nuevaPieza, precio: sugerido.toFixed(2)})} className="bg-transparent text-gray-500 hover:text-white transition-colors cursor-pointer outline-none border border-gray-500 hover:border-white px-4 py-2 font-champagne">{porcentaje}%: ${sugerido.toFixed(2)}</button>
                               );
@@ -1523,7 +1523,7 @@ export default function App() {
                        </div>
                      )}
 
-                     <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows={3} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-8 resize-none"></textarea>
+                     <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows="3" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 transition-colors mb-8 resize-none"></textarea>
                      
                      <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full">
                        <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files[0]})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
@@ -1549,7 +1549,7 @@ export default function App() {
               <div className="w-full h-full sm:h-auto max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl flex flex-col md:flex-row relative shadow-2xl overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-sm items-stretch bg-[#0a0a0a] max-h-[100vh] sm:max-h-[90vh] md:max-h-[80vh]" onClick={e => e.stopPropagation()}>
                 <button onClick={() => setProductoSeleccionado(null)} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 z-[250] text-2xl sm:text-3xl cursor-pointer bg-black/50 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center border-none outline-none">×</button>
                 <div className="w-full md:w-1/2 p-0 m-0 bg-[#0a0a0a] flex flex-col justify-center min-h-[300px] md:min-h-0">
-                  <img loading="lazy" src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover sm:object-contain block m-0 p-0" />
+                  <img src={productoSeleccionado.imagen_url} alt={productoSeleccionado.titulo} className="w-full h-full object-cover sm:object-contain block m-0 p-0" />
                 </div>
                 <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center bg-white/5 backdrop-blur-3xl border-t md:border-t-0 md:border-l border-white/5 m-0">
                   <h2 className="text-[12px] sm:text-[14px] md:text-[20px] font-bold tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md w-full">{productoSeleccionado.titulo}</h2>
@@ -1646,7 +1646,7 @@ export default function App() {
                       {carrito.map(item => (
                         <div key={item.id + (item.tallaSeleccionada || '')} className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 py-4 md:py-6 border-b border-white/5 relative">
                           <button onClick={() => setCarrito(carrito.filter(p => !(p.id === item.id && p.tallaSeleccionada === item.tallaSeleccionada)))} className="absolute top-2 right-0 text-gray-500 hover:text-red-500 text-xl cursor-pointer bg-transparent border-none outline-none sm:pl-4">×</button>
-                          <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
+                          <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/20" />
                           <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                             <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
                             <p className="text-[8px] tracking-[0.1em] text-gray-500 uppercase line-clamp-1 mb-2">
@@ -1806,7 +1806,7 @@ export default function App() {
                     return (
                     <div key={producto.id} className="group relative bg-transparent rounded-sm flex flex-col p-0">
                       <div className="overflow-hidden aspect-square relative cursor-pointer" onClick={() => setProductoSeleccionado(producto)}>
-                        <img loading="lazy" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700 will-change-opacity" />
+                        <img src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-all duration-700" />
                         {producto.vendido && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
                             <span className="text-white tracking-[0.4em] text-[10px] font-bold uppercase border border-white/50 px-4 md:px-6 py-2 md:py-3 bg-black/40">Agotado</span>
@@ -2193,8 +2193,8 @@ export default function App() {
 
           return Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
              const gruposDe4 = [];
-             for (let i = 0; i < (piezasDeSub as any[]).length; i += 4) {
-               gruposDe4.push((piezasDeSub as any[]).slice(i, i + 4));
+             for (let i = 0; i < piezasDeSub.length; i += 4) {
+               gruposDe4.push(piezasDeSub.slice(i, i + 4));
              }
 
              return (
@@ -2218,7 +2218,7 @@ export default function App() {
                           </div>
                           
                           <div className="relative w-full h-[220px] flex items-center justify-center bg-transparent mb-2 mt-2">
-                            <img loading="lazy" src={p.imagen_url} className="max-w-full max-h-full object-contain" alt={p.titulo} />
+                            <img src={p.imagen_url} className="max-w-full max-h-full object-contain" alt={p.titulo} />
                             {p.vendido && (
                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
                                 <span className="tracking-[0.4em] text-[10px] font-bold uppercase border px-4 py-2 bg-black/80 text-white border-white/50">Agotado</span>

@@ -15,12 +15,15 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "noImplicitAny": false,
     "paths": {
       "@/*": [
         "./*"
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "strict": false,
+    "noUncheckedIndexedAccess": false
   }
 }
