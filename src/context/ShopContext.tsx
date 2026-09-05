@@ -61,13 +61,30 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchConfiguracion = useCallback(async () => {
     const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
-    if (data && data.menus_ocultos) setHiddenItems(data.menus_ocultos);
+    if (data && data.menus_ocultos) {
+      const nextHiddenItems = Array.isArray(data.menus_ocultos) ? data.menus_ocultos : [];
+      setHiddenItems(current => current.length === nextHiddenItems.length && current.every(item => nextHiddenItems.includes(item)) ? current : nextHiddenItems);
+    }
   }, []);
 
   useEffect(() => {
     fetchProductos();
     fetchConfiguracion();
   }, [fetchProductos, fetchConfiguracion]);
+
+  useEffect(() => {
+    const refreshConfiguracion = () => { fetchConfiguracion(); };
+    const channel = supabase
+      .channel('configuracion-menu-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracion', filter: 'id=eq.1' }, refreshConfiguracion)
+      .subscribe();
+
+    window.addEventListener('focus', refreshConfiguracion);
+    return () => {
+      window.removeEventListener('focus', refreshConfiguracion);
+      void supabase.removeChannel(channel);
+    };
+  }, [fetchConfiguracion]);
 
   const parseTallasseguro = (tallasData: any): Record<string, number | string> => {
     if (!tallasData) return {};

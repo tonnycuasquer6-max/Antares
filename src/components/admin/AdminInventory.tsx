@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
-import { useState, useEffect } from 'react';
+import BulkProductForm from './BulkProductForm';
 import type { PedidoData } from '../../types';
 
 export default function AdminInventory() {
-  const { productos, parseTallasseguro } = useShop();
+  const { productos, parseTallasseguro, setProductos } = useShop();
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
 
   useEffect(() => {
@@ -18,18 +18,16 @@ export default function AdminInventory() {
 
   const stockProyeccion = useMemo(() => {
     return productos.reduce((acc: any[], p) => {
-      if (!p.vendido) {
-        if (p.subcategoria === 'Anillos') {
+      if (p.subcategoria === 'Anillos') {
           const tallasObj = parseTallasseguro(p.tallas);
           const activeTallas = Object.entries(tallasObj).filter(([_, qty]) => parseInt(String(qty)) > 0);
-          activeTallas.forEach(([talla, cantidad]) => {
+          (activeTallas.length ? activeTallas : [['Todas', 0]]).forEach(([talla, cantidad]) => {
             acc.push({ ...p, talla_especifica: talla, stock_especifico: parseInt(String(cantidad)) });
           });
-        } else {
+      } else {
           const disp = parseInt(String(p.disponibilidad));
           if (!isNaN(disp) && disp > 0) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: disp });
-          else if (isNaN(disp)) acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: p.disponibilidad });
-        }
+          else acc.push({ ...p, talla_especifica: 'N/A', stock_especifico: isNaN(disp) ? p.disponibilidad : 0 });
       }
       return acc;
     }, []);
@@ -58,11 +56,18 @@ export default function AdminInventory() {
     return desglosadas;
   }, [listaPedidos]);
 
+  const publicarProducto = async (id: string | number) => {
+    const { data, error } = await supabase.from('productos').update({ publicado: true }).eq('id', id).select().single();
+    if (!error && data) setProductos(current => current.map(product => product.id === id ? data : product));
+  };
+
   return (
     <section className="container mx-auto py-8 md:py-16 flex-grow animate-fade-in w-full max-w-6xl relative z-10">
       <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white mb-12 text-center border-b border-white/10 pb-4 md:pb-6 drop-shadow-md">
         Inventario y Contabilidad
       </h2>
+
+      <BulkProductForm onSaved={products => setProductos(current => [...products, ...current])} />
       
       <div className="bg-black/40 backdrop-blur-3xl border border-white/10 p-4 md:p-8 w-full overflow-x-auto mb-16 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)]">
         <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6 drop-shadow-md">Stock Disponible (Proyección)</h3>
@@ -83,6 +88,7 @@ export default function AdminInventory() {
             return (
               <div key={`inv-${item.id}-${idx}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
+                  <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
                   <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-12 h-12 object-contain bg-black/60 rounded-sm shadow-inner p-1" />
                   <div className="flex flex-col truncate">
                     <span className="uppercase truncate font-bold text-white/90">{item.titulo}</span>

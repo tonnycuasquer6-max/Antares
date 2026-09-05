@@ -11,6 +11,7 @@ export interface Product {
   tallas: Record<string, number> | string | null;
   imagen_url: string;
   vendido: boolean;
+  publicado?: boolean;
   vendidos: number;
   created_at?: string;
 }
@@ -67,6 +68,7 @@ export interface User {
 
 export interface NuevaPieza {
   titulo: string;
+  categoria?: string;
   descripcion: string;
   costo: string | number;
   precio: string | number;

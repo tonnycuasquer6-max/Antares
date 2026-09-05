@@ -42,7 +42,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       return productos.filter(p => favoritos.includes(p.id));
     }
 
-    let filtrados = productos.filter(p => p.categoria === category && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
+    let filtrados = productos.filter(p => p.publicado !== false && p.categoria === category && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
     if (category === 'Acero Fino') {
       if (filtroColor !== 'Todo') {
@@ -211,20 +211,6 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             </div>
 
           </div>
-        </div>
-      )}
-
-      {/* Botón Admin: Añadir Pieza */}
-      {userRole === 'admin' && !showInlineForm && category !== 'deseos' && (
-        <div 
-          onClick={() => { 
-            setEditandoId(null); 
-            setNuevaPieza({titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: activeSubCategory !== 'Todo' ? activeSubCategory : '', tallas: {}, color: '', imagen: null, imagen_url: '' }); 
-            setShowInlineForm(true); 
-          }} 
-          className="mb-6 sm:mb-8 md:mb-12 border border-dashed border-white/20 py-4 sm:py-6 md:py-8 text-center bg-black/20 hover:bg-white/5 transition-all duration-300 cursor-pointer w-full backdrop-blur-md rounded-sm"
-        >
-          <span className="text-white/70 tracking-[0.2em] text-[8px] sm:text-[10px] uppercase">+ Añadir nueva pieza a {category}</span>
         </div>
       )}
 
