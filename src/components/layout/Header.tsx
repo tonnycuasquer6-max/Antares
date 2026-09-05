@@ -111,11 +111,11 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
               if (userRole !== 'admin' && isMenuHidden) return null;
               
               return (
-                <li key={menu} className="group relative cursor-pointer py-2" onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
+                <li key={menu} className="group relative cursor-pointer py-2" onMouseEnter={() => { setMenuAbierto(menu); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
-                  <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden lg:group-hover:block'}`}>
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
                     <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`}>
                       {estructuraCatalogo[menu].map(sub => {
                         const isSubHidden = hiddenItems.includes(sub);
@@ -134,11 +134,11 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             
             {/* Obsequios */}
             {!menuUsuarioActivo && (!hiddenItems.includes('Obsequios') || userRole === 'admin') && (
-              <li className="group relative cursor-pointer py-2" onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
+              <li className="group relative cursor-pointer py-2" onMouseEnter={() => { setMenuAbierto('Obsequios'); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
                 <div className={`inline-block relative transition-colors duration-300 ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden lg:group-hover:block'}`}>
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
                       <div key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-white transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs py-2">

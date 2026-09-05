@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import manos from '../../assets/Manos.png';
 import iconos from '../../assets/ICONOS.png';
 import { femaleMeasurements, maleMeasurements, type BodyMeasurementDefinition } from '../../data/bodyMeasurements';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../services/supabase';
 
 interface UserMeasurementsProps {
   onNavigate: (view: string) => void;
 }
 
 export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) {
+  const { user } = useAuth();
   const [tabMedidas, setTabMedidas] = useState('anillos'); 
   const [bodyGender, setBodyGender] = useState<'female' | 'male' | null>(null);
   const [medidasAnillo, setMedidasAnillo] = useState({
@@ -16,7 +19,40 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
   });
   const [medidasCorporales, setMedidasCorporales] = useState<Record<string, string>>({});
   const [instruccionAbierta, setInstruccionAbierta] = useState<string | null>(null);
+  const [guardandoMedidas, setGuardandoMedidas] = useState(false);
   const bodyMeasurements: BodyMeasurementDefinition[] = bodyGender === 'female' ? femaleMeasurements : maleMeasurements;
+
+  useEffect(() => {
+    if (!user) return;
+    const cargarMedidas = async () => {
+      const { data } = await supabase
+        .from('perfiles')
+        .select('medidas_anillos, medidas_corporales, genero_medidas')
+        .eq('id', user.id)
+        .single();
+      if (!data) return;
+      if (data.medidas_anillos && typeof data.medidas_anillos === 'object') setMedidasAnillo(data.medidas_anillos);
+      if (data.medidas_corporales && typeof data.medidas_corporales === 'object') setMedidasCorporales(data.medidas_corporales);
+      if (data.genero_medidas === 'female' || data.genero_medidas === 'male') setBodyGender(data.genero_medidas);
+    };
+    cargarMedidas();
+  }, [user]);
+
+  const guardarMedidas = async () => {
+    if (!user) return;
+    setGuardandoMedidas(true);
+    const { error } = await supabase.from('perfiles').update({
+      medidas_anillos: medidasAnillo,
+      medidas_corporales: medidasCorporales,
+      genero_medidas: bodyGender
+    }).eq('id', user.id);
+    setGuardandoMedidas(false);
+    if (error) {
+      alert('No se pudieron guardar las medidas. Inténtalo nuevamente.');
+      return;
+    }
+    alert('Medidas guardadas correctamente.');
+  };
 
   return (
     <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-4xl relative z-10">
@@ -136,10 +172,11 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
         
         <div className="mt-8 flex justify-center">
           <button 
-            onClick={() => alert('Medidas guardadas en su perfil local.')} 
+            onClick={guardarMedidas}
+            disabled={guardandoMedidas}
             className="text-black text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 bg-white hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] rounded-sm"
           >
-            Guardar Medidas
+            {guardandoMedidas ? 'Guardando...' : 'Guardar Medidas'}
           </button>
         </div>
 
