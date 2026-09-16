@@ -19,10 +19,25 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   const headerRef = useRef<HTMLDivElement>(null);
 
   const cristalOpacoSubmenuClass = "liquid-submenu flex flex-col py-6 px-8 shadow-2xl rounded-2xl";
+  const normalizeMenuKey = (value: string) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  const isItemHidden = (value: string) => hiddenItems.some(item => normalizeMenuKey(item) === normalizeMenuKey(value));
+  const normalizedHiddenItems = hiddenItems.map(item => normalizeMenuKey(item));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node | null;
+      const clickedInsideDropdown = target instanceof Element && (
+        target.closest('.liquid-submenu') ||
+        target.closest('.menu-item-visibility') ||
+        target.closest('.menu-hover-bridge')
+      );
+
+      if (headerRef.current && !headerRef.current.contains(target as Node) && !clickedInsideDropdown) {
         setMenuAbierto(null);
         setMenuUsuarioActivo(false);
       }
@@ -107,20 +122,23 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                 return null;
               }
 
-              const isMenuHidden = hiddenItems.includes(menu);
-              
+              const isMenuHidden = isItemHidden(menu) || (estructuraCatalogo[menu] && estructuraCatalogo[menu].every(sub => isItemHidden(sub)));
+              if (isMenuHidden && userRole !== 'admin') return null;
+
+              const visibleSubmenus = estructuraCatalogo[menu].filter(sub => !isItemHidden(sub));
+
               return (
-                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative cursor-pointer py-2 menu-item-visibility ${userRole !== 'admin' && isMenuHidden ? 'menu-item-hidden' : ''}`} onMouseEnter={() => { if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menu); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
+                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className="group relative cursor-pointer py-2 menu-item-visibility" onMouseEnter={() => { if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menu); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
                   <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
                     <div className="menu-hover-bridge" />
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`}>
-                      {estructuraCatalogo[menu].map(sub => {
-                        const isSubHidden = hiddenItems.includes(sub);
+                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                      {visibleSubmenus.map(sub => {
+                        const isSubHidden = isItemHidden(sub);
                         return (
-                          <div key={sub} aria-hidden={userRole !== 'admin' && isSubHidden} onClick={() => { if (!isSubHidden || userRole === 'admin') irACategoria(sub); }} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors py-2 menu-item-visibility ${userRole !== 'admin' && isSubHidden ? 'menu-item-hidden' : ''} ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                          <div key={sub} aria-hidden={userRole !== 'admin' && isSubHidden} onClick={(e) => { e.stopPropagation(); if (!isSubHidden || userRole === 'admin') irACategoria(sub); }} className={`cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs transition-colors py-2 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                             {sub}
                           </div>
                         );
@@ -132,16 +150,16 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             })}
             
             {/* Obsequios */}
-            {!menuUsuarioActivo && (
-              <li aria-hidden={userRole !== 'admin' && hiddenItems.includes('Obsequios')} className={`group relative cursor-pointer py-2 menu-item-visibility ${userRole !== 'admin' && hiddenItems.includes('Obsequios') ? 'menu-item-hidden' : ''}`} onMouseEnter={() => { if (!hiddenItems.includes('Obsequios') || userRole === 'admin') setMenuAbierto('Obsequios'); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!hiddenItems.includes('Obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
-                <div className={`inline-block relative transition-colors duration-300 ${hiddenItems.includes('Obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+            {!menuUsuarioActivo && !normalizedHiddenItems.includes('obsequios') && (
+              <li aria-hidden={userRole !== 'admin' && normalizedHiddenItems.includes('obsequios')} className="group relative cursor-pointer py-2 menu-item-visibility" onMouseEnter={() => { if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto('Obsequios'); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
+                <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>
                 <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
                   <div className="menu-hover-bridge" />
-                  <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`}>
+                  <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                      <div key={p} onClick={() => irACategoria(`Obsequios $${p}`)} className="text-gray-400 hover:text-white transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs py-2">
+                      <div key={p} onClick={(e) => { e.stopPropagation(); irACategoria(`Obsequios $${p}`); }} className="text-gray-400 hover:text-white transition-colors cursor-pointer block mt-4 first:mt-0 text-[10px] md:text-xs py-2">
                         $ {p}.00 USD
                       </div>
                     ))}

@@ -27,12 +27,48 @@ interface ShopContextType {
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
+const CONFIG_HIDDEN_ITEMS_KEY = 'antares_hidden_items';
+
+const normalizeMenuKey = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
+
+const normalizeHiddenItems = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(
+    value
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map(item => normalizeMenuKey(item))
+      .filter(Boolean)
+  )];
+};
+
+const readStoredHiddenItems = (): string[] => {
+  try {
+    const stored = localStorage.getItem(CONFIG_HIDDEN_ITEMS_KEY);
+    if (!stored) return [];
+    return normalizeHiddenItems(JSON.parse(stored));
+  } catch {
+    return [];
+  }
+};
+
+const persistHiddenItems = (items: string[]) => {
+  try {
+    localStorage.setItem(CONFIG_HIDDEN_ITEMS_KEY, JSON.stringify(items));
+  } catch {
+    // no-op
+  }
+};
 
 export const ShopProvider = ({ children }: { children: ReactNode }) => {
   const [productos, setProductos] = useState<Product[]>([]);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [favoritos, setFavoritos] = useState<(string | number)[]>([]);
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<string[]>(() => readStoredHiddenItems());
   const [stars, setStars] = useState<Star[]>([]);
   const [cartPulse, setCartPulse] = useState(false);
 
@@ -60,12 +96,19 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchConfiguracion = useCallback(async () => {
-    const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).single();
-    if (data && data.menus_ocultos) {
-      const nextHiddenItems = Array.isArray(data.menus_ocultos) ? data.menus_ocultos : [];
-      setHiddenItems(current => current.length === nextHiddenItems.length && current.every(item => nextHiddenItems.includes(item)) ? current : nextHiddenItems);
-    }
+    const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).maybeSingle();
+    const nextHiddenItems = normalizeHiddenItems(data?.menus_ocultos);
+    const finalHiddenItems = nextHiddenItems.length > 0 ? nextHiddenItems : readStoredHiddenItems();
+    setHiddenItems(current => {
+      if (current.length === finalHiddenItems.length && current.every(item => finalHiddenItems.includes(item))) return current;
+      persistHiddenItems(finalHiddenItems);
+      return finalHiddenItems;
+    });
   }, []);
+
+  useEffect(() => {
+    persistHiddenItems(hiddenItems);
+  }, [hiddenItems]);
 
   useEffect(() => {
     fetchProductos();

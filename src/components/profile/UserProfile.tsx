@@ -8,6 +8,13 @@ interface UserProfileProps {
   onNavigate: (view: string) => void;
 }
 
+const normalizeMenuKey = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
+
 export default function UserProfile({ onNavigate }: UserProfileProps) {
   const { user, userRole } = useAuth();
   const { hiddenItems, setHiddenItems, estructuraCatalogo, subcategoriasJoyeria, productos, parseTallasseguro, tallasDisponibles } = useShop();
@@ -39,8 +46,6 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   const [profileSaved, setProfileSaved] = useState(false);
   const tratamientos = ['', 'Sr.', 'Sra.', 'Srta.'];
   const tratamientoIndex = Math.max(0, tratamientos.indexOf(profileForm.tratamiento));
-
-  const LOGO_URL = "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/aa.png";
 
   const profileIsIncomplete = !profileSaved && (!user?.user_metadata?.first_name || !user?.user_metadata?.last_name || !user?.user_metadata?.telefono);
 
@@ -117,23 +122,34 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
     }
   };
 
+  const isHiddenInAdminList = (itemName: string) => hiddenItems.some(item => normalizeMenuKey(item) === normalizeMenuKey(itemName));
+
   const toggleMenuVisibility = async (itemName: string) => {
-    let newHidden = [...hiddenItems];
-    const isCurrentlyHidden = hiddenItems.includes(itemName);
+    const normalizedCurrent = hiddenItems.map(item => normalizeMenuKey(item));
+    const currentKey = normalizeMenuKey(itemName);
+    const isCurrentlyHidden = normalizedCurrent.includes(currentKey);
     const isMainMenu = Object.keys(estructuraCatalogo).includes(itemName) || itemName === 'Obsequios';
 
+    let newHidden = [...normalizedCurrent];
+
     if (isMainMenu) {
-      let itemsToToggle = [itemName];
-      if (estructuraCatalogo[itemName]) itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName]];
+      let itemsToToggle = [currentKey];
+      if (estructuraCatalogo[itemName]) itemsToToggle = [...itemsToToggle, ...estructuraCatalogo[itemName].map(sub => normalizeMenuKey(sub))];
       if (isCurrentlyHidden) newHidden = newHidden.filter(item => !itemsToToggle.includes(item));
       else newHidden = [...new Set([...newHidden, ...itemsToToggle])];
     } else {
-      if (isCurrentlyHidden) newHidden = newHidden.filter(i => i !== itemName);
-      else newHidden.push(itemName);
+      if (isCurrentlyHidden) newHidden = newHidden.filter(i => i !== currentKey);
+      else newHidden.push(currentKey);
     }
-    
-    setHiddenItems(newHidden); 
-    await supabase.from('configuracion').update({ menus_ocultos: newHidden }).eq('id', 1);
+
+    const normalized = [...new Set(newHidden.filter(item => item && item.trim().length > 0))];
+    setHiddenItems(normalized);
+    try {
+      localStorage.setItem('antares_hidden_items', JSON.stringify(normalized));
+    } catch {
+      // no-op
+    }
+    await supabase.from('configuracion').upsert({ id: 1, menus_ocultos: normalized }, { onConflict: 'id' });
   };
 
   const isAllSelected = (menuPrincipal: string) => estructuraCatalogo[menuPrincipal].every(sub => categoriasDescarga.includes(sub));
@@ -229,7 +245,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
   return (
     <>
-      <section className="w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in relative z-10">
+      <section className="screen-only w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in relative z-10">
         <div className="profile-card liquid-glass shadow-2xl rounded-[2rem] flex flex-col items-center" style={{ backgroundImage: `linear-gradient(145deg, rgba(13, 14, 18, 0.66), rgba(4, 5, 7, 0.86)), url(${patron})` }}>
           <div className="profile-card-content">
             <div className="profile-identity">
@@ -277,23 +293,23 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                 {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
                   <div key={menu} className="bg-black/20 backdrop-blur-md p-4 md:p-5 border border-white/10 rounded-sm">
                     <div className="flex justify-between items-center">
-                      <span className={`text-[12px] md:text-[14px] tracking-[0.2em] uppercase font-bold ${hiddenItems.includes(menu) ? 'text-red-500/70' : 'text-white'}`}>{menu}</span>
+                      <span className={`text-[12px] md:text-[14px] tracking-[0.2em] uppercase font-bold ${isHiddenInAdminList(menu) ? 'text-red-500/70 underline decoration-red-500 decoration-2 underline-offset-4' : 'text-white'}`}>{menu}</span>
                       <button 
                         onClick={() => toggleMenuVisibility(menu)} 
-                        className={`text-[8px] md:text-[9px] uppercase tracking-[0.2em] bg-transparent border px-4 py-2 cursor-pointer transition-colors rounded-sm ${hiddenItems.includes(menu) ? 'border-gray-500 text-gray-400 hover:text-white' : 'border-white/30 text-white hover:bg-white hover:text-black'}`}
+                        className={`text-[8px] md:text-[9px] uppercase tracking-[0.2em] bg-transparent border px-4 py-2 cursor-pointer transition-colors rounded-sm ${isHiddenInAdminList(menu) ? 'border-red-500/70 text-red-400 hover:text-red-300' : 'border-white/30 text-white hover:bg-white hover:text-black'}`}
                       >
-                        {hiddenItems.includes(menu) ? 'MOSTRAR' : 'OCULTAR'}
+                        {isHiddenInAdminList(menu) ? 'MOSTRAR' : 'OCULTAR'}
                       </button>
                     </div>
                     
                     {estructuraCatalogo[menu] && estructuraCatalogo[menu].map((sub: string) => (
                       <div key={sub} className="flex justify-between items-center pl-6 mt-4 pt-4 border-t border-white/5">
-                        <span className={`text-[10px] tracking-[0.1em] uppercase ${hiddenItems.includes(sub) ? 'text-red-500/50' : 'text-gray-300 font-light'}`}>{sub}</span>
+                        <span className={`text-[10px] tracking-[0.1em] uppercase ${isHiddenInAdminList(sub) ? 'text-red-500/70 underline decoration-red-500 decoration-2 underline-offset-4' : 'text-gray-300 font-light'}`}>{sub}</span>
                         <button 
                           onClick={() => toggleMenuVisibility(sub)} 
-                          className={`text-[8px] uppercase tracking-[0.2em] bg-transparent border px-3 py-1.5 cursor-pointer transition-colors rounded-sm ${hiddenItems.includes(sub) ? 'border-gray-600 text-gray-500 hover:text-white' : 'border-white/20 text-gray-300 hover:text-white hover:border-white'}`}
+                          className={`text-[8px] uppercase tracking-[0.2em] bg-transparent border px-3 py-1.5 cursor-pointer transition-colors rounded-sm ${isHiddenInAdminList(sub) ? 'border-red-500/70 text-red-400 hover:text-red-300' : 'border-white/20 text-gray-300 hover:text-white hover:border-white'}`}
                         >
-                          {hiddenItems.includes(sub) ? 'MOSTRAR' : 'OCULTAR'}
+                          {isHiddenInAdminList(sub) ? 'MOSTRAR' : 'OCULTAR'}
                         </button>
                       </div>
                     ))}
@@ -345,7 +361,8 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
               <div className="flex justify-center">
                 <button 
                   onClick={() => window.print()} 
-                  className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] flex items-center justify-center gap-3 rounded-sm"
+                  disabled={categoriasDescarga.length === 0}
+                  className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] flex items-center justify-center gap-3 rounded-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
                   <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="16" width="16"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                   Generar Catálogo PDF
@@ -360,21 +377,33 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
       {userRole === 'admin' && (
       <div className="hidden print-only w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         
-        {(categoriasDescarga.length > 0 ? categoriasDescarga : Object.values(estructuraCatalogo).flat()).map((cat) => {
-          const piezasDeCategoria = productos.filter(p => p.categoria === cat);
-          const parentMenu = Object.entries(estructuraCatalogo).find(([_, subs]) => subs.includes(cat))?.[0];
-          
-          if (piezasDeCategoria.length === 0) return null;
+        {Object.entries(estructuraCatalogo).map(([parentMenu, submenus]) => {
+          const categoriasSeleccionadas = submenus.filter(cat => (
+            categoriasDescarga.includes(cat) && productos.some(p => p.categoria === cat)
+          ));
+          if (categoriasSeleccionadas.length === 0) return null;
 
-          const piezasPorSub: Record<string, typeof productos> = {};
-          subcategoriasJoyeria.forEach(sub => {
-            const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
-            if (piezas.length > 0) piezasPorSub[sub] = piezas;
-          });
-          const piezasSinSub = piezasDeCategoria.filter(p => !subcategoriasJoyeria.includes(p.subcategoria));
-          if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
+          return (
+            <div key={parentMenu} className="catalog-section">
+              <div className="catalog-section-title">
+                <h2>{parentMenu}</h2>
+              </div>
+              {categoriasSeleccionadas.map(cat => {
+                const piezasDeCategoria = productos.filter(p => p.categoria === cat);
+                if (piezasDeCategoria.length === 0) return null;
 
-          return Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
+                const piezasPorSub: Record<string, typeof productos> = {};
+                subcategoriasJoyeria.forEach(sub => {
+                  const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
+                  if (piezas.length > 0) piezasPorSub[sub] = piezas;
+                });
+                const piezasSinSub = piezasDeCategoria.filter(p => !subcategoriasJoyeria.includes(p.subcategoria));
+                if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
+
+                return (
+                  <div key={cat} className="catalog-category">
+                    <h3 className="catalog-category-title">{cat}</h3>
+                    {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
              const gruposDe4 = [];
              for (let i = 0; i < piezasDeSub.length; i += 4) {
                gruposDe4.push(piezasDeSub.slice(i, i + 4));
@@ -382,21 +411,14 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
              return (
               <div key={`${cat}-${subcat}`}>
-                {/* PORTADA EXCLUSIVA */}
-                <div className="break-after-page w-full flex flex-col items-center justify-center p-10 box-border border-b-8 border-transparent relative" style={{ backgroundColor: '#000000', height: '280mm' }}>
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#111] to-[#000] z-0"></div>
-                  <img src={LOGO_URL} alt="ANTARES" className="h-40 w-auto object-contain mb-20 z-10 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
-                  <h3 className="text-3xl tracking-[0.5em] uppercase mb-6 text-center z-10 font-light" style={{ color: '#888888' }}>{parentMenu}</h3>
-                  <h2 className="text-7xl tracking-[0.3em] uppercase mb-10 text-center font-bold z-10" style={{ color: '#ffffff', textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>{cat}</h2>
-                  <h4 className="text-2xl tracking-[0.4em] uppercase text-center z-10" style={{ color: '#666666' }}>— {subcat} —</h4>
-                </div>
+                <h4 className="catalog-subcategory-title">{subcat}</h4>
 
                 {/* PÁGINAS DE PRODUCTOS */}
                 {gruposDe4.map((grupo, indexGrupo) => (
-                  <div key={`${cat}-${subcat}-${indexGrupo}`} className="break-after-page w-full flex flex-col box-border" style={{ backgroundColor: '#000000', height: '280mm' }}>
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className="catalog-product-page break-after-page w-full flex flex-col box-border" style={{ backgroundColor: '#000000', height: '280mm' }}>
                     <div className="grid grid-cols-2 grid-rows-2 w-full h-full border-t border-l border-white/10">
                       {grupo.map((p) => (
-                        <div key={p.id} className="flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full bg-gradient-to-br from-[#0a0a0a] to-[#000000]">
+                        <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full bg-gradient-to-br from-[#0a0a0a] to-[#000000]">
                           <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center border border-white/20">
                             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
                           </div>
@@ -434,7 +456,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                             <div className="h-6 mb-4"></div> 
                           )}
 
-                          <p className="text-[11px] leading-relaxed px-6 line-clamp-3 uppercase text-gray-400 mt-auto mb-4">{p.descripcion}</p>
+                          <p className="text-[11px] leading-relaxed px-6 uppercase text-gray-400 mt-auto mb-4 break-words">{p.descripcion}</p>
                         </div>
                       ))}
                     </div>
@@ -442,7 +464,12 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                 ))}
               </div>
              );
-          });
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          );
         })}
       </div>
       )}

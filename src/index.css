@@ -992,4 +992,12 @@ input:-webkit-autofill:active{
   .print-only { display: block !important; background-color: #000000 !important; width: 100%; } 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .break-after-page { page-break-after: always; break-after: page; }
+  .catalog-section-title,
+  .catalog-category-title,
+  .catalog-subcategory-title { text-transform: uppercase; text-align: center; letter-spacing: 0.35em; color: #ffffff; }
+  .catalog-section-title { padding: 12mm 0 5mm; font-size: 24pt; }
+  .catalog-category-title { padding: 3mm 0 2mm; font-size: 17pt; color: #bbbbbb; }
+  .catalog-subcategory-title { padding: 2mm 0; font-size: 11pt; color: #888888; }
+  .catalog-product-page { min-height: 280mm; max-height: 280mm; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-product-card { min-width: 0; min-height: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
 }
