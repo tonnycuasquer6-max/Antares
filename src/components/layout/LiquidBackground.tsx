@@ -29,10 +29,20 @@ export default function LiquidBackground() {
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const resizeCanvas = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * pixelRatio);
+      canvas.height = Math.floor(height * pixelRatio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+    resizeCanvas();
 
     let time = 0;
+    let animationFrame = 0;
     const skyStars: SkyStar[] = Array.from({ length: 180 }, (_, index) => ({
       x: (Math.sin(index * 12.9898) * 43758.5453) % 1,
       y: (Math.sin((index + 41) * 78.233) * 24634.6345) % 1,
@@ -75,20 +85,21 @@ export default function LiquidBackground() {
       });
 
       time += 0.01;
-      requestAnimationFrame(draw);
+      animationFrame = requestAnimationFrame(draw);
     };
 
-    draw();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReducedMotion) draw();
 
     const handleResize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      resizeCanvas();
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (

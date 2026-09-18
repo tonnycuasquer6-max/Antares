@@ -21,7 +21,7 @@ export default function Home({ onNavigate }: HomeProps) {
         <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
           Elegancia Atemporal
         </h2>
-        <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-xs max-w-2xl mx-auto leading-loose px-4">
+        <p className="text-gray-400 tracking-[0.12em] md:tracking-[0.2em] uppercase text-xs md:text-sm max-w-2xl mx-auto leading-relaxed md:leading-loose px-4">
           Bienvenido al Atelier de Antares. Un espacio dedicado a la sofisticación, el diseño atemporal y la exclusividad en cada detalle.
         </p>
       </section>
@@ -44,7 +44,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Sastrería a Medida
             </h4>
-            <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose group-hover:text-gray-300 transition-colors">
+            <p className="text-gray-400 text-xs md:text-sm tracking-[0.05em] md:tracking-[0.1em] leading-relaxed md:leading-loose group-hover:text-gray-300 transition-colors">
               Creación de prendas exclusivas adaptadas a su silueta y estilo personal, utilizando únicamente los tejidos más nobles.
             </p>
           </div>
@@ -56,7 +56,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Joyería Personalizada
             </h4>
-            <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose group-hover:text-gray-300 transition-colors">
+            <p className="text-gray-400 text-xs md:text-sm tracking-[0.05em] md:tracking-[0.1em] leading-relaxed md:leading-loose group-hover:text-gray-300 transition-colors">
               Diseño y forja de piezas únicas y exclusivas, seleccionando gemas excepcionales para capturar momentos eternos.
             </p>
           </div>
@@ -68,7 +68,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Asesoría de Imagen
             </h4>
-            <p className="text-gray-400 text-[10px] md:text-xs tracking-[0.1em] leading-loose group-hover:text-gray-300 transition-colors">
+            <p className="text-gray-400 text-xs md:text-sm tracking-[0.05em] md:tracking-[0.1em] leading-relaxed md:leading-loose group-hover:text-gray-300 transition-colors">
               Curaduría de estilo y armario por nuestros expertos, elevando su presencia y confianza en cada ocasión especial.
             </p>
           </div>

@@ -31,6 +31,26 @@ export default function App() {
   const [userRole, setUserRole] = useState<string>('cliente');
   const [user, setUser] = useState<User | null>(null);
 
+  const handleUserSession = async (currentUser: User | null) => {
+    setUser(currentUser);
+    if (currentUser) {
+      setShowLoginModal(false);
+      try {
+        const { data } = await supabase
+          .from('perfiles')
+          .select('rol')
+          .eq('id', currentUser.id)
+          .single();
+        setUserRole(data?.rol || 'cliente');
+      } catch {
+        setUserRole('cliente');
+      }
+    } else {
+      setUserRole('cliente');
+      setActiveView('home');
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleUserSession(session?.user ?? null);
@@ -58,26 +78,6 @@ export default function App() {
     window.addEventListener('scroll', rememberScrollPosition, { passive: true });
     return () => window.removeEventListener('scroll', rememberScrollPosition);
   }, []);
-
-  const handleUserSession = async (currentUser: User | null) => {
-    setUser(currentUser);
-    if (currentUser) {
-      setShowLoginModal(false);
-      try {
-        const { data } = await supabase
-          .from('perfiles')
-          .select('rol')
-          .eq('id', currentUser.id)
-          .single();
-        setUserRole(data?.rol || 'cliente');
-      } catch {
-        setUserRole('cliente');
-      }
-    } else {
-      setUserRole('cliente');
-      setActiveView('home');
-    }
-  };
 
   if (!areSupabaseCredentialsSet) return null;
 
@@ -120,7 +120,7 @@ export default function App() {
               setActiveCategory={setActiveCategory} 
             />
 
-            <main className="flex-grow flex flex-col items-center w-full px-4 sm:px-6 md:px-8 pt-24 animate-fade-in print-root">
+            <main className="flex-grow flex flex-col items-center w-full px-3 sm:px-6 md:px-8 pt-36 sm:pt-32 animate-fade-in print-root">
               {renderView()}
             </main>
 

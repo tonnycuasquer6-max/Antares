@@ -137,7 +137,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     <section
       className={`container mx-auto py-8 md:py-16 flex-grow w-full max-w-7xl animate-fade-in relative z-10 ${isJewelryCategory ? 'jewelry-gallery' : ''}`}
     >
-      <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white mb-8 md:mb-12 text-center pb-4 md:pb-6 break-words drop-shadow-md">
+      <h2 className="text-base md:text-xl tracking-[0.24em] md:tracking-[0.4em] uppercase text-white mb-8 md:mb-12 text-center pb-4 md:pb-6 break-words drop-shadow-md">
         {category === 'deseos' ? 'Lista de Deseos' : category}
       </h2>
 
@@ -320,7 +320,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 md:gap-5 mt-8">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 md:gap-5 mt-8">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 

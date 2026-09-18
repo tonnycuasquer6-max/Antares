@@ -94,7 +94,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       ) : null}
 
       {/* Logo */}
-      <img src={logo} alt="ANTARES" onClick={() => setActiveView('home')} className="h-16 md:h-20 w-auto mt-2 mb-0 z-[100] cursor-pointer drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500" />
+      <img src={logo} alt="ANTARES" onClick={() => setActiveView('home')} className="h-14 sm:h-16 md:h-20 max-w-[52vw] w-auto mt-2 mb-0 z-[100] cursor-pointer drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500" />
 
       {!user && (
         <button onClick={() => setShowLoginModal(true)} aria-label="Iniciar sesión" className="text-white hover:text-gray-400 transition-colors p-0 mb-3 bg-transparent border-none outline-none cursor-pointer z-[100]">
@@ -105,7 +105,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       {/* Navegación (Solo Home) */}
       {user && activeView === 'home' && (
         <nav className="w-full relative z-[100] px-2 md:px-6 pb-2 animate-fade-in">
-          <ul className="flex flex-wrap justify-center gap-y-3 gap-x-6 md:gap-x-12 py-1 text-[11px] md:text-[13px] tracking-[0.3em] uppercase border-none bg-transparent">
+          <ul className="flex flex-wrap justify-center gap-y-2 gap-x-4 md:gap-x-12 py-1 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
             {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar Sesión'] : [...Object.keys(estructuraCatalogo), 'Obsequios']).map(menu => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
@@ -128,11 +128,11 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
               const visibleSubmenus = estructuraCatalogo[menu].filter(sub => !isItemHidden(sub));
 
               return (
-                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className="group relative cursor-pointer py-2 menu-item-visibility" onMouseEnter={() => { if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menu); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
+                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative cursor-pointer py-2 menu-item-visibility ${menuAbierto === menu ? 'z-[300]' : 'z-0'}`} onMouseEnter={() => { if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menu); setMenuUsuarioActivo(false); }} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
-                  <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[100] ${menuAbierto === menu ? 'block' : 'hidden'}`}>
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === menu ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                     <div className="menu-hover-bridge" />
                     <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       {visibleSubmenus.map(sub => {
@@ -155,7 +155,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                 <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[100] ${menuAbierto === 'Obsequios' ? 'block' : 'hidden'}`}>
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                   <div className="menu-hover-bridge" />
                   <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (

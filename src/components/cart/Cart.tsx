@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useShop } from '../../context/ShopContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -15,6 +15,7 @@ export default function Cart() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
+  const uploadSequence = useRef(0);
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
@@ -55,7 +56,8 @@ export default function Cart() {
     let urlComprobante = '';
     if (comprobantePago) {
       const fileExt = comprobantePago.name.split('.').pop();
-      const fileName = `pago_${Date.now()}.${fileExt}`;
+      uploadSequence.current += 1;
+      const fileName = `pago_${uploadSequence.current}.${fileExt}`;
       const { error: uploadError } = await supabase.storage.from('catalogo').upload(`comprobantes/${fileName}`, comprobantePago);
       if (!uploadError) {
         const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(`comprobantes/${fileName}`);
@@ -96,7 +98,7 @@ export default function Cart() {
     setCheckoutPaso(1);
     
     window.open(`https://wa.me/593980111570?text=${mensaje}`, '_blank');
-    window.location.href = '/'; 
+    window.open('/', '_self');
   };
 
   return (
