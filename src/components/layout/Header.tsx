@@ -59,7 +59,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   };
 
   return (
-    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="fixed top-0 left-0 w-full h-auto flex flex-col items-center liquid-header z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
+    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center liquid-header z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
       
       {/* Botón Volver */}
       {user && activeView !== 'home' && (

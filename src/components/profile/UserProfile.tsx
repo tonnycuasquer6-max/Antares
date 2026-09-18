@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import patron from '../../assets/patron.jpeg';
+import logo from '../../assets/logo.png';
 
 interface UserProfileProps {
   onNavigate: (view: string) => void;
@@ -48,6 +49,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   const tratamientoIndex = Math.max(0, tratamientos.indexOf(profileForm.tratamiento));
 
   const profileIsIncomplete = !profileSaved && (!user?.user_metadata?.first_name || !user?.user_metadata?.last_name || !user?.user_metadata?.telefono);
+  const categoriasSeleccionadasPdf = Object.entries(estructuraCatalogo).flatMap(([parentMenu, submenus]) => (
+    submenus
+      .filter(cat => categoriasDescarga.includes(cat) && productos.some(p => p.categoria === cat))
+      .map(categoria => ({ parentMenu, categoria }))
+  ));
 
   useEffect(() => {
     localStorage.setItem(profileDraftKey, JSON.stringify(profileForm));
@@ -377,33 +383,25 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
       {userRole === 'admin' && (
       <div className="hidden print-only w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         
-        {Object.entries(estructuraCatalogo).map(([parentMenu, submenus]) => {
-          const categoriasSeleccionadas = submenus.filter(cat => (
-            categoriasDescarga.includes(cat) && productos.some(p => p.categoria === cat)
-          ));
-          if (categoriasSeleccionadas.length === 0) return null;
+        {categoriasSeleccionadasPdf.map(({ parentMenu, categoria: cat }, indiceCategoria) => {
+          const piezasDeCategoria = productos.filter(p => p.categoria === cat);
+
+          const piezasPorSub: Record<string, typeof productos> = {};
+          subcategoriasJoyeria.forEach(sub => {
+            const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
+            if (piezas.length > 0) piezasPorSub[sub] = piezas;
+          });
+          const piezasSinSub = piezasDeCategoria.filter(p => !subcategoriasJoyeria.includes(p.subcategoria));
+          if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
 
           return (
-            <div key={parentMenu} className="catalog-section">
-              <div className="catalog-section-title">
+            <div key={cat} className="catalog-category">
+              <div className="catalog-cover break-after-page">
+                {indiceCategoria === 0 && <img src={logo} alt="ANTARES" className="catalog-logo" />}
                 <h2>{parentMenu}</h2>
+                <h3>{cat}</h3>
               </div>
-              {categoriasSeleccionadas.map(cat => {
-                const piezasDeCategoria = productos.filter(p => p.categoria === cat);
-                if (piezasDeCategoria.length === 0) return null;
-
-                const piezasPorSub: Record<string, typeof productos> = {};
-                subcategoriasJoyeria.forEach(sub => {
-                  const piezas = piezasDeCategoria.filter(p => p.subcategoria === sub);
-                  if (piezas.length > 0) piezasPorSub[sub] = piezas;
-                });
-                const piezasSinSub = piezasDeCategoria.filter(p => !subcategoriasJoyeria.includes(p.subcategoria));
-                if (piezasSinSub.length > 0) piezasPorSub['Otros'] = piezasSinSub;
-
-                return (
-                  <div key={cat} className="catalog-category">
-                    <h3 className="catalog-category-title">{cat}</h3>
-                    {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
+              {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
              const gruposDe4 = [];
              for (let i = 0; i < piezasDeSub.length; i += 4) {
                gruposDe4.push(piezasDeSub.slice(i, i + 4));
@@ -464,9 +462,6 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                 ))}
               </div>
              );
-                    })}
-                  </div>
-                );
               })}
             </div>
           );
