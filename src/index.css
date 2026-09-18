@@ -991,18 +991,24 @@ input:-webkit-autofill:active{
     margin: 0 !important;
     padding: 0 !important;
   }
+  #root,
+  #root > div,
+  .print-root,
+  .print-only { min-height: 0 !important; height: auto !important; width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; background-color: #000000 !important; }
   .screen-only { display: none !important; } 
-  .print-only { display: block !important; background-color: #000000 !important; width: 100vw; margin: 0 !important; padding: 0 !important; } 
+  .print-only { display: block !important; background-color: #000000 !important; width: 100%; margin: 0 !important; padding: 0 !important; } 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .break-after-page { page-break-after: always; break-after: page; }
-  .catalog-cover { display: flex; width: 100vw; height: 297mm; min-height: 297mm; max-height: 297mm; flex-direction: column; align-items: center; justify-content: center; gap: 14mm; background: #000000; text-align: center; page-break-inside: avoid; break-inside: avoid; }
+  .break-before-page { page-break-before: always; break-before: page; }
+  .catalog-cover { display: flex; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14mm; padding-top: 12mm; background: #000000 !important; text-align: center; page-break-inside: avoid; break-inside: avoid; }
   .catalog-cover h2,
   .catalog-cover h3,
   .catalog-subcategory-title { margin: 0; text-transform: uppercase; text-align: center; letter-spacing: 0.35em; }
-  .catalog-cover h2 { font-size: 34pt; color: #ffffff; }
-  .catalog-cover h3 { font-size: 22pt; color: #bbbbbb; }
-  .catalog-logo { display: block; width: 84mm; height: auto; margin-bottom: 18mm; object-fit: contain; }
-  .catalog-subcategory-title { padding: 2mm 0; font-size: 11pt; color: #888888; }
-  .catalog-product-page { width: 100vw; min-height: 297mm; max-height: 297mm; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-cover h2 { font-size: 42pt; color: #ffffff; }
+  .catalog-cover h3 { font-size: 29pt; color: #bbbbbb; }
+  .catalog-logo { display: block; width: 150mm; height: auto; margin: 0 0 18mm; object-fit: contain; }
+  .catalog-product-page { width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-products-grid { height: calc(100% - 18mm); }
+  .catalog-subcategory-title { height: 18mm; padding: 5mm 0 2mm; font-size: 15pt; color: #888888; }
   .catalog-product-card { min-width: 0; min-height: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
 }

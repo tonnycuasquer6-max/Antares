@@ -396,7 +396,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
           return (
             <div key={cat} className="catalog-category">
-              <div className="catalog-cover break-after-page">
+              <div className={`catalog-cover break-after-page ${indiceCategoria > 0 ? 'break-before-page' : ''}`}>
                 {indiceCategoria === 0 && <img src={logo} alt="ANTARES" className="catalog-logo" />}
                 <h2>{parentMenu}</h2>
                 <h3>{cat}</h3>
@@ -409,12 +409,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
              return (
               <div key={`${cat}-${subcat}`}>
-                <h4 className="catalog-subcategory-title">{subcat}</h4>
-
                 {/* PÁGINAS DE PRODUCTOS */}
                 {gruposDe4.map((grupo, indexGrupo) => (
-                  <div key={`${cat}-${subcat}-${indexGrupo}`} className="catalog-product-page break-after-page w-full flex flex-col box-border" style={{ backgroundColor: '#000000', height: '280mm' }}>
-                    <div className="grid grid-cols-2 grid-rows-2 w-full h-full border-t border-l border-white/10">
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`} style={{ backgroundColor: '#000000' }}>
+                    <h4 className="catalog-subcategory-title">{subcat}</h4>
+                    <div className="catalog-products-grid grid grid-cols-2 grid-rows-2 w-full border-t border-l border-white/10">
                       {grupo.map((p) => (
                         <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full bg-gradient-to-br from-[#0a0a0a] to-[#000000]">
                           <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center border border-white/20">

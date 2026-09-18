@@ -120,7 +120,7 @@ export default function App() {
               setActiveCategory={setActiveCategory} 
             />
 
-            <main className="flex-grow flex flex-col items-center w-full px-4 sm:px-6 md:px-8 pt-24 animate-fade-in">
+            <main className="flex-grow flex flex-col items-center w-full px-4 sm:px-6 md:px-8 pt-24 animate-fade-in print-root">
               {renderView()}
             </main>
 

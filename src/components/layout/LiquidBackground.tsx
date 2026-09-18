@@ -70,10 +70,10 @@ export default function LiquidBackground() {
     <>
       <canvas 
         ref={canvasRef} 
-        className="fixed inset-0 z-0 pointer-events-none opacity-80"
+        className="screen-only fixed inset-0 z-0 pointer-events-none opacity-80"
       />
       {/* Capa de Glassmorphism estilo Apple */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-black/40 backdrop-blur-[60px] border-t border-white/5 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]"></div>
+      <div className="screen-only fixed inset-0 z-0 pointer-events-none bg-black/40 backdrop-blur-[60px] border-t border-white/5 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]"></div>
     </>
   );
 }
