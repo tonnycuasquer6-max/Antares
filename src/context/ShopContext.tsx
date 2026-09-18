@@ -72,7 +72,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   const [stars, setStars] = useState<Star[]>([]);
   const [cartPulse, setCartPulse] = useState(false);
 
-  const tallasDisponibles = ['6', '7', '8', '9', '10', '11', '12'];
+  const tallasDisponibles = ['5', '6', '7', '8', '9', '10', '11', '12'];
   const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
   const estructuraCatalogo = {
     'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],

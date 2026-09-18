@@ -411,11 +411,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
               <div key={`${cat}-${subcat}`}>
                 {/* PÁGINAS DE PRODUCTOS */}
                 {gruposDe4.map((grupo, indexGrupo) => (
-                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`} style={{ backgroundColor: '#000000' }}>
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`} style={{ backgroundImage: 'linear-gradient(145deg, rgba(3, 4, 6, 0.72), rgba(0, 0, 0, 0.92))' }}>
                     <h4 className="catalog-subcategory-title">{subcat}</h4>
                     <div className="catalog-products-grid grid grid-cols-2 grid-rows-2 w-full border-t border-l border-white/10">
                       {grupo.map((p) => (
-                        <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full bg-gradient-to-br from-[#0a0a0a] to-[#000000]">
+                        <div key={p.id} className="catalog-product-card catalog-liquid-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full">
                           <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center border border-white/20">
                             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
                           </div>

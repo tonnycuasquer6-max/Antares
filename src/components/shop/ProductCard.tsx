@@ -24,6 +24,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
 
   const tallasObj = parseTallasseguro(producto.tallas);
   const isRing = producto.subcategoria === 'Anillos';
+  const isJewelry = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(producto.categoria);
   const canBuy = !isRing || tallasSeleccionadas.length > 0;
 
   const handleSelectTalla = (e: React.MouseEvent, talla: string) => {
@@ -84,12 +85,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   };
 
   return (
-    <div className="group relative bg-black/20 backdrop-blur-md flex flex-col p-4 sm:p-6 border-b border-r border-white/10 hover:bg-black/40 transition-colors duration-500">
-      
-      {/* Esquina inferior decorativa */}
-      <div className="absolute -bottom-[10px] -right-[10px] w-5 h-5 bg-black z-20 flex items-center justify-center">
-        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
-      </div>
+    <div className={`group relative flex flex-col p-4 sm:p-6 transition-all duration-500 ${isJewelry ? 'jewelry-product-card' : 'bg-black/20 backdrop-blur-md hover:bg-black/40'}`}>
 
       {/* Imagen */}
       <div className={`overflow-hidden aspect-square relative w-full mb-6 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
@@ -116,31 +112,31 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       
       {/* Info */}
       <div className="flex flex-col flex-grow items-center text-center w-full z-10 relative">
-        <h4 className="text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase text-white mb-2 line-clamp-2 break-words w-full group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
-        <span className="text-[10px] md:text-sm tracking-[0.1em] text-white font-light whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+        <h4 className="text-[11px] md:text-[13px] font-bold tracking-[0.14em] uppercase text-white mb-3 line-clamp-2 break-words w-full group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
+        <span className="text-[11px] md:text-[14px] tracking-[0.08em] text-white font-light whitespace-nowrap mb-2 block">${producto.precio} USD</span>
         
         {!isRing && (
-          <p className="text-[8px] tracking-[0.2em] text-gray-500 mb-4 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
+          <p className="text-[9px] tracking-[0.14em] text-gray-400 mb-5 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
         )}
 
         {isRing && (
-          <div className="flex flex-col items-center w-full mb-6 mt-4 z-30">
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full">
+          <div className="flex flex-col items-center w-full mb-6 mt-3 z-30">
+            <div className="grid grid-cols-8 gap-1 sm:gap-1.5 w-full">
               {tallasDisponibles.map(talla => {
                 const stock = parseInt(String(tallasObj[talla] || 0));
                 const isAvailable = stock > 0;
                 const isSelected = tallasSeleccionadas.includes(talla);
                 
                 return (
-                  <div key={talla} className="flex flex-col items-center gap-1 sm:gap-1.5">
+                  <div key={talla} className="flex min-w-0 flex-col items-center gap-1">
                     <button 
                       type="button"
                       onClick={(e) => { if (isAvailable) handleSelectTalla(e, talla); }}
-                      className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center text-[10px] sm:text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer' : 'bg-black/50 text-white border-white/30 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500/50 bg-black/20 cursor-not-allowed'}`}
+                      className={`w-full aspect-square max-w-9 flex items-center justify-center text-[10px] sm:text-[11px] tracking-[0.04em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer' : 'bg-black/20 text-white border-white/25 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500/50 bg-black/10 cursor-not-allowed'}`}
                     >
                       <span>{talla}</span>
                     </button>
-                    <span className={`text-[9px] sm:text-[11px] tracking-[0.1em] uppercase leading-none mt-1 ${isAvailable ? 'text-gray-500' : 'text-red-500/40'}`}>
+                    <span className={`text-[9px] sm:text-[10px] tracking-[0.04em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/40'}`}>
                       {stock}
                     </span>
                   </div>
@@ -150,7 +146,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
           </div>
         )}
         
-        <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4 sm:mb-6 break-words uppercase w-full">{producto.descripcion}</p>
+        <p className="text-[11px] text-gray-300 line-clamp-2 leading-relaxed mb-5 sm:mb-6 break-words uppercase w-full">{producto.descripcion}</p>
 
         {/* Acciones Cliente */}
         {userRole === 'cliente' && !producto.vendido && (

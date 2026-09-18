@@ -36,6 +36,8 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
 
+  const isJewelryCategory = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(category);
+
   // Filtros
   const productosMostrar = useMemo(() => {
     if (category === 'deseos') {
@@ -132,14 +134,16 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   };
 
   return (
-    <section className="container mx-auto py-8 md:py-16 flex-grow w-full max-w-7xl animate-fade-in relative z-10">
-      <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white mb-8 md:mb-12 text-center border-b border-white/10 pb-4 md:pb-6 break-words drop-shadow-md">
+    <section
+      className={`container mx-auto py-8 md:py-16 flex-grow w-full max-w-7xl animate-fade-in relative z-10 ${isJewelryCategory ? 'jewelry-gallery' : ''}`}
+    >
+      <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white mb-8 md:mb-12 text-center pb-4 md:pb-6 break-words drop-shadow-md">
         {category === 'deseos' ? 'Lista de Deseos' : category}
       </h2>
 
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
-        <ul className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-12 mb-6 border-b border-white/10 pb-6">
+        <ul className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-12 mb-6 pb-6">
           {subcategoriasJoyeria.map(sub => (
             <li 
               key={sub} 
@@ -316,7 +320,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full border-t border-l border-white/10 mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 md:gap-5 mt-8">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 
@@ -327,8 +331,8 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
           />
         ))}
         {productosMostrar.length === 0 && (
-          <div className="col-span-full text-center py-20 border-b border-r border-white/10">
-            <p className="text-gray-500 tracking-[0.2em] uppercase text-[10px]">
+          <div className="col-span-full text-center py-20">
+            <p className="text-gray-400 tracking-[0.14em] uppercase text-[11px]">
               {category === 'deseos' ? 'No hay piezas en su lista de deseos aún.' : 'No hay piezas en esta categoría aún.'}
             </p>
           </div>

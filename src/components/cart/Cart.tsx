@@ -13,6 +13,7 @@ export default function Cart() {
   const [envioConfig, setEnvioConfig] = useState<EnvioConfig>({ tipo: 'local', sectorPrecio: 0, sectorNombre: 'Quito Centro', linkMaps: '' });
   const [comprobantePago, setComprobantePago] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
@@ -22,8 +23,33 @@ export default function Cart() {
     else enviarPedidoWhatsApp(); 
   };
 
+  const obtenerUbicacionExacta = () => {
+    if (!navigator.geolocation) {
+      alert('Este navegador no permite obtener la ubicación del dispositivo.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const linkMaps = `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
+        setEnvioConfig(current => ({ ...current, linkMaps }));
+        setIsLocating(false);
+      },
+      () => {
+        setIsLocating(false);
+        alert('No pudimos obtener tu ubicación. Permite el acceso a la ubicación e inténtalo nuevamente.');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
+
   const enviarPedidoWhatsApp = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
+    if (envioConfig.tipo === 'domicilio' && (!comprobantePago || !envioConfig.linkMaps)) {
+      alert('Adjunta el comprobante de pago y obtén tu ubicación exacta para continuar.');
+      return;
+    }
     setIsUploading(true);
 
     let urlComprobante = '';
@@ -141,14 +167,14 @@ export default function Cart() {
                         </div>
                       )}
                     </div>
-                    <input 
-                      type="url" 
-                      placeholder="PEGUE EL LINK DE GOOGLE MAPS DE SU UBICACIÓN*"
-                      value={envioConfig.linkMaps}
-                      onChange={(e) => setEnvioConfig({...envioConfig, linkMaps: e.target.value})}
-                      className="w-full sm:w-80 bg-transparent border-b border-white/20 text-white text-[8px] tracking-[0.1em] py-3 outline-none text-right hover:border-white/50 transition-colors placeholder-gray-600"
-                      required
-                    />
+                    <button
+                      type="button"
+                      onClick={obtenerUbicacionExacta}
+                      disabled={isLocating}
+                      className={`w-full sm:w-80 border py-3 text-[8px] tracking-[0.2em] uppercase transition-colors outline-none ${isLocating ? 'border-white/10 text-gray-500 cursor-wait' : 'border-white/20 text-white hover:border-white/60 cursor-pointer'}`}
+                    >
+                      {isLocating ? 'Obteniendo ubicación...' : envioConfig.linkMaps ? 'Ubicación exacta confirmada' : 'Mi ubicación exacta'}
+                    </button>
                     <p className="text-[7px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm uppercase">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
                   </div>
                 )}
@@ -245,8 +271,8 @@ export default function Cart() {
 
               <button 
                 onClick={enviarPedidoWhatsApp} 
-                disabled={isUploading || !comprobantePago || !envioConfig.linkMaps}
-                className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-all duration-300 cursor-pointer outline-none border shadow-xl w-full sm:w-auto rounded-sm ${isUploading || !comprobantePago || !envioConfig.linkMaps ? 'bg-black/20 text-gray-500 border-white/10 cursor-not-allowed' : 'bg-transparent text-white border-white hover:bg-white hover:text-black hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]'}`}
+                disabled={isUploading}
+                className={`mt-12 text-[10px] font-bold tracking-[0.3em] uppercase px-10 py-5 transition-all duration-300 cursor-pointer outline-none border shadow-xl w-full sm:w-auto rounded-sm ${isUploading ? 'bg-black/20 text-gray-500 border-white/10 cursor-not-allowed' : 'bg-transparent text-white border-white hover:bg-white hover:text-black hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]'}`}
               >
                 {isUploading ? 'Procesando Transacción...' : 'Enviar Pedido vía WhatsApp'}
               </button>
