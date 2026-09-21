@@ -142,7 +142,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
             {products.map(product => (
               <div key={product.id} role="button" tabIndex={0} onClick={() => setSelectedId(product.id)} onKeyDown={event => { if (event.key === 'Enter') setSelectedId(product.id); }} className={`bulk-preview-item ${selectedId === product.id ? 'is-selected' : 'is-secondary'}`}>
                 <img src={product.previewUrl} alt={product.titulo} />
-                <span>{product.titulo}</span>
+                <span>{product.titulo || "\u00A0"}</span>
                 <button type="button" onClick={event => { event.stopPropagation(); removeProduct(product.id); }} className="bulk-preview-remove" aria-label={`Eliminar ${product.titulo}`}>×</button>
               </div>
             ))}
@@ -151,7 +151,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
           {selected && (
             <div className="bulk-product-editor liquid-form mt-8 animate-fade-in">
               <div className="flex items-center justify-between gap-3 mb-6">
-                <h4 className="text-[10px] tracking-[0.25em] uppercase text-white">Configurando: {selected.titulo}</h4>
+                <h4 className="text-[10px] tracking-[0.25em] uppercase text-white">Configurando: {selected.titulo || "\u00A0"}</h4>
                 <span className="text-[9px] tracking-[0.15em] uppercase text-gray-500">{products.indexOf(selected) + 1} / {products.length}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -167,7 +167,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
                   <option value="">SELECCIONA SUBCATEGORÍA</option>
                   {jewelrySubcategories.map(subcategory => <option key={subcategory} value={subcategory}>{subcategory}</option>)}
                 </select>}
-                <input value={selected.titulo} onChange={event => updateProduct(selected.id, { titulo: event.target.value })} placeholder="TÍTULO DEL PRODUCTO" />
+                <input value={selected.titulo} onChange={event => updateProduct(selected.id, { titulo: event.target.value })} placeholder="TÍTULO DEL PRODUCTO" aria-label="Título del producto" />
                 <select value={selected.color} onChange={event => updateProduct(selected.id, { color: event.target.value })}>
                   <option value="">COLOR</option>
                   <option value="Silver">SILVER</option>
@@ -209,7 +209,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
             <button type="button" onClick={() => setPreviewProduct(null)} className="absolute top-3 right-4 text-white text-2xl bg-transparent border-0 cursor-pointer">×</button>
             <img src={previewProduct.previewUrl} alt={previewProduct.titulo} />
             <div className="bulk-product-card-info">
-              <h2>{previewProduct.titulo}</h2>
+              <h2>{previewProduct.titulo || "\u00A0"}</h2>
               <p>{previewProduct.color || 'Color no especificado'}</p>
               <strong>${Number(previewProduct.precio || 0).toFixed(2)} USD</strong>
               {previewProduct.subcategoria === 'Anillos' && <div className="bulk-card-sizes">{ringSizes.filter(size => Number(previewProduct.tallas[size] || 0) > 0).map(size => <span key={size}>{size}<small>{previewProduct.tallas[size]}</small></span>)}</div>}

@@ -73,7 +73,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
         <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center bg-black/60 backdrop-blur-3xl border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
           
           <h2 className="text-[12px] sm:text-[14px] md:text-[20px] font-bold tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md w-full">
-            {producto.titulo}
+            {producto.titulo || "\u00A0"}
           </h2>
           
           <p className="text-[12px] sm:text-[14px] tracking-[0.1em] text-white font-light mb-6 sm:mb-8 drop-shadow-md">
@@ -133,7 +133,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
             <>
               <div className="w-12 h-px bg-white/20 mb-6 sm:mb-8 mx-auto"></div>
               <p className="text-[10px] text-gray-300 leading-loose mb-8 sm:mb-12 uppercase tracking-[0.1em] drop-shadow-sm break-words w-full">
-                {producto.descripcion}
+                {producto.descripcion || "\u00A0"}
               </p>
               
               {userRole === 'cliente' && !producto.vendido ? (

@@ -75,12 +75,23 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       {/* Menú de Usuario y Carrito */}
       {user ? (
         <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
-          {userRole !== 'admin' && (
+          {false && userRole !== 'admin' && (
             <button 
               onClick={() => setActiveView('bag')} 
               className={`text-white hover:text-gray-300 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
             >
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+              <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[5px] py-[1px] rounded-full shadow-lg">{carrito.length}</span>
+            </button>
+          )}
+
+          {userRole !== 'admin' && (
+            <button
+              aria-label="Abrir carrito"
+              onClick={() => setActiveView('bag')}
+              className={`text-white hover:text-gray-300 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
+            >
+              <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h2l2 13h10l2-9H6M9 21h.01M17 21h.01"></path></svg>
               <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[5px] py-[1px] rounded-full shadow-lg">{carrito.length}</span>
             </button>
           )}
