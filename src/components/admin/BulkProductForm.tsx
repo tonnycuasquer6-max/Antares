@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabase';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import type { NuevaPieza } from '../../types';
 
 interface BulkProductFormProps {
@@ -90,14 +91,12 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
     setSaving(true);
     let imageUrl = product.imagen_url;
     if (product.imagen) {
-      const extension = product.imagen.name.split('.').pop() || 'png';
-      const fileName = `productos/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
-      const { error: uploadError } = await supabase.storage.from('catalogo').upload(fileName, product.imagen);
-      if (uploadError) {
+      try {
+        imageUrl = await uploadToCloudinary(product.imagen, 'antares/productos');
+      } catch (error) {
         setSaving(false);
-        return alert(`No se pudo subir ${product.titulo}: ${uploadError.message}`);
+        return alert(`No se pudo subir ${product.titulo}: ${error instanceof Error ? error.message : 'error desconocido'}`);
       }
-      imageUrl = supabase.storage.from('catalogo').getPublicUrl(fileName).data.publicUrl;
     }
 
     const payload = {

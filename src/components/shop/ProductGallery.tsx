@@ -3,6 +3,7 @@ import { useShop } from '../../context/ShopContext';
 import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import { supabase } from '../../services/supabase';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import type { Product, NuevaPieza } from '../../types';
 
 interface ProductGalleryProps {
@@ -97,12 +98,11 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     let imageUrl = nuevaPieza.imagen_url || 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
     if (nuevaPieza.imagen) {
-      const fileExt = nuevaPieza.imagen.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('catalogo').upload(fileName, nuevaPieza.imagen);
-      if (uploadError) return alert('Error subiendo la imagen.');
-      const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(fileName);
-      imageUrl = publicUrl;
+      try {
+        imageUrl = await uploadToCloudinary(nuevaPieza.imagen, 'antares/productos');
+      } catch (error) {
+        return alert(`Error subiendo la imagen: ${error instanceof Error ? error.message : 'error desconocido'}`);
+      }
     }
 
     const payload = { 
@@ -232,7 +232,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-6 text-center items-center justify-items-center w-full">
-              <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza({...nuevaPieza, titulo: e.target.value})} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 focus:border-white transition-colors" required />
+              <input type="text" value={nuevaPieza.titulo} onChange={e => setNuevaPieza(current => ({ ...current, titulo: e.target.value }))} placeholder="TÍTULO DE LA OBRA" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 focus:border-white transition-colors" required />
               
               <div className="w-full relative">
                 <input type="number" value={nuevaPieza.costo} onChange={e => setNuevaPieza({...nuevaPieza, costo: e.target.value})} placeholder="COSTO FABRICACIÓN (USD)" className="w-full bg-transparent border-b border-white/20 text-white/70 text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-600 text-center hover:border-white/50 focus:border-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />

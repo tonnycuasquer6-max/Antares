@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useShop } from '../../context/ShopContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import type { EnvioConfig } from '../../types';
 
 export default function Cart() {
@@ -15,7 +16,6 @@ export default function Cart() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
-  const uploadSequence = useRef(0);
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
 
@@ -55,13 +55,12 @@ export default function Cart() {
 
     let urlComprobante = '';
     if (comprobantePago) {
-      const fileExt = comprobantePago.name.split('.').pop();
-      uploadSequence.current += 1;
-      const fileName = `pago_${uploadSequence.current}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('catalogo').upload(`comprobantes/${fileName}`, comprobantePago);
-      if (!uploadError) {
-        const { data: { publicUrl } } = supabase.storage.from('catalogo').getPublicUrl(`comprobantes/${fileName}`);
-        urlComprobante = publicUrl;
+      try {
+        urlComprobante = await uploadToCloudinary(comprobantePago, 'antares/comprobantes');
+      } catch (error) {
+        setIsUploading(false);
+        alert(`No se pudo subir el comprobante: ${error instanceof Error ? error.message : 'error desconocido'}`);
+        return;
       }
     }
 
