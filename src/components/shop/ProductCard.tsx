@@ -140,7 +140,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
         
         {isRing && (
           <div className="flex flex-col items-center w-full mb-3 mt-1 z-30">
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4 w-full">
+            <div className="grid grid-cols-4 gap-3 sm:gap-4 w-full">
               {tallasDisponibles.map(talla => {
                 const stock = parseInt(String(tallasObj[talla] || 0));
                 const isAvailable = stock > 0;
