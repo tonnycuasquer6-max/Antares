@@ -133,12 +133,14 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       
       {/* Info */}
       <div className="flex flex-col flex-grow items-center text-center w-full z-10 relative">
-        <h4 className="text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white mb-1.5 line-clamp-2 break-words w-full group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
-        <span className="text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap mb-1 block">${producto.precio} USD</span>
+        <div className="flex justify-between items-center w-full gap-3 mb-1.5">
+          <h4 className="text-left text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white line-clamp-2 break-words min-w-0 group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
+          <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
+        </div>
         
         {isRing && (
           <div className="flex flex-col items-center w-full mb-3 mt-1 z-30">
-            <div className="grid grid-cols-8 gap-1 sm:gap-1.5 w-full">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4 w-full">
               {tallasDisponibles.map(talla => {
                 const stock = parseInt(String(tallasObj[talla] || 0));
                 const isAvailable = stock > 0;
@@ -148,7 +150,8 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                   <div key={talla} className="flex min-w-0 flex-col items-center gap-1">
                     <button 
                       type="button"
-                      onClick={(e) => { if (isAvailable) handleSelectTalla(e, talla); }}
+                      disabled={!isAvailable}
+                      onClick={(e) => handleSelectTalla(e, talla)}
                       className={`w-full aspect-square max-w-9 flex items-center justify-center text-[10px] sm:text-[11px] tracking-[0.04em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer' : 'bg-black/20 text-white border-white/25 hover:border-white cursor-pointer') : 'border-red-500/20 text-red-500/50 bg-black/10 cursor-not-allowed'}`}
                     >
                       <span>{talla}</span>
@@ -159,9 +162,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                         <span className="min-w-3 text-center">{cantidadesPorTalla[talla] || 0}</span>
                         <button type="button" aria-label={`Aumentar cantidad de talla ${talla}`} disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock} onClick={(e) => handleCantidad(e, talla, 1, stock)} className="px-1 disabled:opacity-30">+</button>
                       </div>
-                    ) : (
-                      <span className="text-[9px] sm:text-[10px] text-red-500/40 uppercase">Agotado</span>
-                    )}
+                    ) : null}
                   </div>
                 );
               })}
@@ -172,9 +173,9 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
         {!isRing && (
           <div className="flex items-center justify-center gap-3 mb-3 sm:mb-4">
             <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400">Cantidad</span>
-            <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="w-6 h-6 border border-white/30 text-white disabled:opacity-30">-</button>
+            <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="p-2 text-white disabled:opacity-30">-</button>
             <span className="min-w-4 text-center text-white">{cantidadSeleccionada}</span>
-            <button type="button" aria-label="Aumentar cantidad" disabled={Number.isNaN(stockDisponible) ? false : cantidadSeleccionada >= stockDisponible} onClick={(e) => handleCantidad(e, 'general', 1, Number.isNaN(stockDisponible) ? 99 : stockDisponible)} className="w-6 h-6 border border-white/30 text-white disabled:opacity-30">+</button>
+            <button type="button" aria-label="Aumentar cantidad" disabled={Number.isNaN(stockDisponible) ? false : cantidadSeleccionada >= stockDisponible} onClick={(e) => handleCantidad(e, 'general', 1, Number.isNaN(stockDisponible) ? 99 : stockDisponible)} className="p-2 text-white disabled:opacity-30">+</button>
           </div>
         )}
 
