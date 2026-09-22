@@ -20,7 +20,7 @@ interface ShopContextType {
   sectoresQuito: { nombre: string; precio: number }[];
   parseTallasseguro: (tallasData: any) => Record<string, number | string>;
   triggerStarAnimation: (e: React.MouseEvent) => void;
-  agregarAlCarrito: (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent) => void;
+  agregarAlCarrito: (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad?: number, cantidadesPorTalla?: Record<string, number>) => void;
   updateCantidad: (id: string | number, tallaSeleccionada: string | undefined, delta: number) => void;
   toggleFavorito: (id: string | number) => void;
   fetchProductos: () => Promise<void>;
@@ -149,25 +149,24 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
 
   const triggerStarAnimation = (e: React.MouseEvent) => {
     if (!e || !e.currentTarget) return;
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const cart = document.getElementById('cart-icon');
+    const cartRect = cart?.getBoundingClientRect();
     const id = Date.now();
-    const startX = rect.left + (rect.width / 2);
-    const startY = rect.top + (rect.height / 2);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const targetX = cartRect ? cartRect.left + (cartRect.width / 2) : startX;
+    const targetY = cartRect ? cartRect.top + (cartRect.height / 2) : startY;
     
-    setStars(prev => [...prev, { id, x: startX, y: startY, active: false }]);
-    
-    setTimeout(() => {
-      setStars(prev => prev.map(s => s.id === id ? { ...s, active: true } : s));
-    }, 50);
+    setStars(prev => [...prev, { id, x: startX, y: startY, targetX, targetY, active: false }]);
     
     setTimeout(() => {
       setStars(prev => prev.filter(s => s.id !== id));
       setCartPulse(true);
       setTimeout(() => setCartPulse(false), 400); 
-    }, 700);
+    }, 720);
   };
 
-  const agregarAlCarrito = (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent) => {
+  const agregarAlCarrito = (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad = 1, cantidadesPorTalla: Record<string, number> = {}) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -182,20 +181,22 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
         const tallasObj = parseTallasseguro(producto.tallas);
         tallasSeleccionadas.forEach(talla => {
           const maxForTalla = parseInt(String(tallasObj[talla] || 0));
+          const cantidadSolicitada = Math.max(0, Math.min(cantidadesPorTalla[talla] || cantidad, maxForTalla));
           const index = newCart.findIndex(item => item.id === producto.id && item.tallaSeleccionada === talla);
+          if (cantidadSolicitada === 0) return;
           if (index > -1) {
-            if (newCart[index].cantidad < maxForTalla) newCart[index].cantidad += 1;
+            newCart[index].cantidad = Math.min(newCart[index].cantidad + cantidadSolicitada, maxForTalla);
           } else {
-            newCart.push({ ...producto, tallaSeleccionada: talla, cantidad: 1, stockMaximo: maxForTalla });
+            newCart.push({ ...producto, tallaSeleccionada: talla, cantidad: cantidadSolicitada, stockMaximo: maxForTalla });
           }
         });
       } else {
         const stockMax = parseInt(String(producto.disponibilidad)) || 99;
         const index = newCart.findIndex(item => item.id === producto.id);
         if (index > -1) {
-          if (newCart[index].cantidad < stockMax) newCart[index].cantidad += 1;
+          newCart[index].cantidad = Math.min(newCart[index].cantidad + cantidad, stockMax);
         } else {
-          newCart.push({ ...producto, cantidad: 1, stockMaximo: stockMax });
+          newCart.push({ ...producto, cantidad: Math.min(cantidad, stockMax), stockMaximo: stockMax });
         }
       }
       return newCart;

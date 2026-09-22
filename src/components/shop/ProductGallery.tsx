@@ -135,20 +135,20 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
   return (
     <section
-      className={`container mx-auto py-8 md:py-16 flex-grow w-full max-w-7xl animate-fade-in relative z-10 ${isJewelryCategory ? 'jewelry-gallery' : ''}`}
+      className={`container mx-auto py-4 md:py-8 flex-grow w-full max-w-7xl animate-fade-in relative z-10 ${isJewelryCategory ? 'jewelry-gallery' : ''}`}
     >
-      <h2 className="text-base md:text-xl tracking-[0.24em] md:tracking-[0.4em] uppercase text-white mb-8 md:mb-12 text-center pb-4 md:pb-6 break-words drop-shadow-md">
+      <h2 className="text-base md:text-xl tracking-[0.24em] md:tracking-[0.4em] uppercase text-white mb-4 md:mb-6 text-center pb-2 md:pb-3 break-words drop-shadow-md">
         {category === 'deseos' ? 'Lista de Deseos' : category}
       </h2>
 
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
-        <ul className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-12 mb-6 pb-6">
+        <ul className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-8 mb-4 pb-3">
           {subcategoriasJoyeria.map(sub => (
             <li 
               key={sub} 
               onClick={() => setActiveSubCategory(sub)} 
-              className={`text-[8px] sm:text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
+              className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
             >
               {sub}
             </li>
@@ -158,19 +158,19 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
       {/* Filtros Dropdown (Acero Fino) */}
       {category === 'Acero Fino' && (
-        <div className="w-full max-w-3xl mx-auto mb-8 sm:mb-10 flex flex-col items-center relative z-[150]">
-          <p className="text-[8px] sm:text-[10px] tracking-[0.3em] text-gray-500 font-bold mb-4 sm:mb-6 uppercase">Ordenar Por</p>
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 md:gap-16 w-full text-[8px] sm:text-[10px] md:text-[11px] tracking-[0.2em] uppercase">
+        <div className="w-full max-w-3xl mx-auto mb-4 sm:mb-6 flex flex-col items-center relative z-[150]">
+          <p className="text-xs sm:text-sm tracking-[0.24em] text-gray-500 font-bold mb-2 sm:mb-3 uppercase">Ordenar Por</p>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 w-full text-xs sm:text-sm tracking-[0.16em] uppercase">
             
-            <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+            <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
               <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                 Color: {filtroColor === 'Todo' ? 'Todos' : filtroColor}
               </div>
               {openFilter === 'color' && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
-                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 border border-white/10 rounded-sm">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[120px] sm:min-w-[140px]">
+                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm">
                     {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
-                      <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
+                      <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                         {opt === 'Todo' ? 'Todos' : opt}
                       </span>
                     ))}
@@ -180,16 +180,16 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             </div>
             
             {['Todo', 'Anillos'].includes(activeSubCategory) && (
-              <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+              <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
                 <div onClick={() => setOpenFilter(openFilter === 'talla' ? null : 'talla')} className={`transition-colors ${filtroTalla !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                   Talla: {filtroTalla === 'Todo' ? 'Todas' : filtroTalla}
                 </div>
                 {openFilter === 'talla' && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[120px] sm:min-w-[140px]">
-                    <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 border border-white/10 rounded-sm max-h-64 overflow-y-auto">
-                      <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500'}`}>Todas</span>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[120px] sm:min-w-[140px]">
+                    <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm max-h-64 overflow-y-auto">
+                      <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500'}`}>Todas</span>
                       {tallasDisponibles.map(t => (
-                        <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${filtroTalla === t ? 'text-white' : 'text-gray-500'}`}>
+                        <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroTalla === t ? 'text-white' : 'text-gray-500'}`}>
                           {t}
                         </span>
                       ))}
@@ -199,16 +199,16 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               </div>
             )}
 
-            <div className="relative group cursor-pointer pb-2" onMouseLeave={() => setOpenFilter(null)}>
+            <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
               <div onClick={() => setOpenFilter(openFilter === 'precio' ? null : 'precio')} className={`transition-colors ${ordenPrecio !== '' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
                 Precio: {ordenPrecio === '' ? 'Normal' : (ordenPrecio === 'Asc' ? 'Menor a Mayor' : 'Mayor a Menor')}
               </div>
               {openFilter === 'precio' && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-[200] min-w-[140px] sm:min-w-[160px]">
-                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-3 sm:gap-4 py-3 sm:py-4 border border-white/10 rounded-sm">
-                    <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500'}`}>Normal</span>
-                    <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500'}`}>Menor a Mayor</span>
-                    <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-2 hover:bg-white/5 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500'}`}>Mayor a Menor</span>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[140px] sm:min-w-[160px]">
+                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm">
+                    <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500'}`}>Normal</span>
+                    <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500'}`}>Menor a Mayor</span>
+                    <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500'}`}>Mayor a Menor</span>
                   </div>
                 </div>
               )}

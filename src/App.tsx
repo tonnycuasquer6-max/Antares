@@ -10,6 +10,7 @@ import { ShopProvider } from './context/ShopContext';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import LiquidBackground from './components/layout/LiquidBackground';
+import CartFlyAnimation from './components/layout/CartFlyAnimation';
 
 // Views
 import Home from './components/shop/Home';
@@ -112,6 +113,7 @@ export default function App() {
         <div className="min-h-screen bg-black text-white font-serif flex flex-col relative w-full overflow-x-hidden overflow-y-auto selection:bg-white/30 selection:text-black transition-colors duration-700">
           
           <LiquidBackground />
+          <CartFlyAnimation />
 
           <div className="z-10 relative flex flex-col flex-grow w-full">
             <Header 

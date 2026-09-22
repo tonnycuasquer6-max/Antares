@@ -21,11 +21,16 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   } = useShop();
 
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
+  const [cantidadesPorTalla, setCantidadesPorTalla] = useState<Record<string, number>>({});
 
   const tallasObj = parseTallasseguro(producto.tallas);
   const isRing = producto.subcategoria === 'Anillos';
   const isJewelry = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(producto.categoria);
-  const canBuy = !isRing || tallasSeleccionadas.length > 0;
+  const stockDisponible = parseInt(String(producto.disponibilidad));
+  const cantidadSeleccionada = cantidadesPorTalla.general || 0;
+  const canBuy = isRing
+    ? tallasSeleccionadas.some(talla => (cantidadesPorTalla[talla] || 0) > 0)
+    : cantidadSeleccionada > 0 && (Number.isNaN(stockDisponible) || stockDisponible > 0);
 
   const handleSelectTalla = (e: React.MouseEvent, talla: string) => {
     e.preventDefault();
@@ -33,6 +38,22 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
     setTallasSeleccionadas(prev => 
       prev.includes(talla) ? prev.filter(t => t !== talla) : [...prev, talla]
     );
+  };
+
+  const handleCantidad = (e: React.MouseEvent, key: string, delta: number, max: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCantidadesPorTalla(prev => ({
+      ...prev,
+      [key]: Math.max(0, Math.min((prev[key] || 0) + delta, max))
+    }));
+  };
+
+  const handleComprar = (e: React.MouseEvent) => {
+    if (!canBuy) return;
+    agregarAlCarrito(producto, tallasSeleccionadas, e, cantidadSeleccionada, cantidadesPorTalla);
+    setTallasSeleccionadas([]);
+    setCantidadesPorTalla({});
   };
 
   const handleBorrarLocal = async (e: React.MouseEvent, id: string | number) => {
@@ -85,10 +106,10 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   };
 
   return (
-    <div className={`group relative flex flex-col p-4 sm:p-6 transition-all duration-500 ${isJewelry ? 'jewelry-product-card' : 'bg-black/20 backdrop-blur-md hover:bg-black/40'}`}>
+    <div className={`group relative flex flex-col p-3 sm:p-4 transition-all duration-500 ${isJewelry ? 'jewelry-product-card' : 'bg-black/20 backdrop-blur-md hover:bg-black/40'}`}>
 
       {/* Imagen */}
-      <div className={`overflow-hidden aspect-square relative w-full mb-6 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
+      <div className={`overflow-hidden aspect-square relative w-full mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
         <img loading="lazy" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 will-change-transform" />
         
         {producto.vendido && (
@@ -112,15 +133,11 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       
       {/* Info */}
       <div className="flex flex-col flex-grow items-center text-center w-full z-10 relative">
-        <h4 className="text-[11px] md:text-[13px] font-bold tracking-[0.14em] uppercase text-white mb-3 line-clamp-2 break-words w-full group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
-        <span className="text-[11px] md:text-[14px] tracking-[0.08em] text-white font-light whitespace-nowrap mb-2 block">${producto.precio} USD</span>
+        <h4 className="text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white mb-1.5 line-clamp-2 break-words w-full group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
+        <span className="text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap mb-1 block">${producto.precio} USD</span>
         
-        {!isRing && (
-          <p className="text-[9px] tracking-[0.14em] text-gray-400 mb-5 uppercase">{producto.disponibilidad ? producto.disponibilidad : 'Bajo Pedido'}</p>
-        )}
-
         {isRing && (
-          <div className="flex flex-col items-center w-full mb-6 mt-3 z-30">
+          <div className="flex flex-col items-center w-full mb-3 mt-1 z-30">
             <div className="grid grid-cols-8 gap-1 sm:gap-1.5 w-full">
               {tallasDisponibles.map(talla => {
                 const stock = parseInt(String(tallasObj[talla] || 0));
@@ -136,9 +153,15 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                     >
                       <span>{talla}</span>
                     </button>
-                    <span className={`text-[9px] sm:text-[10px] tracking-[0.04em] uppercase leading-none ${isAvailable ? 'text-gray-400' : 'text-red-500/40'}`}>
-                      {stock}
-                    </span>
+                    {isAvailable ? (
+                      <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400">
+                        <button type="button" aria-label={`Reducir cantidad de talla ${talla}`} disabled={!isSelected || !(cantidadesPorTalla[talla] || 0)} onClick={(e) => handleCantidad(e, talla, -1, stock)} className="px-1 disabled:opacity-30">-</button>
+                        <span className="min-w-3 text-center">{cantidadesPorTalla[talla] || 0}</span>
+                        <button type="button" aria-label={`Aumentar cantidad de talla ${talla}`} disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock} onClick={(e) => handleCantidad(e, talla, 1, stock)} className="px-1 disabled:opacity-30">+</button>
+                      </div>
+                    ) : (
+                      <span className="text-[9px] sm:text-[10px] text-red-500/40 uppercase">Agotado</span>
+                    )}
                   </div>
                 );
               })}
@@ -146,16 +169,26 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
           </div>
         )}
         
-        <p className="text-[11px] text-gray-300 line-clamp-2 leading-relaxed mb-5 sm:mb-6 break-words uppercase w-full">{producto.descripcion}</p>
+        {!isRing && (
+          <div className="flex items-center justify-center gap-3 mb-3 sm:mb-4">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400">Cantidad</span>
+            <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="w-6 h-6 border border-white/30 text-white disabled:opacity-30">-</button>
+            <span className="min-w-4 text-center text-white">{cantidadSeleccionada}</span>
+            <button type="button" aria-label="Aumentar cantidad" disabled={Number.isNaN(stockDisponible) ? false : cantidadSeleccionada >= stockDisponible} onClick={(e) => handleCantidad(e, 'general', 1, Number.isNaN(stockDisponible) ? 99 : stockDisponible)} className="w-6 h-6 border border-white/30 text-white disabled:opacity-30">+</button>
+          </div>
+        )}
+
+        <p className="text-xs text-gray-300 line-clamp-2 leading-snug mb-3 sm:mb-4 break-words uppercase w-full">{producto.descripcion}</p>
 
         {/* Acciones Cliente */}
         {userRole === 'cliente' && !producto.vendido && (
           <div className="flex flex-col sm:flex-row gap-2 mt-auto w-full z-30 justify-center">
              <button 
-               onClick={(e) => { if(canBuy) agregarAlCarrito(producto, tallasSeleccionadas, e); }} 
+               onClick={handleComprar}
+               disabled={!canBuy}
                className={`w-full sm:flex-grow py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-all duration-300 cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-white/10 text-gray-500 cursor-not-allowed border border-white/10'}`}
              >
-               {canBuy ? 'COMPRAR' : 'ELIJA TALLA'}
+               {canBuy ? 'COMPRAR' : isRing ? 'ELIJA TALLA Y CANTIDAD' : 'ELIJA CANTIDAD'}
              </button>
              <button 
                onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
