@@ -69,7 +69,7 @@ export default function AdminInventory() {
 
       <BulkProductForm onSaved={products => setProductos(current => [...products, ...current])} />
       
-      <div className="bg-black/40 backdrop-blur-3xl border border-white/10 p-4 md:p-8 w-full overflow-x-auto mb-16 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+      <div className="glass-panel p-4 md:p-8 w-full overflow-x-auto mb-16 rounded-sm">
         <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6 drop-shadow-md">Stock Disponible (Proyección)</h3>
         <div className="min-w-[800px]">
           <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
@@ -106,7 +106,7 @@ export default function AdminInventory() {
         </div>
       </div>
 
-      <div className="bg-black/40 backdrop-blur-3xl border border-white/10 p-4 md:p-8 w-full overflow-x-auto rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+      <div className="glass-panel p-4 md:p-8 w-full overflow-x-auto rounded-sm">
         <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6 drop-shadow-md">Historial de Ventas (Ganancia Real)</h3>
         <div className="min-w-[800px]">
           <div className="grid grid-cols-6 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">

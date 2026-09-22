@@ -124,7 +124,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
   };
 
   return (
-    <div className="liquid-glass p-5 md:p-8 mb-12 rounded-[2rem]">
+    <div className="glass-panel p-5 md:p-8 mb-12 rounded-[2rem]">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h3 className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-white">Agregar productos</h3>
@@ -205,7 +205,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
 
       {previewProduct && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4" onClick={() => setPreviewProduct(null)}>
-          <div className="bulk-product-card liquid-glass" onClick={event => event.stopPropagation()}>
+          <div className="bulk-product-card glass-panel" onClick={event => event.stopPropagation()}>
             <button type="button" onClick={() => setPreviewProduct(null)} className="absolute top-3 right-4 text-white text-2xl bg-transparent border-0 cursor-pointer">×</button>
             <img src={previewProduct.previewUrl} alt={previewProduct.titulo} />
             <div className="bulk-product-card-info">

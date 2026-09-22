@@ -58,7 +58,7 @@ export default function Auth({ onClose }: AuthProps) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 font-serif animate-fade-in">
       
-      <div className="liquid-glass liquid-form w-full max-w-md p-8 md:p-12 relative shadow-2xl rounded-[2rem]">
+      <div className="glass-panel liquid-form w-full max-w-md p-8 md:p-12 relative rounded-[2rem]">
         
         <button 
           onClick={onClose}

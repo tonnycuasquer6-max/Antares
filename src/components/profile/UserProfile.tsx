@@ -180,7 +180,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   if (profileIsIncomplete) {
     return (
       <section className="w-full max-w-2xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in relative z-10">
-        <form onSubmit={handleProfileSubmit} className="liquid-glass liquid-form p-7 md:p-12 shadow-2xl rounded-[2rem]">
+        <form onSubmit={handleProfileSubmit} className="glass-panel liquid-form p-7 md:p-12 rounded-[2rem]">
           <div className="text-center mb-10">
             <p className="text-[9px] tracking-[0.35em] uppercase text-white/50 mb-4">Bienvenido al Atelier</p>
             <h2 className="text-[15px] md:text-[20px] tracking-[0.4em] uppercase text-white font-light">Completa tu perfil</h2>
@@ -252,7 +252,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   return (
     <>
       <section className="screen-only w-full max-w-4xl mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in relative z-10">
-        <div className="profile-card liquid-glass shadow-2xl rounded-[2rem] flex flex-col items-center" style={{ backgroundImage: `linear-gradient(145deg, rgba(13, 14, 18, 0.66), rgba(4, 5, 7, 0.86)), url(${patron})` }}>
+        <div className="profile-card glass-panel rounded-[2rem] flex flex-col items-center" style={{ backgroundImage: `linear-gradient(145deg, rgba(13, 14, 18, 0.66), rgba(4, 5, 7, 0.86)), url(${patron})` }}>
           <div className="profile-card-content">
             <div className="profile-identity">
               <p className="profile-treatment">{user?.user_metadata?.tratamiento || ''}</p>
@@ -297,7 +297,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
               
               <div className="flex flex-col gap-3 w-full max-w-md mx-auto mb-10">
                 {Object.keys(estructuraCatalogo).concat('Obsequios').map(menu => (
-                  <div key={menu} className="bg-black/20 backdrop-blur-md p-4 md:p-5 border border-white/10 rounded-sm">
+                  <div key={menu} className="glass-panel p-4 md:p-5 rounded-sm">
                     <div className="flex justify-between items-center">
                       <span className={`text-[12px] md:text-[14px] tracking-[0.2em] uppercase font-bold ${isHiddenInAdminList(menu) ? 'text-red-500/70 underline decoration-red-500 decoration-2 underline-offset-4' : 'text-white'}`}>{menu}</span>
                       <button 

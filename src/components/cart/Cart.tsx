@@ -109,7 +109,7 @@ export default function Cart() {
           Su bolso está vacío en este momento.
         </p>
       ) : (
-        <div className="liquid-glass p-4 md:p-10 shadow-2xl relative rounded-[2rem]">
+        <div className="glass-panel p-4 md:p-10 relative rounded-[2rem]">
           
           {checkoutPaso === 1 && (
             <>
@@ -154,7 +154,7 @@ export default function Cart() {
                       </div>
                       {openFormSelect === 'envio' && (
                         <div className="absolute top-full right-0 w-full pt-1 z-[300]">
-                          <div className="bg-black/80 backdrop-blur-3xl flex flex-col gap-4 py-4 border border-white/10 rounded-sm shadow-2xl">
+                          <div className="glass-panel flex flex-col gap-4 py-4 rounded-sm">
                             {sectoresQuito.map(sector => (
                               <span 
                                 key={sector.nombre} 

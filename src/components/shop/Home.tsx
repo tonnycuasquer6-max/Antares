@@ -39,7 +39,7 @@ export default function Home({ onNavigate }: HomeProps) {
           
           <div 
             onClick={() => handleNavigation('Sastrería a Medida')} 
-            className="p-6 md:p-10 bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500 cursor-pointer group"
+            className="glass-panel p-6 md:p-10 hover:border-white/20 transition-all duration-500 cursor-pointer group"
           >
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Sastrería a Medida
@@ -51,7 +51,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
           <div 
             onClick={() => handleNavigation('Joyería Exclusiva')} 
-            className="p-6 md:p-10 bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500 cursor-pointer group"
+            className="glass-panel p-6 md:p-10 hover:border-white/20 transition-all duration-500 cursor-pointer group"
           >
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Joyería Personalizada
@@ -63,7 +63,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
           <div 
             onClick={() => handleNavigation('perfil')} 
-            className="p-6 md:p-10 bg-black/40 backdrop-blur-md border border-white/5 hover:border-white/20 transition-all duration-500 cursor-pointer sm:col-span-2 lg:col-span-1 group"
+            className="glass-panel p-6 md:p-10 hover:border-white/20 transition-all duration-500 cursor-pointer sm:col-span-2 lg:col-span-1 group"
           >
             <h4 className="text-xs md:text-sm tracking-[0.2em] uppercase text-white mb-4 md:mb-6 group-hover:scale-105 transition-transform duration-500">
               Asesoría de Imagen

@@ -45,7 +45,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
       onClick={onClose}
     >
       <div 
-        className="w-full h-full sm:h-auto max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl flex flex-col md:flex-row relative shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-sm items-stretch bg-black/40 border border-white/10 max-h-[100vh] sm:max-h-[90vh] md:max-h-[80vh]" 
+        className="glass-panel w-full h-full sm:h-auto max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl flex flex-col md:flex-row relative overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-sm items-stretch max-h-[100vh] sm:max-h-[90vh] md:max-h-[80vh]" 
         onClick={e => e.stopPropagation()}
       >
         
@@ -70,7 +70,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           )}
         </div>
 
-        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center bg-black/60 backdrop-blur-3xl border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
+        <div className="glass-panel w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
           
           <h2 className="text-[12px] sm:text-[14px] md:text-[20px] font-bold tracking-[0.2em] uppercase text-white mb-2 drop-shadow-md w-full">
             {producto.titulo || "\u00A0"}

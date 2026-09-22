@@ -101,7 +101,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                       const isExpanded = pedidoExpandido === expandKey;
                       
                       return (
-                        <div key={clientKey} className="bg-black/40 backdrop-blur-3xl p-4 md:p-6 shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-sm border border-white/10 w-full transition-all duration-300">
+                        <div key={clientKey} className="glass-panel p-4 md:p-6 rounded-sm w-full transition-all duration-300">
                             <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
                               <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white text-black flex items-center justify-center font-bold text-lg sm:text-xl rounded-full uppercase shadow-[0_0_15px_rgba(255,255,255,0.4)]">{nombre.charAt(0)}</div>
@@ -198,7 +198,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
           )}
         </div>
       ) : (
-        <div className="bg-black/40 backdrop-blur-3xl p-8 md:p-16 shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 rounded-sm w-full text-center">
+        <div className="glass-panel p-8 md:p-16 rounded-sm w-full text-center">
           <p className="text-gray-400 tracking-[0.2em] uppercase text-[10px] md:text-[12px] py-6 md:py-10">
             Aún no hay un historial de pedidos en su cuenta.
           </p>

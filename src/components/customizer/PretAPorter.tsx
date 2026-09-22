@@ -195,7 +195,7 @@ export default function PretAPorter() {
         Prêt-à-Porter Personalizado
       </h2>
       
-      <div className="liquid-glass flex flex-col lg:flex-row gap-8 lg:gap-16 items-center lg:items-start w-full p-6 md:p-12 shadow-2xl rounded-[2rem]">
+      <div className="glass-panel flex flex-col lg:flex-row gap-8 lg:gap-16 items-center lg:items-start w-full p-6 md:p-12 rounded-[2rem]">
         
         {/* Visualizador */}
         <div className="w-full max-w-[400px] md:max-w-[500px] lg:max-w-none lg:w-1/2 flex flex-col gap-4">
@@ -216,7 +216,7 @@ export default function PretAPorter() {
               </button>
             </div>
             
-            <div className="w-full relative bg-black/60 backdrop-blur-[50px] aspect-[3/4] flex items-center justify-center overflow-hidden group border border-white/5 rounded-sm mx-auto shadow-inner">
+            <div className="glass-panel w-full relative aspect-[3/4] flex items-center justify-center overflow-hidden group rounded-sm mx-auto">
               <img 
                 src={customRenderedImage || getMockupUrl(customPrenda, customVista)} 
                 alt="Renderizado Prêt-à-Porter" 

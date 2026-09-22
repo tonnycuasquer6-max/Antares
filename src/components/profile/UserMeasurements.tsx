@@ -56,7 +56,7 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
 
   return (
     <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-4xl relative z-10">
-      <div className="liquid-glass p-6 md:p-12 shadow-2xl relative rounded-[2rem]">
+      <div className="glass-panel p-6 md:p-12 relative rounded-[2rem]">
         
         <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
           <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white font-light drop-shadow-md">Configuración de Medidas</h2>

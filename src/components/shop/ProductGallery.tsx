@@ -5,6 +5,7 @@ import ProductModal from './ProductModal';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import type { Product, NuevaPieza } from '../../types';
+import { Filter } from 'lucide-react';
 
 interface ProductGalleryProps {
   category: string;
@@ -26,6 +27,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [filtroTalla, setFiltroTalla] = useState<string>('Todo');
   const [ordenPrecio, setOrdenPrecio] = useState<string>('');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   
   const [productoSeleccionado, setProductoSeleccionado] = useState<Product | null>(null);
   
@@ -143,24 +145,37 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
-        <ul className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-8 mb-4 pb-3">
-          {subcategoriasJoyeria.map(sub => (
-            <li 
-              key={sub} 
-              onClick={() => setActiveSubCategory(sub)} 
-              className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-              {sub}
-            </li>
-          ))}
-        </ul>
-      )}
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 mb-4 pb-3">
+          <ul className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-8">
+            {subcategoriasJoyeria.map(sub => (
+              <li 
+                key={sub} 
+                onClick={() => setActiveSubCategory(sub)} 
+                className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
+              >
+                {sub}
+              </li>
+            ))}
+          </ul>
 
-      {/* Filtros Dropdown (Acero Fino) */}
-      {category === 'Acero Fino' && (
-        <div className="w-full max-w-3xl mx-auto mb-4 sm:mb-6 flex flex-col items-center relative z-[150]">
-          <p className="text-xs sm:text-sm tracking-[0.24em] text-gray-500 font-bold mb-2 sm:mb-3 uppercase">Ordenar Por</p>
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 w-full text-xs sm:text-sm tracking-[0.16em] uppercase">
+          {/* Filtros Dropdown (Acero Fino) */}
+          {category === 'Acero Fino' && (
+            <div className="flex flex-col items-center relative z-[150]">
+          <button
+            type="button"
+            onClick={() => setShowFilters(current => !current)}
+            aria-expanded={showFilters}
+            aria-controls="product-filters"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm tracking-[0.24em] text-gray-500 font-bold uppercase transition-colors hover:text-white text-shadow"
+          >
+            <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span className="sr-only">Mostrar filtros</span>
+          </button>
+          <div
+            id="product-filters"
+            className={`w-full glass-panel rounded-sm px-3 py-2 transition-all duration-300 ease-out ${showFilters ? 'max-h-48 opacity-100 overflow-visible mt-2 sm:mt-3' : 'max-h-0 opacity-0 overflow-hidden'}`}
+          >
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 w-full text-xs sm:text-sm tracking-[0.16em] uppercase">
             
             <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
               <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
@@ -168,7 +183,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               </div>
               {openFilter === 'color' && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[120px] sm:min-w-[140px]">
-                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm">
+                    <div className="glass-panel text-shadow w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 rounded-sm">
                     {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
                       <span key={opt} onClick={() => { setFiltroColor(opt); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroColor === opt ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
                         {opt === 'Todo' ? 'Todos' : opt}
@@ -186,7 +201,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                 </div>
                 {openFilter === 'talla' && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[120px] sm:min-w-[140px]">
-                    <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm max-h-64 overflow-y-auto">
+                    <div className="glass-panel text-shadow w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 rounded-sm max-h-64 overflow-y-auto">
                       <span onClick={() => { setFiltroTalla('Todo'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroTalla === 'Todo' ? 'text-white' : 'text-gray-500'}`}>Todas</span>
                       {tallasDisponibles.map(t => (
                         <span key={t} onClick={() => { setFiltroTalla(t); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${filtroTalla === t ? 'text-white' : 'text-gray-500'}`}>
@@ -205,7 +220,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               </div>
               {openFilter === 'precio' && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-[200] min-w-[140px] sm:min-w-[160px]">
-                  <div className="bg-black/60 backdrop-blur-3xl w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 border border-white/10 rounded-sm">
+                  <div className="glass-panel text-shadow w-full flex flex-col items-center gap-1.5 sm:gap-2 py-2 sm:py-3 rounded-sm">
                     <span onClick={() => { setOrdenPrecio(''); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === '' ? 'text-white' : 'text-gray-500'}`}>Normal</span>
                     <span onClick={() => { setOrdenPrecio('Asc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === 'Asc' ? 'text-white' : 'text-gray-500'}`}>Menor a Mayor</span>
                     <span onClick={() => { setOrdenPrecio('Desc'); setOpenFilter(null); }} className={`cursor-pointer transition-colors w-full text-center py-1.5 hover:bg-white/5 ${ordenPrecio === 'Desc' ? 'text-white' : 'text-gray-500'}`}>Mayor a Menor</span>
@@ -214,14 +229,17 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               )}
             </div>
 
+            </div>
           </div>
+        </div>
+          )}
         </div>
       )}
 
       {/* Formulario Admin Inline/Modal */}
       {userRole === 'admin' && showInlineForm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <form onSubmit={handlePublicarLocal} className="liquid-glass liquid-form p-6 md:p-10 shadow-2xl relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto">
+          <form onSubmit={handlePublicarLocal} className="glass-panel liquid-form p-6 md:p-10 relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto">
             <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50 transition-colors">×</button>
             <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-6 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
             
@@ -251,7 +269,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                   </div>
                   {openFormSelect === 'subcat' && (
                     <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-3xl flex flex-col gap-4 py-4 border border-white/10 rounded-sm max-h-48 overflow-y-auto">
+                      <div className="glass-panel flex flex-col gap-4 py-4 rounded-sm max-h-48 overflow-y-auto">
                         <div onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: '', tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
                         {subcategoriasJoyeria.filter(s => s !== 'Todo').map(sub => (
                           <div key={sub} onClick={() => { setNuevaPieza({...nuevaPieza, subcategoria: sub, tallas: {}}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{sub}</div>
@@ -269,7 +287,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                   </div>
                   {openFormSelect === 'color' && (
                     <div className="absolute top-full left-0 w-full pt-1 z-[300]">
-                      <div className="bg-black/90 backdrop-blur-3xl flex flex-col gap-4 py-4 border border-white/10 rounded-sm">
+                      <div className="glass-panel flex flex-col gap-4 py-4 rounded-sm">
                         <div onClick={() => { setNuevaPieza({...nuevaPieza, color: ''}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">NINGUNO</div>
                         {['Silver', 'Gold', 'Black'].map(c => (
                           <div key={c} onClick={() => { setNuevaPieza({...nuevaPieza, color: c}); setOpenFormSelect(null); }} className="text-[10px] md:text-xs tracking-[0.2em] text-gray-400 hover:text-white cursor-pointer text-center transition-colors uppercase py-2">{c}</div>

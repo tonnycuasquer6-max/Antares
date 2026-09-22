@@ -18,7 +18,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   const [menuUsuarioActivo, setMenuUsuarioActivo] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  const cristalOpacoSubmenuClass = "liquid-submenu flex flex-col py-2.5 px-5 shadow-2xl rounded-2xl";
+  const cristalOpacoSubmenuClass = "glass-panel flex flex-col py-2.5 px-5 rounded-2xl";
   const normalizeMenuKey = (value: string) => value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -32,7 +32,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
       const clickedInsideDropdown = target instanceof Element && (
-        target.closest('.liquid-submenu') ||
+        target.closest('.glass-panel') ||
         target.closest('.menu-item-visibility') ||
         target.closest('.menu-hover-bridge')
       );
@@ -59,7 +59,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   };
 
   return (
-    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center liquid-header z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
+    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
       
       {/* Botón Volver */}
       {user && activeView !== 'home' && (
