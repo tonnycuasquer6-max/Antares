@@ -398,8 +398,10 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
             <div key={cat} className="catalog-category">
               <div className={`catalog-cover break-after-page ${indiceCategoria > 0 ? 'break-before-page' : ''}`}>
                 {indiceCategoria === 0 && <img src={logo} alt="ANTARES" className="catalog-logo" />}
-                <h2>{parentMenu}</h2>
-                <h3>{cat}</h3>
+                <div className="catalog-cover-heading flex flex-col items-center text-center gap-2">
+                  <h2>{parentMenu}</h2>
+                  <h3>{cat}</h3>
+                </div>
               </div>
               {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
              const gruposDe4 = [];
@@ -416,10 +418,6 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                     <div className="catalog-products-grid grid grid-cols-2 grid-rows-2 w-full border-t border-l border-white/10">
                       {grupo.map((p) => (
                         <div key={p.id} className="catalog-product-card catalog-liquid-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full">
-                          <div className="absolute -bottom-[8px] -right-[8px] w-4 h-4 bg-black z-20 flex items-center justify-center border border-white/20">
-                            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white"><path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z"/></svg>
-                          </div>
-                          
                           <div className="relative w-full h-[240px] flex items-center justify-center bg-transparent mb-4 mt-2">
                             <img src={p.imagen_url} className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
                             {p.vendido && (
@@ -429,8 +427,13 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                             )}
                           </div>
                           
-                          <h3 className="text-[14px] tracking-[0.2em] font-bold uppercase mb-2 break-words line-clamp-2 text-white drop-shadow-md">{p.titulo}</h3>
-                          <p className="text-white text-xl font-light tracking-[0.1em] mb-4 font-serif">${p.precio} USD</p>
+                          <div className="w-full flex flex-row justify-between items-start gap-3 mb-4 text-left">
+                            <div className="flex min-w-0 flex-col">
+                              <h3 className="text-[14px] tracking-[0.2em] font-bold uppercase break-words line-clamp-2 text-white drop-shadow-md">{p.titulo}</h3>
+                              {p.subcategoria !== 'Anillos' && <p className="text-[10px] text-gray-400 mt-1">Stock: {p.disponibilidad || 0}</p>}
+                            </div>
+                            <p className="text-white text-xl font-light tracking-[0.1em] font-serif text-right whitespace-nowrap">${p.precio} USD</p>
+                          </div>
                           
                           {p.subcategoria === 'Anillos' ? (
                             <div className="flex gap-3 justify-center mb-4 flex-wrap">
@@ -439,19 +442,17 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                                  const isAvailable = stock > 0;
                                  return (
                                    <div key={t} className="flex flex-col items-center gap-1.5">
-                                     <div className="font-serif text-[12px] font-bold flex items-center justify-center w-8 h-8 rounded-sm" style={{ border: `1px solid ${isAvailable ? 'rgba(255,255,255,0.6)' : 'rgba(255,0,0,0.3)'}`, color: isAvailable ? '#ffffff' : '#ff0000', backgroundColor: isAvailable ? 'transparent' : 'rgba(255,0,0,0.05)' }}>
+                                     <div className={`font-serif text-[12px] font-bold flex items-center justify-center w-8 h-8 rounded-sm ${isAvailable ? 'border border-white/60 text-white' : 'border border-gray-500 text-gray-500 opacity-50'}`}>
                                        {t}
                                      </div>
-                                     <span className="font-serif text-[10px]" style={{ color: isAvailable ? '#aaaaaa' : '#ff0000', opacity: isAvailable ? 1 : 0.7 }}>
+                                     <span className={`font-serif text-[10px] ${isAvailable ? 'text-gray-400' : 'text-gray-500 opacity-50'}`}>
                                        {stock}
                                      </span>
                                    </div>
                                  );
                                })}
                             </div>
-                          ) : (
-                            <div className="h-6 mb-4"></div> 
-                          )}
+                          ) : null}
 
                           <p className="text-[11px] leading-relaxed px-6 uppercase text-gray-400 mt-auto mb-4 break-words">{p.descripcion}</p>
                         </div>

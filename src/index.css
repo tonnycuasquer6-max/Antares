@@ -114,7 +114,7 @@
   }
 
   .liquid-header {
-    @apply bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl;
+    @apply bg-black/45 backdrop-blur-md border border-gray-800 shadow-2xl;
   }
 
   .liquid-header :where(button, nav, nav *) {
@@ -125,7 +125,7 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    @apply bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl;
+    @apply bg-black/45 backdrop-blur-md border border-gray-800 shadow-2xl;
   }
 
   .product-card-surface::before {
@@ -1175,7 +1175,7 @@ input:-webkit-autofill:active{
   .catalog-cover h3,
   .catalog-subcategory-title { margin: 0; text-transform: uppercase; text-align: center; letter-spacing: 0.35em; }
   .catalog-cover h2 { font-size: 42pt; color: #ffffff; }
-  .catalog-cover h3 { font-size: 29pt; color: #bbbbbb; }
+  .catalog-cover h3 { font-size: 34pt; color: #bbbbbb; }
   .catalog-logo { display: block; width: 150mm; height: auto; margin: 0 0 18mm; object-fit: contain; }
   .catalog-product-page { position: relative; isolation: isolate; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; overflow: hidden; background-position: center; background-size: cover; background-repeat: no-repeat; page-break-inside: avoid; break-inside: avoid; }
   .catalog-products-grid { height: calc(100% - 18mm); }

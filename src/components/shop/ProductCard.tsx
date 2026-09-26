@@ -133,7 +133,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       
       {/* Info */}
       <div className="flex flex-col flex-grow items-center text-center w-full z-10 relative">
-        <div className="flex justify-between items-center w-full gap-3 mb-1.5">
+        <div className="flex flex-row justify-between items-center w-full gap-3 mb-1.5">
           <h4 className="text-left text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white line-clamp-2 break-words min-w-0 group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
           <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
         </div>

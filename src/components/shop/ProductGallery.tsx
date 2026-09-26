@@ -139,14 +139,16 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     <section
       className={`container mx-auto py-4 md:py-8 flex-grow w-full max-w-7xl animate-fade-in relative z-10 ${isJewelryCategory ? 'jewelry-gallery' : ''}`}
     >
-      <h2 className="text-base md:text-xl tracking-[0.24em] md:tracking-[0.4em] uppercase text-white mb-4 md:mb-6 text-center pb-2 md:pb-3 break-words drop-shadow-md">
-        {category === 'deseos' ? 'Lista de Deseos' : category}
-      </h2>
+      {category !== 'Acero Fino' && (
+        <h2 className="text-base md:text-xl tracking-[0.24em] md:tracking-[0.4em] uppercase text-white mb-4 md:mb-6 text-center pb-2 md:pb-3 break-words drop-shadow-md">
+          {category === 'deseos' ? 'Lista de Deseos' : category}
+        </h2>
+      )}
 
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 mb-4 pb-3">
-          <ul className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-8">
+        <div className="flex flex-row items-center justify-center gap-6 w-full" style={{ position: 'relative' }}>
+          <ul className="flex flex-row items-center gap-4 w-auto">
             {subcategoriasJoyeria.map(sub => (
               <li 
                 key={sub} 
@@ -160,7 +162,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
           {/* Filtros Dropdown (Acero Fino) */}
           {category === 'Acero Fino' && (
-            <div className="flex flex-col items-center relative z-[150]">
+            <>
           <button
             type="button"
             onClick={() => setShowFilters(current => !current)}
@@ -173,9 +175,9 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
           </button>
           <div
             id="product-filters"
-            className={`w-full glass-panel rounded-sm px-3 py-2 transition-all duration-300 ease-out ${showFilters ? 'max-h-48 opacity-100 overflow-visible mt-2 sm:mt-3' : 'max-h-0 opacity-0 overflow-hidden'}`}
+            className={`glass-panel absolute left-1/2 top-full z-[150] -translate-x-1/2 rounded-sm px-3 py-2 transition-all duration-300 ease-out ${showFilters ? 'max-h-48 opacity-100 overflow-visible mt-2 sm:mt-3' : 'max-h-0 opacity-0 overflow-hidden'}`}
           >
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 w-full text-xs sm:text-sm tracking-[0.16em] uppercase">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 text-xs sm:text-sm tracking-[0.16em] uppercase">
             
             <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
               <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
@@ -231,7 +233,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
             </div>
           </div>
-        </div>
+            </>
           )}
         </div>
       )}
