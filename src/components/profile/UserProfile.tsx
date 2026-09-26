@@ -4,6 +4,7 @@ import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import patron from '../../assets/patron.jpeg';
 import logo from '../../assets/logo.png';
+import LiquidBackground from '../layout/LiquidBackground';
 
 interface UserProfileProps {
   onNavigate: (view: string) => void;
@@ -381,7 +382,8 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
       {/* BLOQUE OCULTO PARA IMPRESIÓN PDF (GÓTICO / LIQUID) */}
       {userRole === 'admin' && (
-      <div className="hidden print-only w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+      <div className="hidden print-only catalog-print-root relative isolate w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <LiquidBackground />
         
         {categoriasSeleccionadasPdf.map(({ parentMenu, categoria: cat }, indiceCategoria) => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);
@@ -396,11 +398,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
           return (
             <div key={cat} className="catalog-category">
-              <div className={`catalog-cover break-after-page ${indiceCategoria > 0 ? 'break-before-page' : ''}`}>
+              <div className={`catalog-cover bg-transparent break-after-page ${indiceCategoria > 0 ? 'break-before-page' : ''}`}>
                 {indiceCategoria === 0 && <img src={logo} alt="ANTARES" className="catalog-logo" />}
-                <div className="catalog-cover-heading flex flex-col items-center text-center gap-2">
-                  <h2>{parentMenu}</h2>
-                  <h3>{cat}</h3>
+                <div className="catalog-cover-heading flex flex-col items-center justify-center w-full text-center mx-auto gap-2">
+                  <h2 className="w-full text-center">{parentMenu}</h2>
+                  <h3 className="w-full text-center">{cat}</h3>
                 </div>
               </div>
               {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
@@ -413,11 +415,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
               <div key={`${cat}-${subcat}`}>
                 {/* PÁGINAS DE PRODUCTOS */}
                 {gruposDe4.map((grupo, indexGrupo) => (
-                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`} style={{ backgroundImage: 'linear-gradient(145deg, rgba(3, 4, 6, 0.72), rgba(0, 0, 0, 0.92))' }}>
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page bg-transparent ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`}>
                     <h4 className="catalog-subcategory-title">{subcat}</h4>
                     <div className="catalog-products-grid grid grid-cols-2 grid-rows-2 w-full border-t border-l border-white/10">
                       {grupo.map((p) => (
-                        <div key={p.id} className="catalog-product-card catalog-liquid-card flex flex-col items-center text-center relative border-b border-r border-white/10 p-6 h-full">
+                        <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 h-full">
                           <div className="relative w-full h-[240px] flex items-center justify-center bg-transparent mb-4 mt-2">
                             <img src={p.imagen_url} className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
                             {p.vendido && (
@@ -436,13 +438,13 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                           </div>
                           
                           {p.subcategoria === 'Anillos' ? (
-                            <div className="flex gap-3 justify-center mb-4 flex-wrap">
+                            <div className="grid grid-cols-4 w-full mt-4 gap-2 justify-items-center mb-4">
                                {tallasDisponibles.map(t => {
                                  const stock = parseInt(String(parseTallasseguro(p.tallas)[t] || 0));
                                  const isAvailable = stock > 0;
                                  return (
-                                   <div key={t} className="flex flex-col items-center gap-1.5">
-                                     <div className={`font-serif text-[12px] font-bold flex items-center justify-center w-8 h-8 rounded-sm ${isAvailable ? 'border border-white/60 text-white' : 'border border-gray-500 text-gray-500 opacity-50'}`}>
+                                   <div key={t} className="w-full flex flex-col items-center gap-1.5">
+                                     <div className={`font-serif text-[12px] font-bold w-full h-10 flex items-center justify-center rounded-sm ${isAvailable ? 'border border-white/60 text-white' : 'border border-gray-600 text-gray-500 opacity-50'}`}>
                                        {t}
                                      </div>
                                      <span className={`font-serif text-[10px] ${isAvailable ? 'text-gray-400' : 'text-gray-500 opacity-50'}`}>

@@ -106,7 +106,7 @@ export default function LiquidBackground() {
     <>
       <canvas 
         ref={canvasRef} 
-        className="screen-only fixed inset-0 z-0 pointer-events-none opacity-100"
+        className="liquid-background-canvas screen-only fixed inset-0 z-0 pointer-events-none opacity-100"
       />
       <div className="screen-only fixed inset-0 z-0 pointer-events-none bg-transparent shadow-[inset_0_0_100px_rgba(0,0,0,0.28)]"></div>
     </>

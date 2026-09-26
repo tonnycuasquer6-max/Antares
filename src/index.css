@@ -1131,10 +1131,12 @@ body {
 /* Removes arrows from number inputs elegantly */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
   -webkit-appearance: none;
   margin: 0;
 }
 input[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -1149,7 +1151,7 @@ input:-webkit-autofill:active{
 }
 
 /* Print handling based on original styles */
-@media print { 
+@media print {
   @page { margin: 0; size: A4 portrait; }
   html, body { 
     background-color: #000000 !important; 
@@ -1170,19 +1172,30 @@ input:-webkit-autofill:active{
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .break-after-page { page-break-after: always; break-after: page; }
   .break-before-page { page-break-before: always; break-before: page; }
-  .catalog-cover { display: flex; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14mm; padding-top: 12mm; background: #000000 !important; text-align: center; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-print-root { position: relative !important; background-color: #000000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .catalog-print-root > canvas.liquid-background-canvas {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+  }
+  .catalog-print-root > .screen-only:not(canvas) { display: none !important; }
+  .catalog-cover { display: flex; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14mm; padding-top: 12mm; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-cover-heading { display: flex !important; width: 100% !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; margin-left: auto !important; margin-right: auto !important; text-align: center !important; }
   .catalog-cover h2,
   .catalog-cover h3,
   .catalog-subcategory-title { margin: 0; text-transform: uppercase; text-align: center; letter-spacing: 0.35em; }
+  .catalog-cover h2,
+  .catalog-cover h3 { display: block !important; width: 100% !important; margin-left: 0 !important; text-align: center !important; }
   .catalog-cover h2 { font-size: 42pt; color: #ffffff; }
   .catalog-cover h3 { font-size: 34pt; color: #bbbbbb; }
   .catalog-logo { display: block; width: 150mm; height: auto; margin: 0 0 18mm; object-fit: contain; }
-  .catalog-product-page { position: relative; isolation: isolate; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; overflow: hidden; background-position: center; background-size: cover; background-repeat: no-repeat; page-break-inside: avoid; break-inside: avoid; }
+  .catalog-product-page { position: relative; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; break-inside: avoid; }
   .catalog-products-grid { height: calc(100% - 18mm); }
   .catalog-subcategory-title { height: 18mm; padding: 5mm 0 2mm; font-size: 15pt; color: #888888; }
-  .catalog-product-card { min-width: 0; min-height: 0; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
-  .catalog-liquid-card { position: relative; isolation: isolate; border-color: rgba(255, 255, 255, 0.16) !important; background: linear-gradient(145deg, rgba(44, 47, 52, 0.62), rgba(9, 10, 12, 0.5) 48%, rgba(1, 2, 3, 0.72)); backdrop-filter: blur(18px) saturate(135%); -webkit-backdrop-filter: blur(18px) saturate(135%); box-shadow: inset 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px rgba(0, 0, 0, 0.7), 0 14px 32px rgba(0, 0, 0, 0.34); }
-  .catalog-liquid-card::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(112deg, transparent 12%, rgba(255, 255, 255, 0.12) 48%, transparent 66%); opacity: 0.55; pointer-events: none; }
-  .catalog-liquid-card::after { content: ''; position: absolute; inset: 1px; z-index: -1; background: radial-gradient(circle at 78% 5%, rgba(255, 255, 255, 0.12), transparent 28%); pointer-events: none; }
-  .catalog-liquid-card > * { position: relative; z-index: 1; }
+  .catalog-product-card { min-width: 0; min-height: 0; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; break-inside: avoid; }
 }
