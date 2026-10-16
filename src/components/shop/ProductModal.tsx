@@ -71,7 +71,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
       onWheel={e => e.preventDefault()}
     >
       <div 
-        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:overflow-hidden sm:rounded-sm md:h-[min(80dvh,52rem)] md:max-h-none md:max-w-3xl md:flex-row lg:max-w-4xl" 
+        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-y-auto rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:rounded-sm md:h-auto md:max-h-[90dvh] md:max-w-3xl md:flex-row md:overflow-hidden lg:max-w-4xl" 
         onClick={e => e.stopPropagation()}
       >
         
@@ -82,12 +82,12 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           ×
         </button>
 
-        <div className="relative m-0 flex h-[40dvh] max-h-[45dvh] min-h-48 w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:h-full md:min-h-0 md:w-1/2 md:flex-1">
+        <div className="relative m-0 flex aspect-square w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:w-1/2 md:flex-none">
           <img 
             loading="lazy" 
             src={producto.imagen_url} 
             alt={producto.titulo} 
-            className="block h-full w-full object-cover p-0 opacity-90" 
+            className="block h-full w-full object-contain p-0 opacity-90" 
           />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -96,7 +96,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           )}
         </div>
 
-        <div className="product-modal-info relative m-0 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden border-t border-white/10 p-3 text-center sm:p-8 md:w-1/2 md:flex-1 md:border-l md:border-t-0 md:p-12">
+        <div className="product-modal-info relative m-0 flex min-h-0 w-full flex-none flex-col items-center justify-center overflow-y-auto border-t border-white/10 p-3 text-center sm:p-8 md:w-1/2 md:flex-1 md:border-l md:border-t-0 md:p-12">
           
           <div className="mb-2 w-full sm:mb-8">
             <div className="flex justify-between items-center w-full gap-4">
