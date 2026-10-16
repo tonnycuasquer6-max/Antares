@@ -193,13 +193,13 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
         <div className="relative z-20 flex w-full flex-col items-center gap-2">
-          <div className="flex w-full flex-row items-center justify-center gap-6">
-            <ul className="flex w-auto flex-row items-center gap-4">
+          <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            <ul className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:w-auto sm:flex-nowrap sm:gap-4">
               {subcategoriasJoyeria.map(sub => (
                 <li 
                   key={sub} 
                   onClick={() => setActiveSubCategory(sub)} 
-                  className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`px-1 py-1 text-xs sm:text-sm tracking-[0.12em] sm:tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   {sub}
                 </li>

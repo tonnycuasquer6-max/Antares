@@ -1229,16 +1229,23 @@ textarea {
     letter-spacing: 0.1em;
   }
 
+  .site-header nav .menu-item-visibility {
+    transform: none;
+  }
+
   .header-dropdown {
+    position: fixed;
+    top: 100%;
     left: 50%;
+    right: auto;
     width: min(90vw, 24rem);
-    transform: translateX(-50%);
+    transform: none;
   }
 
   .header-dropdown-panel {
     width: 100%;
     min-width: 0;
-    max-height: min(52dvh, 22rem);
+    max-height: min(52dvh, calc(100dvh - 10rem));
     padding: 0.75rem;
   }
 

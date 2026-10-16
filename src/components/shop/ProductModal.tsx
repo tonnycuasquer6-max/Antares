@@ -136,7 +136,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
                     onClick={() => setCantidad(prev => Math.max(0, prev - 1))}
                     disabled={cantidad === 0}
                     aria-label="Reducir cantidad"
-                    className="px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
                   >
                     -
                   </button>
@@ -146,7 +146,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
                     onClick={() => setCantidad(prev => Math.min(cantidadMaxima, prev + 1))}
                     disabled={cantidad >= cantidadMaxima}
                     aria-label="Aumentar cantidad"
-                    className="px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
                   >
                     +
                   </button>
@@ -156,7 +156,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
               {isRing && (
                 <div className="flex flex-col items-center w-full mb-8 sm:mb-10 mt-2">
                   <p className="text-[8px] sm:text-[10px] tracking-[0.2em] text-gray-500 mb-4 sm:mb-6 uppercase">Seleccione su talla</p>
-                  <div className="grid grid-cols-4 justify-items-center gap-2 sm:gap-4 w-full">
+                  <div className="grid grid-cols-2 justify-items-center gap-2 sm:grid-cols-4 sm:gap-4 w-full">
                     {tallasDisponibles.map(talla => {
                       const stock = parseInt(String(tallasObj[talla] || 0));
                       const isAvailable = stock > 0;
@@ -167,7 +167,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
                           <button
                             type="button"
                             onClick={(e) => { if (isAvailable) handleSelectTalla(e, talla); }}
-                            className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-[10px] sm:text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_15px_rgba(255,255,255,0.6)] cursor-pointer' : 'bg-black/50 text-white border-white/30 hover:border-white cursor-pointer') : 'border-gray-800 text-gray-500 bg-black/20 opacity-50 cursor-not-allowed'}`}
+                            className={`min-h-11 min-w-11 flex items-center justify-center text-[10px] sm:text-[13px] tracking-[0.1em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_15px_rgba(255,255,255,0.6)] cursor-pointer' : 'bg-black/50 text-white border-white/30 hover:border-white cursor-pointer') : 'border-gray-800 text-gray-500 bg-black/20 opacity-50 cursor-not-allowed'}`}
                           >
                             <span>{talla}</span>
                           </button>
@@ -180,7 +180,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
                               onClick={() => setCantidadesPorTalla(prev => ({ ...prev, [talla]: Math.max(0, (prev[talla] || 0) - 1) }))}
                               disabled={!isSelected || (cantidadesPorTalla[talla] || 0) === 0}
                               aria-label={`Reducir cantidad talla ${talla}`}
-                              className="px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
+                              className="inline-flex min-h-11 min-w-6 items-center justify-center px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
                             >
                               -
                             </button>
@@ -190,7 +190,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
                               onClick={() => setCantidadesPorTalla(prev => ({ ...prev, [talla]: Math.min(stock, (prev[talla] || 0) + 1) }))}
                               disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock}
                               aria-label={`Aumentar cantidad talla ${talla}`}
-                              className="px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
+                              className="inline-flex min-h-11 min-w-6 items-center justify-center px-1 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:text-gray-300 transition-colors"
                             >
                               +
                             </button>
