@@ -33,7 +33,7 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
     const resizeCanvas = () => {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -47,7 +47,8 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let time = 0;
     let animationFrame = 0;
-    const skyStars: SkyStar[] = Array.from({ length: 180 }, (_, index) => ({
+    const starCount = window.matchMedia('(max-width: 640px)').matches ? 90 : 180;
+    const skyStars: SkyStar[] = Array.from({ length: starCount }, (_, index) => ({
       x: (Math.sin(index * 12.9898) * 43758.5453) % 1,
       y: (Math.sin((index + 41) * 78.233) * 24634.6345) % 1,
       size: index % 19 === 0 ? 1.8 : index % 7 === 0 ? 1.2 : 0.55 + (index % 4) * 0.12,
@@ -60,6 +61,7 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
     });
 
     const draw = () => {
+      animationFrame = 0;
       ctx.clearRect(0, 0, width, height);
       
       // Cielo profundo en negro y gris, sin un patrón geométrico dominante.
@@ -89,20 +91,35 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
       });
 
       time += 0.01;
-      animationFrame = requestAnimationFrame(draw);
+      if (!document.hidden && !prefersReducedMotion) {
+        animationFrame = requestAnimationFrame(draw);
+      }
     };
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!prefersReducedMotion) draw();
+    draw();
 
     const handleResize = () => {
       resizeCanvas();
+      if (!animationFrame && !document.hidden && !prefersReducedMotion) {
+        animationFrame = requestAnimationFrame(draw);
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      } else if (!prefersReducedMotion && !animationFrame) {
+        animationFrame = requestAnimationFrame(draw);
+      }
     };
 
     window.addEventListener('resize', handleResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

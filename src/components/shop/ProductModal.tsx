@@ -51,6 +51,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
       return;
     }
     setTallasSeleccionadas(prev => [...prev, talla]);
+    setCantidadesPorTalla(prev => ({ ...prev, [talla]: 1 }));
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -94,7 +95,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           )}
         </div>
 
-        <div className="glass-panel w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
+        <div className="product-modal-info w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
           
           <div className="w-full mb-6 sm:mb-8">
             <div className="flex justify-between items-center w-full gap-4">

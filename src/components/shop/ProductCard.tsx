@@ -3,6 +3,11 @@ import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import type { Product } from '../../types';
 
+const obtenerFechaLocal = () => {
+  const ahora = new Date();
+  return new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+};
+
 interface ProductCardProps {
   producto: Product;
   userRole: string;
@@ -17,12 +22,18 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
     favoritos, 
     parseTallasseguro, 
     tallasDisponibles,
-    setProductos
+    setProductos,
+    fetchProductos
   } = useShop();
 
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
   const [cantidadesPorTalla, setCantidadesPorTalla] = useState<Record<string, number>>({});
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [showSaleForm, setShowSaleForm] = useState(false);
+  const [saleDate, setSaleDate] = useState(obtenerFechaLocal);
+  const [salePrice, setSalePrice] = useState('');
+  const [saleError, setSaleError] = useState('');
+  const [isSavingSale, setIsSavingSale] = useState(false);
 
   const tallasObj = parseTallasseguro(producto.tallas);
   const isRing = producto.subcategoria === 'Anillos';
@@ -74,42 +85,64 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
     }
   };
 
-  const handleToggleVendidoAdmin = async (e: React.MouseEvent) => {
+  const handleToggleVendidoAdmin = (e: React.MouseEvent) => {
     e.stopPropagation();
-    let nuevasTallas = null;
-    let nuevoVendido = producto.vendido;
-    let cantidadVendida = 1; 
+    if (producto.vendido) return;
+    if (isRing && !tallasSeleccionadas.some(talla => (cantidadesPorTalla[talla] || 0) > 0)) {
+      return alert('Para registrar la venta de un anillo, seleccione primero la talla.');
+    }
+    setSaleDate(obtenerFechaLocal());
+    setSalePrice('');
+    setSaleError('');
+    setShowSaleForm(true);
+  };
 
-    if (isRing) {
-      if (tallasSeleccionadas.length === 0) {
-        return alert('Para descontar stock de un anillo, seleccione primero la(s) talla(s).');
-      }
-      let errorStock = false;
-      tallasSeleccionadas.forEach(talla => {
-        if (!tallasObj[talla] || Number(tallasObj[talla]) < 1) errorStock = true;
-        else (tallasObj as Record<string, number>)[talla] = Number(tallasObj[talla]) - 1;
-      });
-
-      if (errorStock) return alert('Una de las tallas seleccionadas no tiene stock disponible.');
-      nuevasTallas = JSON.stringify(tallasObj);
-      cantidadVendida = tallasSeleccionadas.length; 
-      const totalStockRestante = Object.values(tallasObj).reduce((acc: number, val: any) => acc + Number(val), 0);
-      if (totalStockRestante === 0) nuevoVendido = true;
-      setTallasSeleccionadas([]);
-    } else {
-      let disp = parseInt(String(producto.disponibilidad));
-      if (!isNaN(disp) && disp > 1 && !producto.vendido) {} else { nuevoVendido = !producto.vendido; }
+  const handleSaveSale = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const parsedPrice = Number(salePrice);
+    if (!salePrice.trim() || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      setSaleError('Ingresa un PVP válido.');
+      return;
     }
 
-    const currentVendidos = producto.vendidos || 0;
-    const { data, error } = await supabase.from('productos').update({ 
-      tallas: nuevasTallas !== null ? nuevasTallas : producto.tallas,
-      vendido: nuevoVendido,
-      vendidos: currentVendidos + cantidadVendida
-    }).eq('id', producto.id).select();
+    const unidades = isRing
+      ? tallasSeleccionadas
+        .map(talla => ({ talla, cantidad: cantidadesPorTalla[talla] || 0 }))
+        .filter(unidad => unidad.cantidad > 0)
+      : [{ talla: 'N/A', cantidad: Math.max(1, cantidadSeleccionada) }];
+    if (unidades.length === 0) {
+      setSaleError('Selecciona una talla con cantidad mayor que cero.');
+      return;
+    }
 
-    if (!error && data && data.length > 0) {
-      setProductos(prev => prev.map(p => p.id === producto.id ? data[0] : p));
+    setIsSavingSale(true);
+    setSaleError('');
+    try {
+      const { error } = await supabase.rpc('registrar_venta_manual', {
+        p_producto_id: producto.id,
+        p_fecha_venta: saleDate,
+        p_pvp: parsedPrice,
+        p_unidades: unidades
+      });
+
+      if (error) {
+        console.error('No se pudo registrar la venta manual:', error);
+        setSaleError(`No se pudo registrar la venta: ${error.message}`);
+        setIsSavingSale(false);
+        return;
+      }
+
+      await fetchProductos();
+      window.dispatchEvent(new CustomEvent('antares-manual-sale-recorded'));
+      setTallasSeleccionadas([]);
+      setCantidadesPorTalla({});
+      setShowSaleForm(false);
+    } catch (error) {
+      console.error('Error inesperado al registrar la venta manual:', error);
+      setSaleError('Ocurrió un error de conexión al registrar la venta. Intenta de nuevo.');
+    } finally {
+      setIsSavingSale(false);
     }
   };
 
@@ -118,7 +151,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
 
       {/* Imagen */}
       <div className={`overflow-hidden aspect-square relative w-full mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
-        <img loading="lazy" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 will-change-transform" />
+        <img loading="lazy" decoding="async" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
         
         {producto.vendido && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -243,13 +276,97 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
             </button>
             <button 
               onClick={handleToggleVendidoAdmin} 
-              className={`min-w-0 flex-1 py-2 sm:py-2.5 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors cursor-pointer border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 hover:text-white hover:border-white' : 'bg-white text-black border-white hover:bg-gray-300'}`}
+              disabled={producto.vendido}
+              className={`min-w-0 flex-1 py-2 sm:py-2.5 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 cursor-not-allowed' : 'bg-white text-black border-white hover:bg-gray-300 cursor-pointer'}`}
             >
-              {producto.vendido ? 'Desmarcar Venta' : 'Marcar como Vendida'}
+              {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
             </button>
           </div>
         )}
       </div>
+      {showSaleForm && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          onClick={() => !isSavingSale && setShowSaleForm(false)}
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`sale-form-title-${producto.id}`}
+            onSubmit={handleSaveSale}
+            onClick={e => e.stopPropagation()}
+            className="glass-panel w-full max-w-md rounded-sm p-6 md:p-8"
+          >
+            <h3 id={`sale-form-title-${producto.id}`} className="text-sm tracking-[0.2em] uppercase text-white">
+              Registrar venta: {producto.titulo}
+            </h3>
+            {isRing && (
+              <p className="mt-3 text-[10px] tracking-[0.12em] text-gray-400">
+                Talla(s): {tallasSeleccionadas.join(', ')}
+              </p>
+            )}
+            <label className="mt-6 flex flex-col gap-2 text-[10px] tracking-[0.15em] uppercase text-gray-400">
+              Fecha de venta
+              <input
+                type="date"
+                required
+                value={saleDate}
+                onChange={e => setSaleDate(e.target.value)}
+                className="border-b border-white/30 bg-transparent py-2 text-sm text-white outline-none"
+              />
+            </label>
+            <label className="mt-5 flex flex-col gap-2 text-[10px] tracking-[0.15em] uppercase text-gray-400">
+              Costo (no editable)
+              <input
+                type="text"
+                readOnly
+                value={Number(producto.costo || 0).toFixed(2)}
+                className="border-b border-white/15 bg-transparent py-2 text-sm text-gray-400 outline-none"
+              />
+            </label>
+            <label className="mt-5 flex flex-col gap-2 text-[10px] tracking-[0.15em] uppercase text-gray-400">
+              PVP / precio de venta
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={salePrice}
+                  onChange={e => setSalePrice(e.target.value)}
+                  className="min-w-0 flex-1 border-b border-white/30 bg-transparent py-2 text-sm text-white outline-none"
+                  placeholder="Precio al que se vendió"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSalePrice(String(producto.precio))}
+                  className="border border-white/30 px-4 text-[10px] font-bold tracking-[0.15em] text-white transition-colors hover:bg-white hover:text-black"
+                >
+                  PVP
+                </button>
+              </div>
+            </label>
+            {saleError && <p role="alert" className="mt-4 text-xs text-red-400">{saleError}</p>}
+            <div className="mt-7 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isSavingSale}
+                onClick={() => setShowSaleForm(false)}
+                className="border border-white/30 px-4 py-2 text-[10px] tracking-[0.15em] uppercase text-white disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingSale}
+                className="bg-white px-5 py-2 text-[10px] font-bold tracking-[0.15em] uppercase text-black disabled:opacity-50"
+              >
+                {isSavingSale ? 'Guardando...' : 'Guardar venta'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

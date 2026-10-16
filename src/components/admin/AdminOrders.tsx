@@ -7,6 +7,17 @@ interface AdminOrdersProps {
   userRole: string;
 }
 
+interface PedidoProducto {
+  id: string | number;
+  cantidad: number;
+  titulo: string;
+  precio: number;
+  imagen_url: string;
+  tallaSeleccionada?: string;
+}
+
+type PedidoConNumero = PedidoData & { orderNumber: string };
+
 export default function AdminOrders({ userRole }: AdminOrdersProps) {
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
   const [pedidoExpandido, setPedidoExpandido] = useState<string | null>(null);
@@ -14,12 +25,23 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
 
   const fetchPedidosAdmin = useCallback(async () => {
     const { data } = await supabase.from('pedidos').select('*').order('id', { ascending: false });
-    if (data) setListaPedidos(data);
+    return data;
   }, []);
 
   useEffect(() => {
-    fetchPedidosAdmin();
+    let isCurrent = true;
+    void fetchPedidosAdmin().then(data => {
+      if (isCurrent && data) setListaPedidos(data);
+    });
+    return () => {
+      isCurrent = false;
+    };
   }, [fetchPedidosAdmin]);
+
+  const actualizarListaPedidos = async () => {
+    const data = await fetchPedidosAdmin();
+    if (data) setListaPedidos(data);
+  };
 
   const completarPedido = async (pedido: PedidoData) => {
     if(!window.confirm('¿Seguro que deseas marcar este pedido como completado? Se descontará el stock de las piezas.')) return;
@@ -27,25 +49,31 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
     const { error: err1 } = await supabase.from('pedidos').update({ estado: 'Completado' }).eq('id', pedido.id);
     if (err1) return alert('Error actualizando pedido.');
 
-    const items = typeof pedido.productos === 'string' ? JSON.parse(pedido.productos) : pedido.productos;
-    for (let item of items) {
+    const items = (typeof pedido.productos === 'string' ? JSON.parse(pedido.productos) : pedido.productos) as PedidoProducto[];
+    for (const item of items) {
       const { data: prodData } = await supabase.from('productos').select('*').eq('id', item.id).single();
       if (prodData) {
-        let isRing = prodData.subcategoria === 'Anillos';
-        let updatePayload: any = { vendidos: (prodData.vendidos || 0) + item.cantidad };
+        const isRing = prodData.subcategoria === 'Anillos';
+        const updatePayload: {
+          vendidos: number;
+          tallas?: string;
+          vendido?: boolean;
+          disponibilidad?: string;
+        } = { vendidos: (prodData.vendidos || 0) + item.cantidad };
         
         if (isRing) {
-          let currentTallas = parseTallasseguro(prodData.tallas);
-          if (currentTallas[item.tallaSeleccionada] !== undefined) {
-            currentTallas[item.tallaSeleccionada] = Math.max(0, parseInt(String(currentTallas[item.tallaSeleccionada])) - item.cantidad);
+          const currentTallas = parseTallasseguro(prodData.tallas);
+          const tallaSeleccionada = item.tallaSeleccionada;
+          if (tallaSeleccionada && currentTallas[tallaSeleccionada] !== undefined) {
+            currentTallas[tallaSeleccionada] = Math.max(0, parseInt(String(currentTallas[tallaSeleccionada])) - item.cantidad);
           }
           updatePayload.tallas = JSON.stringify(currentTallas);
-          let totalStock = Object.values(currentTallas).reduce((a: number, b: any) => a + Number(b), 0);
+          const totalStock = Object.values(currentTallas).reduce<number>((total, stock) => total + Number(stock), 0);
           if (totalStock === 0) updatePayload.vendido = true;
         } else {
-          let currentDisp = parseInt(prodData.disponibilidad);
+          const currentDisp = parseInt(prodData.disponibilidad);
           if (!isNaN(currentDisp)) {
-            let newDisp = Math.max(0, currentDisp - item.cantidad);
+            const newDisp = Math.max(0, currentDisp - item.cantidad);
             updatePayload.disponibilidad = newDisp.toString();
             if (newDisp === 0) updatePayload.vendido = true;
           }
@@ -53,19 +81,19 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
         await supabase.from('productos').update(updatePayload).eq('id', item.id);
       }
     }
-    fetchPedidosAdmin();
+    actualizarListaPedidos();
     fetchProductos();
   };
 
   const cancelarPedido = async (id: string | number) => {
     if(!window.confirm('¿Seguro que deseas cancelar este pedido?')) return;
     await supabase.from('pedidos').update({ estado: 'Cancelado' }).eq('id', id);
-    fetchPedidosAdmin();
+    actualizarListaPedidos();
   };
 
   const groupedOrdersByMonth = useMemo(() => {
     return listaPedidos.reduce((acc: Record<string, PedidoData[]>, pedido) => {
-      let dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
+      const dateObj = pedido.created_at ? new Date(pedido.created_at) : new Date();
       const month = dateObj.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
       if (!acc[month]) acc[month] = [];
       acc[month].push(pedido);
@@ -83,7 +111,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
         <div className="flex flex-col gap-6 w-full">
           {Object.entries(groupedOrdersByMonth).map(([month, monthPedidos]) => {
             const sortedMonthPedidos = [...monthPedidos].sort((a,b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
-            const userGroups: Record<string, any[]> = {};
+            const userGroups: Record<string, PedidoConNumero[]> = {};
             
             sortedMonthPedidos.forEach(ped => {
               const clientKey = `${ped.cliente_nombre}|${ped.cliente_telefono}`;
@@ -121,7 +149,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                             
                             {isExpanded && (
                               <div className="mt-6 border-t border-white/10 pt-6 space-y-6 animate-fade-in">
-                                  {[...clientPedidos].reverse().map((pedido: any) => (
+                                  {[...clientPedidos].reverse().map((pedido) => (
                                     <div key={pedido.id} className="bg-black/60 p-4 sm:p-6 border border-white/5 rounded-sm shadow-inner">
                                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/10 pb-3 gap-3 sm:gap-0">
                                           <span className="text-white font-bold text-[10px] sm:text-[12px] tracking-[0.3em]">PEDIDO #{pedido.orderNumber}</span>
@@ -131,7 +159,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                         </div>
                                         
                                         <div className="space-y-4 mb-6">
-                                          {JSON.parse(pedido.productos).map((prod: any, i: number) => (
+                                          {(JSON.parse(pedido.productos) as PedidoProducto[]).map((prod, i) => (
                                             <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-3">
                                               <div className="flex items-center gap-4 text-left w-full">
                                                 <img loading="lazy" src={prod.imagen_url} alt={prod.titulo} className="w-12 h-12 sm:w-16 sm:h-16 object-contain bg-black/40 rounded-sm shadow-inner p-1" />
@@ -145,7 +173,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                           ))}
                                           <div className="pt-3 mt-3 flex justify-between items-center text-[10px] sm:text-[12px] font-bold text-white tracking-[0.3em] uppercase">
                                             <span className="text-gray-400">Logística de Envío:</span>
-                                            <span className="font-serif text-[14px] drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">${parseFloat(pedido.total_envio).toFixed(2)}</span>
+                                            <span className="font-serif text-[14px] drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">${Number(pedido.total_envio).toFixed(2)}</span>
                                           </div>
                                         </div>
 

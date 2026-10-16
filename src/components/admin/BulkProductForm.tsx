@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import type { NuevaPieza } from '../../types';
@@ -51,6 +52,27 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
   const [previewProduct, setPreviewProduct] = useState<BulkProduct | null>(null);
   const [saving, setSaving] = useState(false);
   const selected = products.find(product => product.id === selectedId) || null;
+
+  useEffect(() => {
+    if (!previewProduct) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const appContainer = document.querySelector<HTMLElement>('#root > div');
+    const previousAppOverflowY = appContainer?.style.overflowY;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPreviewProduct(null);
+    };
+
+    document.body.style.overflow = 'hidden';
+    if (appContainer) appContainer.style.overflowY = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (appContainer && previousAppOverflowY !== undefined) appContainer.style.overflowY = previousAppOverflowY;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [previewProduct]);
 
   const updateProduct = (id: string, changes: Partial<BulkProduct>) => {
     setProducts(current => current.map(product => product.id === id ? { ...product, ...changes } : product));
@@ -204,22 +226,25 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
       )}
 
       {previewProduct && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4" onClick={() => setPreviewProduct(null)}>
-          <div className="bulk-product-card glass-panel" onClick={event => event.stopPropagation()}>
-            <button type="button" onClick={() => setPreviewProduct(null)} className="absolute top-3 right-4 text-white text-2xl bg-transparent border-0 cursor-pointer">×</button>
-            <img src={previewProduct.previewUrl} alt={previewProduct.titulo} />
-            <div className="bulk-product-card-info">
-              <h2>{previewProduct.titulo || "\u00A0"}</h2>
-              <p>{previewProduct.color || 'Color no especificado'}</p>
-              <strong>${Number(previewProduct.precio || 0).toFixed(2)} USD</strong>
-              {previewProduct.subcategoria === 'Anillos' && <div className="bulk-card-sizes">{ringSizes.filter(size => Number(previewProduct.tallas[size] || 0) > 0).map(size => <span key={size}>{size}<small>{previewProduct.tallas[size]}</small></span>)}</div>}
-              <div className="bulk-card-actions">
-                <button type="button" disabled={saving} onClick={() => saveProduct(previewProduct, false)}>Guardar tarjeta</button>
-                <button type="button" disabled={saving} onClick={() => saveProduct(previewProduct, true)}>Guardar y publicar</button>
+        createPortal(
+          <div className="bulk-product-preview-overlay fixed inset-0 z-[10000] flex items-center justify-center bg-transparent backdrop-blur-xl p-4" onClick={() => setPreviewProduct(null)}>
+            <div className="bulk-product-card glass-panel" role="dialog" aria-modal="true" aria-label={`Vista previa de ${previewProduct.titulo}`} onClick={event => event.stopPropagation()}>
+              <button type="button" onClick={() => setPreviewProduct(null)} aria-label="Cerrar vista previa" className="absolute top-3 right-4 text-white text-2xl bg-transparent border-0 cursor-pointer z-10">×</button>
+              <img src={previewProduct.previewUrl} alt={previewProduct.titulo} />
+              <div className="bulk-product-card-info">
+                <h2>{previewProduct.titulo || "\u00A0"}</h2>
+                <p>{previewProduct.color || 'Color no especificado'}</p>
+                <strong>${Number(previewProduct.precio || 0).toFixed(2)} USD</strong>
+                {previewProduct.subcategoria === 'Anillos' && <div className="bulk-card-sizes">{ringSizes.filter(size => Number(previewProduct.tallas[size] || 0) > 0).map(size => <span key={size}>{size}<small>{previewProduct.tallas[size]}</small></span>)}</div>}
+                <div className="bulk-card-actions">
+                  <button type="button" disabled={saving} onClick={() => saveProduct(previewProduct, false)}>Guardar tarjeta</button>
+                  <button type="button" disabled={saving} onClick={() => saveProduct(previewProduct, true)}>Guardar y publicar</button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div>,
+          document.body
+        )
       )}
     </div>
   );

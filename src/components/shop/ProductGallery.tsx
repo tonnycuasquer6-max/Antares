@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useShop } from '../../context/ShopContext';
 import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
@@ -33,8 +34,10 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   
   // Admin Form State
   const [showInlineForm, setShowInlineForm] = useState(false);
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const [editandoId, setEditandoId] = useState<string | number | null>(null);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
+  const originalPieza = useRef<NuevaPieza | null>(null);
   const [nuevaPieza, setNuevaPieza] = useState<NuevaPieza>({ 
     titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
@@ -71,7 +74,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
   // Funciones Admin
   const prepararEdicion = (producto: Product) => {
-    setNuevaPieza({
+    const pieza: NuevaPieza = {
       titulo: producto.titulo, 
       descripcion: producto.descripcion || '', 
       costo: producto.costo || '', 
@@ -82,16 +85,58 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       color: producto.color || '', 
       imagen: null, 
       imagen_url: producto.imagen_url
-    });
+    };
+    originalPieza.current = { ...pieza, tallas: { ...pieza.tallas } };
+    setNuevaPieza(pieza);
+    setShowCloseConfirmation(false);
     setEditandoId(producto.id);
     setShowInlineForm(true);
   };
 
-  const cerrarFormulario = () => {
+  const cerrarFormulario = useCallback(() => {
     setShowInlineForm(false);
+    setShowCloseConfirmation(false);
     setEditandoId(null);
+    originalPieza.current = null;
     setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' });
-  };
+  }, []);
+
+  const solicitarCierre = useCallback(() => {
+    const original = originalPieza.current;
+    const changedFields: (keyof NuevaPieza)[] = [
+      'titulo', 'categoria', 'descripcion', 'costo', 'precio',
+      'disponibilidad', 'subcategoria', 'color', 'imagen', 'imagen_url'
+    ];
+    const hasChanges = original !== null && (
+      changedFields.some(key => String(original[key] ?? '') !== String(nuevaPieza[key] ?? ''))
+      || JSON.stringify(original.tallas) !== JSON.stringify(nuevaPieza.tallas)
+    );
+
+    if (hasChanges) {
+      setShowCloseConfirmation(true);
+      return;
+    }
+    cerrarFormulario();
+  }, [cerrarFormulario, nuevaPieza]);
+
+  useEffect(() => {
+    if (!showInlineForm) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showCloseConfirmation) setShowCloseConfirmation(false);
+        else solicitarCierre();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showInlineForm, showCloseConfirmation, solicitarCierre]);
 
   const handlePublicarLocal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,37 +192,132 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
       {/* Filtros Subcategorías */}
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
-        <div className="flex flex-row items-center justify-center gap-6 w-full" style={{ position: 'relative' }}>
-          <ul className="flex flex-row items-center gap-4 w-auto">
-            {subcategoriasJoyeria.map(sub => (
-              <li 
-                key={sub} 
-                onClick={() => setActiveSubCategory(sub)} 
-                className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                {sub}
-              </li>
-            ))}
-          </ul>
+        <div className="relative z-20 flex w-full flex-col items-center gap-2">
+          <div className="flex w-full flex-row items-center justify-center gap-6">
+            <ul className="flex w-auto flex-row items-center gap-4">
+              {subcategoriasJoyeria.map(sub => (
+                <li 
+                  key={sub} 
+                  onClick={() => setActiveSubCategory(sub)} 
+                  className={`text-xs sm:text-sm tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  {sub}
+                </li>
+              ))}
+            </ul>
 
-          {/* Filtros Dropdown (Acero Fino) */}
+            {/* Filtros (Acero Fino) */}
+            {category === 'Acero Fino' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFilters(current => !current);
+                  setOpenFilter(null);
+                }}
+                aria-expanded={showFilters}
+                aria-controls="product-filters"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm tracking-[0.24em] text-gray-500 font-bold uppercase transition-colors hover:text-white text-shadow"
+              >
+                <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
+                <span className="sr-only">Mostrar filtros</span>
+              </button>
+            )}
+          </div>
+
           {category === 'Acero Fino' && (
-            <>
-          <button
-            type="button"
-            onClick={() => setShowFilters(current => !current)}
-            aria-expanded={showFilters}
-            aria-controls="product-filters"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm tracking-[0.24em] text-gray-500 font-bold uppercase transition-colors hover:text-white text-shadow"
-          >
-            <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span className="sr-only">Mostrar filtros</span>
-          </button>
-          <div
-            id="product-filters"
-            className={`glass-panel absolute left-1/2 top-full z-[150] -translate-x-1/2 rounded-sm px-3 py-2 transition-all duration-300 ease-out ${showFilters ? 'max-h-48 opacity-100 overflow-visible mt-2 sm:mt-3' : 'max-h-0 opacity-0 overflow-hidden'}`}
-          >
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-5 md:gap-8 text-xs sm:text-sm tracking-[0.16em] uppercase">
+            <div
+              id="product-filters"
+              className={`relative z-20 w-full max-w-full self-center transition-all duration-300 ease-out ${showFilters ? 'pointer-events-auto mt-3 mb-5 max-h-[40rem] opacity-100' : 'pointer-events-none max-h-0 overflow-hidden opacity-0'}`}
+            >
+              <div className="w-full px-2">
+              <div className="flex w-full flex-wrap items-start justify-center gap-5 text-[10px] sm:gap-7 sm:text-xs tracking-[0.12em] uppercase">
+                <div className="relative flex shrink-0 flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    aria-expanded={openFilter === 'color'}
+                    onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')}
+                    className={`whitespace-nowrap transition-colors hover:text-white ${filtroColor !== 'Todo' ? 'text-white' : 'text-gray-500'}`}
+                  >
+                    Color{filtroColor !== 'Todo' ? `: ${filtroColor}` : ''}
+                  </button>
+                  {openFilter === 'color' && (
+                    <div className="glass-panel flex min-w-[140px] flex-col items-center gap-2 rounded-2xl px-5 py-2.5 text-center">
+                      {['Todo', 'Silver', 'Gold', 'Black'].map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          aria-pressed={filtroColor === opt}
+                          onClick={() => { setFiltroColor(opt); setOpenFilter(null); }}
+                          className={`w-full py-1 transition-colors hover:text-white ${filtroColor === opt ? 'text-white' : 'text-gray-400'}`}
+                        >
+                          {opt === 'Todo' ? 'Todos' : opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {['Todo', 'Anillos'].includes(activeSubCategory) && (
+                  <div className="relative flex shrink-0 flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      aria-expanded={openFilter === 'talla'}
+                      onClick={() => setOpenFilter(openFilter === 'talla' ? null : 'talla')}
+                      className={`whitespace-nowrap transition-colors hover:text-white ${filtroTalla !== 'Todo' ? 'text-white' : 'text-gray-500'}`}
+                    >
+                      Talla{filtroTalla !== 'Todo' ? `: ${filtroTalla}` : ''}
+                    </button>
+                    {openFilter === 'talla' && (
+                      <div className="glass-panel flex max-h-64 min-w-[140px] flex-col items-center gap-2 overflow-y-auto rounded-2xl px-5 py-2.5 text-center">
+                        {['Todo', ...tallasDisponibles].map(talla => (
+                          <button
+                            key={talla}
+                            type="button"
+                            aria-pressed={filtroTalla === talla}
+                            onClick={() => { setFiltroTalla(talla); setOpenFilter(null); }}
+                            className={`w-full py-1 transition-colors hover:text-white ${filtroTalla === talla ? 'text-white' : 'text-gray-400'}`}
+                          >
+                            {talla === 'Todo' ? 'Todas' : talla}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="relative flex shrink-0 flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    aria-expanded={openFilter === 'precio'}
+                    onClick={() => setOpenFilter(openFilter === 'precio' ? null : 'precio')}
+                    className={`whitespace-nowrap transition-colors hover:text-white ${ordenPrecio !== '' ? 'text-white' : 'text-gray-500'}`}
+                  >
+                    Precio{ordenPrecio !== '' ? `: ${ordenPrecio === 'Asc' ? 'Menor a mayor' : 'Mayor a menor'}` : ''}
+                  </button>
+                  {openFilter === 'precio' && (
+                    <div className="glass-panel flex min-w-[180px] flex-col items-center gap-2 rounded-2xl px-5 py-2.5 text-center">
+                      {[
+                        { value: '', label: 'Normal' },
+                        { value: 'Asc', label: 'Menor a mayor' },
+                        { value: 'Desc', label: 'Mayor a menor' },
+                      ].map(option => (
+                        <button
+                          key={option.value || 'normal'}
+                          type="button"
+                          aria-pressed={ordenPrecio === option.value}
+                          onClick={() => { setOrdenPrecio(option.value); setOpenFilter(null); }}
+                          className={`w-full py-1 transition-colors hover:text-white ${ordenPrecio === option.value ? 'text-white' : 'text-gray-400'}`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              </div>
+              <div className="hidden">
+              <div className="flex flex-nowrap justify-start gap-3 overflow-x-auto text-xs sm:justify-center sm:gap-5 md:gap-8 sm:text-sm tracking-[0.16em] uppercase">
             
             <div className="relative group cursor-pointer pb-1" onMouseLeave={() => setOpenFilter(null)}>
               <div onClick={() => setOpenFilter(openFilter === 'color' ? null : 'color')} className={`transition-colors ${filtroColor !== 'Todo' ? 'text-white border-b border-white' : 'text-gray-500 hover:text-white'}`}>
@@ -232,18 +372,27 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             </div>
 
             </div>
-          </div>
-            </>
+            </div>
+            </div>
           )}
         </div>
       )}
 
       {/* Formulario Admin Inline/Modal */}
-      {userRole === 'admin' && showInlineForm && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <form onSubmit={handlePublicarLocal} className="glass-panel liquid-form p-6 md:p-10 relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto">
-            <button type="button" onClick={cerrarFormulario} className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50 transition-colors">×</button>
-            <h3 className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-6 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
+      {userRole === 'admin' && showInlineForm && createPortal(
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 animate-fade-in overflow-y-auto"
+          onClick={event => { if (event.target === event.currentTarget) solicitarCierre(); }}
+        >
+          <form
+            onSubmit={handlePublicarLocal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-product-form-title"
+            className="glass-panel liquid-form p-6 md:p-10 relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto"
+          >
+            <button type="button" onClick={solicitarCierre} aria-label="Cerrar edición" className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50 transition-colors">×</button>
+            <h3 id="admin-product-form-title" className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-6 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
               <div className="mb-6 flex justify-center bg-transparent p-0">
@@ -336,7 +485,43 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               <button type="submit" className="bg-white text-black hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
             </div>
           </form>
-        </div>
+          {showCloseConfirmation && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+              <div
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="discard-product-changes-title"
+                aria-describedby="discard-product-changes-description"
+                className="glass-panel w-full max-w-md rounded-2xl p-6 md:p-8 text-center"
+              >
+                <h4 id="discard-product-changes-title" className="text-xs md:text-sm tracking-[0.2em] uppercase text-white">
+                  ¿Seguro deseas cerrar sin guardar los cambios?
+                </h4>
+                <p id="discard-product-changes-description" className="mt-3 text-[10px] tracking-[0.12em] text-gray-400">
+                  Los cambios realizados se perderán.
+                </p>
+                <div className="mt-6 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={cerrarFormulario}
+                    className="bg-white px-6 py-3 text-[10px] font-bold tracking-[0.2em] uppercase text-black transition-colors hover:bg-gray-300"
+                  >
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    autoFocus
+                    onClick={() => setShowCloseConfirmation(false)}
+                    className="border border-white/30 bg-transparent px-6 py-3 text-[10px] font-bold tracking-[0.2em] uppercase text-white transition-colors hover:bg-white/10"
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body
       )}
 
       {/* Rejilla de Productos */}

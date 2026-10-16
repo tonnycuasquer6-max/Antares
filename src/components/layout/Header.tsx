@@ -59,7 +59,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   };
 
   return (
-    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
+    <header ref={headerRef} onMouseLeave={() => { setMenuAbierto(null); setMenuUsuarioActivo(false); }} className="site-header screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
       
       {/* Botón Volver */}
       {user && activeView !== 'home' && (
@@ -106,7 +106,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       ) : null}
 
       {/* Logo */}
-      <img src={logo} alt="ANTARES" onClick={() => setActiveView('home')} className="h-14 sm:h-16 md:h-20 max-w-[52vw] w-auto mt-2 mb-0 z-[100] cursor-pointer drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500" />
+      <img src={logo} alt="ANTARES" fetchPriority="high" decoding="async" onClick={() => setActiveView('home')} className="h-14 sm:h-16 md:h-20 max-w-[52vw] w-auto mt-2 mb-0 z-[100] cursor-pointer drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500" />
 
       {!user && (
         <button onClick={() => setShowLoginModal(true)} aria-label="Iniciar sesión" className="text-white hover:text-gray-400 transition-colors p-0 mb-3 bg-transparent border-none outline-none cursor-pointer z-[100]">
@@ -144,9 +144,9 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
-                  <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === menu ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                  <div className={`header-dropdown absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === menu ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                     <div className="menu-hover-bridge" />
-                    <div className={`${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                    <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[180px] md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       {visibleSubmenus.map(sub => {
                         const isSubHidden = isItemHidden(sub);
                         return (
@@ -167,9 +167,9 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                 <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                <div className={`header-dropdown absolute top-full left-1/2 -translate-x-1/2 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                   <div className="menu-hover-bridge" />
-                  <div className={`${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                  <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[150px] md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
                       <div key={p} onClick={(e) => { e.stopPropagation(); irACategoria(`Obsequios $${p}`); }} className="text-gray-400 hover:text-white transition-colors cursor-pointer block mt-2 first:mt-0 text-xs md:text-sm py-1">
                         $ {p}.00 USD

@@ -18,7 +18,7 @@ export default function Home({ onNavigate }: HomeProps) {
   return (
     <div className="w-full flex flex-col items-center pb-20">
       <section className="w-full text-center py-16 md:py-32">
-        <h2 className="text-4xl md:text-8xl font-bold tracking-[0.2em] uppercase text-white mb-6 md:mb-8 opacity-90 break-words drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+        <h2 className="text-[clamp(2rem,8vw,6rem)] leading-tight font-bold tracking-[clamp(0.08em,2vw,0.2em)] uppercase text-white mb-6 md:mb-8 opacity-90 break-words drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
           Elegancia Atemporal
         </h2>
         <p className="text-gray-400 tracking-[0.12em] md:tracking-[0.2em] uppercase text-xs md:text-sm max-w-2xl mx-auto leading-relaxed md:leading-loose px-4">

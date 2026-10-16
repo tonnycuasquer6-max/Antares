@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { supabase, areSupabaseCredentialsSet } from './services/supabase';
 import type { User } from './types';
 
@@ -8,22 +8,19 @@ import { ShopProvider } from './context/ShopContext';
 
 // Layout Components
 import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
 import LiquidBackground from './components/layout/LiquidBackground';
 import CartFlyAnimation from './components/layout/CartFlyAnimation';
 
-// Views
-import Home from './components/shop/Home';
-import ProductGallery from './components/shop/ProductGallery';
-import PretAPorter from './components/customizer/PretAPorter';
-import Cart from './components/cart/Cart';
-import UserProfile from './components/profile/UserProfile';
-import UserMeasurements from './components/profile/UserMeasurements';
-import AdminInventory from './components/admin/AdminInventory';
-import AdminOrders from './components/admin/AdminOrders';
-
-// Auth Modal
-import Auth from './components/auth/Auth';
+const Footer = lazy(() => import('./components/layout/Footer'));
+const Home = lazy(() => import('./components/shop/Home'));
+const ProductGallery = lazy(() => import('./components/shop/ProductGallery'));
+const PretAPorter = lazy(() => import('./components/customizer/PretAPorter'));
+const Cart = lazy(() => import('./components/cart/Cart'));
+const UserProfile = lazy(() => import('./components/profile/UserProfile'));
+const UserMeasurements = lazy(() => import('./components/profile/UserMeasurements'));
+const AdminInventory = lazy(() => import('./components/admin/AdminInventory'));
+const AdminOrders = lazy(() => import('./components/admin/AdminOrders'));
+const Auth = lazy(() => import('./components/auth/Auth'));
 
 export default function App() {
   const [activeView, setActiveView] = useState<string>(() => localStorage.getItem('antares_active_view') || 'home');
@@ -122,14 +119,22 @@ export default function App() {
               setActiveCategory={setActiveCategory} 
             />
 
-            <main className="flex-grow flex flex-col items-center w-full px-3 sm:px-6 md:px-8 pt-36 sm:pt-32 animate-fade-in print-root">
-              {renderView()}
+            <main className="flex-grow flex flex-col items-center w-full min-w-0 px-3 sm:px-6 md:px-8 pt-36 sm:pt-40 animate-fade-in print-root">
+              <Suspense fallback={<div className="flex min-h-[40vh] w-full items-center justify-center text-xs uppercase tracking-[0.2em] text-white/60" role="status">Cargando...</div>}>
+                {renderView()}
+              </Suspense>
             </main>
 
-            <Footer />
+            <Suspense fallback={null}>
+              <Footer />
+            </Suspense>
           </div>
 
-          {showLoginModal && <Auth onClose={() => setShowLoginModal(false)} />}
+          {showLoginModal && (
+            <Suspense fallback={<div className="fixed inset-0 z-[9999] grid place-items-center bg-black/80 text-xs uppercase tracking-[0.2em] text-white/60" role="status">Cargando...</div>}>
+              <Auth onClose={() => setShowLoginModal(false)} />
+            </Suspense>
+          )}
         </div>
       </ShopProvider>
     </AuthProvider>

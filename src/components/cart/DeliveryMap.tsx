@@ -29,7 +29,7 @@ export default function DeliveryMap({ mapRef, location, onLocationChange }: Deli
         mapboxAccessToken={mapboxToken}
         mapStyle="mapbox://styles/mapbox/dark-v11"
         onClick={event => onLocationChange(event.lngLat.lng, event.lngLat.lat)}
-        style={{ width: '100%', height: '360px' }}
+        style={{ width: '100%', height: 'clamp(16rem, 55vh, 24rem)' }}
         aria-label="Mapa para seleccionar la ubicación de entrega"
       >
         {location && (

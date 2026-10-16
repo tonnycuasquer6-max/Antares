@@ -63,6 +63,13 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   }
 
+  .product-modal-info {
+    background-color: rgba(15, 15, 15, 0.28);
+    backdrop-filter: blur(16px) saturate(125%);
+    -webkit-backdrop-filter: blur(16px) saturate(125%);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+  }
+
   .text-shadow {
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.55);
   }
@@ -556,16 +563,16 @@
     position: relative;
     display: grid;
     width: min(58rem, 100%);
-    max-height: 90vh;
+    height: min(42rem, calc(100dvh - 2rem));
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    overflow: auto;
+    overflow: hidden;
     border-radius: 2rem;
   }
 
   .bulk-product-card > img {
     width: 100%;
     height: 100%;
-    min-height: 20rem;
+    min-height: 0;
     object-fit: contain;
     background: rgba(0, 0, 0, 0.22);
   }
@@ -575,7 +582,7 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    padding: 3rem 2rem;
+    padding: clamp(1.5rem, 5vw, 3rem) clamp(1rem, 4vw, 2rem);
     text-align: center;
   }
 
@@ -603,6 +610,8 @@
 
   .bulk-card-sizes {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
     margin-top: 1.5rem;
   }
@@ -690,10 +699,36 @@
 
     .bulk-product-card {
       grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 32dvh) minmax(0, 1fr);
+      width: min(30rem, 100%);
+      height: calc(100dvh - 2rem);
+      max-height: calc(100dvh - 2rem);
     }
 
     .bulk-product-card > img {
-      min-height: 14rem;
+      min-height: 0;
+      max-height: 15rem;
+    }
+
+    .bulk-product-card-info {
+      min-height: 0;
+      padding: 1rem 1.25rem;
+    }
+
+    .bulk-product-card-info p,
+    .bulk-product-card-info strong,
+    .bulk-card-sizes {
+      margin-top: 0.75rem;
+    }
+
+    .bulk-card-actions {
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .bulk-card-actions button {
+      padding: 0.7rem;
+      font-size: 0.48rem;
     }
   }
 
@@ -1126,6 +1161,136 @@
 body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+@layer base {
+  #root,
+  #root > div {
+    min-width: 0;
+    min-height: 100%;
+  }
+
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+}
+
+.site-header {
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+}
+
+input,
+select,
+textarea {
+  font-size: max(16px, 1em);
+}
+
+.header-dropdown-panel {
+  max-width: min(90vw, 24rem);
+  max-height: min(60dvh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 9rem;
+  }
+
+  .site-header {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-bottom: 0.25rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .site-header nav {
+    padding-inline: 0;
+  }
+
+  .site-header nav ul {
+    column-gap: clamp(0.45rem, 2.5vw, 0.9rem);
+    row-gap: 0.35rem;
+    max-width: 100%;
+    font-size: clamp(0.58rem, 2.5vw, 0.72rem);
+    letter-spacing: 0.1em;
+  }
+
+  .header-dropdown {
+    left: 50%;
+    width: min(90vw, 24rem);
+    transform: translateX(-50%);
+  }
+
+  .header-dropdown-panel {
+    width: 100%;
+    min-width: 0;
+    max-height: min(52dvh, 22rem);
+    padding: 0.75rem;
+  }
+
+  .glass-panel,
+  .product-card-surface,
+  .filter-panel {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .liquid-glass {
+    backdrop-filter: blur(10px) saturate(110%);
+    -webkit-backdrop-filter: blur(10px) saturate(110%);
+  }
+
+  .bulk-preview-cascade {
+    max-width: 100%;
+  }
+
+  .bulk-product-card {
+    width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header nav ul {
+    letter-spacing: 0.06em;
+  }
+
+  .profile-card {
+    min-height: 0;
+    padding: 2rem 0.75rem 0;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .product-card-surface:hover {
+    transform: none;
+  }
+
+  .product-card-surface::before,
+  .liquid-glass::before,
+  .liquid-submenu::before {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-background-canvas {
+    display: none;
+  }
 }
 
 /* Removes arrows from number inputs elegantly */
