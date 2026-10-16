@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Mapa y tarifa de entrega
+
+El mapa de entrega usa Mapbox. Define `VITE_MAPBOX_TOKEN` en `.env` con un token público de Mapbox para mostrarlo en el checkout.
+
+La tarifa se calcula exclusivamente con la distancia lineal desde `STORE_ORIGIN` en `src/components/cart/Cart.tsx`: menos de 5 km = USD 0.70; de 5 a 15 km = USD 1.00; más de 15 km = USD 1.60. El origen oculto de la tienda está fijado en longitud -78.498 y latitud -0.2513.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
