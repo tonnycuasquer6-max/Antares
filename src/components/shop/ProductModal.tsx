@@ -87,7 +87,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
             loading="lazy" 
             src={producto.imagen_url} 
             alt={producto.titulo} 
-            className="block h-full w-full object-contain p-0 opacity-90" 
+            className="block h-full w-full object-cover p-0 opacity-90" 
           />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
