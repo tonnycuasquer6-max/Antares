@@ -66,11 +66,11 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
   return createPortal((
     <div 
-      className="fixed inset-0 z-[100] w-screen h-screen flex items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-fade-in" 
+      className="fixed inset-0 z-[100] flex h-[100dvh] w-screen items-center justify-center bg-black/80 p-0 backdrop-blur-md sm:p-4 animate-fade-in" 
       onClick={onClose}
     >
       <div 
-        className="glass-panel w-full h-full sm:h-auto max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl flex flex-col md:flex-row relative overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-sm items-stretch max-h-[100vh] sm:max-h-[90vh] md:max-h-[80vh]" 
+        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:overflow-hidden sm:rounded-sm md:max-h-[80vh] md:max-w-3xl md:flex-row lg:max-w-4xl" 
         onClick={e => e.stopPropagation()}
       >
         
@@ -81,12 +81,12 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           ×
         </button>
 
-        <div className="w-full md:w-1/2 p-0 m-0 bg-black/40 flex flex-col justify-center min-h-[300px] md:min-h-0 relative">
+        <div className="relative m-0 flex h-[18dvh] max-h-36 min-h-20 w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:h-auto md:min-h-0 md:w-1/2 md:flex-1">
           <img 
             loading="lazy" 
             src={producto.imagen_url} 
             alt={producto.titulo} 
-            className="w-full h-full object-cover sm:object-contain block m-0 p-0 opacity-90" 
+            className="block h-full w-full object-contain p-0 opacity-90 md:object-contain" 
           />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -95,11 +95,11 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           )}
         </div>
 
-        <div className="product-modal-info w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center text-center border-t md:border-t-0 md:border-l border-white/10 m-0 relative">
+        <div className="product-modal-info relative m-0 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden border-t border-white/10 p-3 text-center sm:p-8 md:w-1/2 md:flex-1 md:border-l md:border-t-0 md:p-12">
           
-          <div className="w-full mb-6 sm:mb-8">
+          <div className="mb-2 w-full sm:mb-8">
             <div className="flex justify-between items-center w-full gap-4">
-              <h2 className="text-left text-[12px] sm:text-[14px] md:text-[20px] font-bold tracking-[0.2em] uppercase text-white drop-shadow-md min-w-0">
+              <h2 className="line-clamp-2 min-w-0 text-left text-[12px] font-bold uppercase tracking-[0.12em] text-white drop-shadow-md sm:text-[14px] sm:tracking-[0.2em] md:text-[20px]">
                 {producto.titulo || "\u00A0"}
               </h2>
               <p className="text-right text-[12px] sm:text-[14px] tracking-[0.1em] text-white font-light drop-shadow-md shrink-0">
@@ -154,9 +154,9 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
               )}
 
               {isRing && (
-                <div className="flex flex-col items-center w-full mb-8 sm:mb-10 mt-2">
-                  <p className="text-[8px] sm:text-[10px] tracking-[0.2em] text-gray-500 mb-4 sm:mb-6 uppercase">Seleccione su talla</p>
-                  <div className="grid grid-cols-2 justify-items-center gap-2 sm:grid-cols-4 sm:gap-4 w-full">
+                <div className="mb-3 mt-1 flex w-full flex-col items-center sm:mb-10 sm:mt-2">
+                    <p className="mb-2 text-[8px] uppercase tracking-[0.2em] text-gray-500 sm:mb-6 sm:text-[10px]">Seleccione su talla</p>
+                    <div className="grid w-full grid-cols-4 justify-items-center gap-1 sm:gap-4">
                     {tallasDisponibles.map(talla => {
                       const stock = parseInt(String(tallasObj[talla] || 0));
                       const isAvailable = stock > 0;
