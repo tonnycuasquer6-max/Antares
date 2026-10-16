@@ -1,0 +1,1 @@
+async function e(e,t){let n=new FormData;n.append(`file`,e),n.append(`upload_preset`,`antares_productos`),n.append(`folder`,t);let r=await fetch(`https://api.cloudinary.com/v1_1/du0woxeqh/auto/upload`,{method:`POST`,body:n}),i=await r.json();if(!r.ok||!i.secure_url)throw Error(i.error?.message||`Cloudinary no pudo subir el archivo.`);return i.secure_url}export{e as t};
