@@ -6,6 +6,10 @@ El mapa de entrega usa Mapbox. Define `VITE_MAPBOX_TOKEN` en `.env` con un token
 
 La tarifa se calcula exclusivamente con la distancia lineal desde `STORE_ORIGIN` en `src/components/cart/Cart.tsx`: menos de 5 km = USD 0.70; de 5 a 15 km = USD 1.00; más de 15 km = USD 1.60. El origen oculto de la tienda está fijado en longitud -78.498 y latitud -0.2513.
 
+## Deshacer ventas
+
+Para habilitar la restauración de stock y la eliminación de ventas desde el historial, ejecuta el `supabase/schema.sql` actualizado en el SQL Editor de Supabase con un usuario propietario del proyecto. La reversión requiere la contraseña `0211` y una sesión de administrador.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
