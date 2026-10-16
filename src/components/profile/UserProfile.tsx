@@ -382,8 +382,8 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
       {/* BLOQUE OCULTO PARA IMPRESIÓN PDF (GÓTICO / LIQUID) */}
       {userRole === 'admin' && (
-      <div className="hidden print-only catalog-print-root relative isolate w-full font-serif pb-0" style={{ backgroundColor: '#000000', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-        <LiquidBackground />
+      <div className="hidden print-only catalog-print-root relative isolate w-full font-serif pb-0" style={{ color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <LiquidBackground className="print:hidden" />
         
         {categoriasSeleccionadasPdf.map(({ parentMenu, categoria: cat }, indiceCategoria) => {
           const piezasDeCategoria = productos.filter(p => p.categoria === cat);

@@ -18,7 +18,11 @@ const constellations: Constellation[] = [
   { name: 'Piscis', stars: [[0.88, 0.65], [0.92, 0.69], [0.95, 0.75], [0.9, 0.8], [0.85, 0.76], [0.82, 0.7]] }
 ];
 
-export default function LiquidBackground() {
+interface LiquidBackgroundProps {
+  className?: string;
+}
+
+export default function LiquidBackground({ className = '' }: LiquidBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -106,9 +110,9 @@ export default function LiquidBackground() {
     <>
       <canvas 
         ref={canvasRef} 
-        className="liquid-background-canvas screen-only fixed inset-0 z-0 pointer-events-none opacity-100"
+        className={`liquid-background-canvas screen-only fixed inset-0 z-0 pointer-events-none opacity-100 ${className}`}
       />
-      <div className="screen-only fixed inset-0 z-0 pointer-events-none bg-transparent shadow-[inset_0_0_100px_rgba(0,0,0,0.28)]"></div>
+      <div className={`screen-only fixed inset-0 z-0 pointer-events-none bg-transparent shadow-[inset_0_0_100px_rgba(0,0,0,0.28)] ${className}`}></div>
     </>
   );
 }

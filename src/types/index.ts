@@ -57,8 +57,6 @@ export interface PedidoData {
 
 export interface EnvioConfig {
   tipo: 'local' | 'domicilio';
-  sectorPrecio: number;
-  sectorNombre: string;
   linkMaps: string;
 }
 

@@ -1,25 +1,57 @@
-import { useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
+import { distance, point } from '@turf/turf';
+import type { MapRef } from 'react-map-gl/mapbox';
 import { useShop } from '../../context/ShopContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import type { EnvioConfig } from '../../types';
+const DeliveryMap = lazy(() => import('./DeliveryMap'));
+
+const STORE_ORIGIN: [number, number] = [-78.498, -0.2513];
+const formatUSD = (amount: number) => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+}).format(amount);
+
+const calcularTarifaEnvio = (distanciaKm: number) => {
+  if (distanciaKm <= 4) return 0.70;
+  if (distanciaKm <= 10) return 1.60;
+  if (distanciaKm <= 15) return 2.50;
+  return 3.50;
+};
 
 export default function Cart() {
   const { user } = useAuth();
-  const { carrito, setCarrito, updateCantidad, sectoresQuito } = useShop();
+  const { carrito, setCarrito, updateCantidad } = useShop();
+  const mapRef = useRef<MapRef>(null);
 
   const [checkoutPaso, setCheckoutPaso] = useState(1);
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState('pichincha');
-  const [envioConfig, setEnvioConfig] = useState<EnvioConfig>({ tipo: 'local', sectorPrecio: 0, sectorNombre: 'Quito Centro', linkMaps: '' });
+  const [envioConfig, setEnvioConfig] = useState<EnvioConfig>({ tipo: 'local', linkMaps: '' });
+  const [ubicacionEntrega, setUbicacionEntrega] = useState<{ longitude: number; latitude: number } | null>(null);
   const [comprobantePago, setComprobantePago] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
 
   const subtotalCarrito = carrito.reduce((sum, item) => sum + ((item.precio || 0) * (item.cantidad || 1)), 0);
+  const distanciaKm = envioConfig.tipo === 'domicilio' && ubicacionEntrega
+    ? distance(point(STORE_ORIGIN), point([ubicacionEntrega.longitude, ubicacionEntrega.latitude]), { units: 'kilometers' })
+    : null;
+  const tarifaEnvio = distanciaKm === null ? 0 : calcularTarifaEnvio(distanciaKm);
+  const totalPedido = subtotalCarrito + tarifaEnvio;
+
+  const actualizarUbicacionEntrega = (longitude: number, latitude: number) => {
+    const linkMaps = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    setUbicacionEntrega({ longitude, latitude });
+    setEnvioConfig(current => ({ ...current, linkMaps }));
+  };
 
   const handleContinuarCheckout = () => {
+    if (envioConfig.tipo === 'domicilio' && !ubicacionEntrega) {
+      alert('Selecciona la ubicación de entrega en el mapa para calcular el envío.');
+      return;
+    }
     if (envioConfig.tipo === 'domicilio') setCheckoutPaso(2);
     else enviarPedidoWhatsApp(); 
   };
@@ -33,8 +65,8 @@ export default function Cart() {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const linkMaps = `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
-        setEnvioConfig(current => ({ ...current, linkMaps }));
+        actualizarUbicacionEntrega(coords.longitude, coords.latitude);
+        mapRef.current?.flyTo({ center: [coords.longitude, coords.latitude], zoom: 14 });
         setIsLocating(false);
       },
       () => {
@@ -47,8 +79,8 @@ export default function Cart() {
 
   const enviarPedidoWhatsApp = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (envioConfig.tipo === 'domicilio' && (!comprobantePago || !envioConfig.linkMaps)) {
-      alert('Adjunta el comprobante de pago y obtén tu ubicación exacta para continuar.');
+    if (envioConfig.tipo === 'domicilio' && (!comprobantePago || !ubicacionEntrega)) {
+      alert('Adjunta el comprobante de pago y selecciona tu ubicación de entrega en el mapa para continuar.');
       return;
     }
     setIsUploading(true);
@@ -64,7 +96,7 @@ export default function Cart() {
       }
     }
 
-    const total = subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0);
+    const total = totalPedido;
     const nombreCliente = `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`;
     const telfCliente = user?.user_metadata?.telefono || '';
     
@@ -72,7 +104,7 @@ export default function Cart() {
       cliente_nombre: nombreCliente,
       cliente_telefono: telfCliente,
       productos: JSON.stringify(carrito),
-      total_envio: envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0,
+      total_envio: tarifaEnvio,
       estado: 'En progreso',
       comprobante_url: urlComprobante,
       link_maps: envioConfig.linkMaps
@@ -82,14 +114,14 @@ export default function Cart() {
     
     carrito.forEach(item => {
       const tallaStr = item.tallaSeleccionada ? ` (Talla: ${item.tallaSeleccionada})` : '';
-      mensaje += `- ${item.cantidad || 1}x ${item.titulo}${tallaStr} : $${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)}%0A`;
+      mensaje += `- ${item.cantidad || 1}x ${item.titulo}${tallaStr} : ${formatUSD((item.precio || 0) * (item.cantidad || 1))}%0A`;
     });
 
     if (envioConfig.tipo === 'domicilio') {
-      mensaje += `------------------------%0A*Subtotal:* $${subtotalCarrito.toFixed(2)}%0A*Envío:* $${envioConfig.sectorPrecio.toFixed(2)} (${envioConfig.sectorNombre})%0A*TOTAL DEL PEDIDO:* $${total.toFixed(2)}%0A------------------------%0A*TOTAL A PAGAR AHORA:* $${envioConfig.sectorPrecio.toFixed(2)} (Solo Envío)%0A*Ubicación:* ${envioConfig.linkMaps || 'No proporcionado'}%0A`;
+      mensaje += `------------------------%0A*Subtotal:* ${formatUSD(subtotalCarrito)}%0A*Envío:* ${formatUSD(tarifaEnvio)}%0A*TOTAL DEL PEDIDO:* ${formatUSD(total)}%0A------------------------%0A*TOTAL A PAGAR AHORA:* ${formatUSD(tarifaEnvio)} (Solo Envío)%0A*Ubicación:* ${envioConfig.linkMaps || 'No proporcionado'}%0A`;
       if (urlComprobante) mensaje += `*Comprobante:* ${urlComprobante}%0A`;
     } else {
-      mensaje += `------------------------%0A*TOTAL:* $${total.toFixed(2)}%0A*Envío:* Recoger en Local%0A------------------------%0A`;
+      mensaje += `------------------------%0A*TOTAL:* ${formatUSD(total)}%0A*Envío:* Recoger en Local%0A------------------------%0A`;
     }
 
     setIsUploading(false);
@@ -135,57 +167,55 @@ export default function Cart() {
                       <button onClick={() => updateCantidad(item.id, item.tallaSeleccionada, 1)} disabled={(item.cantidad || 1) >= (item.stockMaximo || 1)} className={`text-white border border-white/20 w-6 h-6 flex items-center justify-center bg-transparent outline-none rounded-sm transition-colors ${(item.cantidad || 1) >= (item.stockMaximo || 1) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 cursor-pointer'}`}>+</button>
                     </div>
                   </div>
-                  <span className="text-[12px] tracking-[0.1em] text-white whitespace-nowrap font-bold">${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)} USD</span>
+                  <span className="text-[12px] tracking-[0.1em] text-white whitespace-nowrap font-bold">{formatUSD((item.precio || 0) * (item.cantidad || 1))}</span>
                 </div>
               ))}
               
               <div className="mt-8 border-t border-white/10 pt-6">
                 <label className="text-[8px] tracking-[0.4em] uppercase text-gray-500 mb-4 block text-center sm:text-right drop-shadow-md">MÉTODO DE ENTREGA</label>
                 <div className="flex flex-col sm:flex-row justify-end gap-4 mb-8">
-                  <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local', sectorPrecio: 0})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-all duration-300 outline-none cursor-pointer rounded-sm ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-black/40 text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
-                  <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio', sectorPrecio: sectoresQuito[0].precio, sectorNombre: sectoresQuito[0].nombre})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-all duration-300 outline-none cursor-pointer rounded-sm ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-black/40 text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
+                  <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'local'})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-all duration-300 outline-none cursor-pointer rounded-sm ${envioConfig.tipo === 'local' ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-black/40 text-white border-white/20 hover:border-white/50'}`}>Recoger en el Local</button>
+                  <button onClick={() => setEnvioConfig({...envioConfig, tipo: 'domicilio'})} className={`px-6 py-3 text-[8px] tracking-[0.2em] uppercase border transition-all duration-300 outline-none cursor-pointer rounded-sm ${envioConfig.tipo === 'domicilio' ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-black/40 text-white border-white/20 hover:border-white/50'}`}>Envío a Domicilio</button>
                 </div>
 
                 {envioConfig.tipo === 'domicilio' && (
-                  <div className="flex flex-col items-end gap-4 mb-8 animate-fade-in w-full relative z-[150]">
-                    <div className="relative w-full sm:w-80" onMouseLeave={() => setOpenFormSelect(null)}>
-                      <div onClick={() => setOpenFormSelect(openFormSelect === 'envio' ? null : 'envio')} onMouseEnter={() => setOpenFormSelect('envio')} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] tracking-[0.1em] py-3 cursor-pointer text-right hover:border-white/50 transition-colors uppercase">
-                        {envioConfig.sectorNombre} - ${envioConfig.sectorPrecio.toFixed(2)} USD
-                      </div>
-                      {openFormSelect === 'envio' && (
-                        <div className="absolute top-full right-0 w-full pt-1 z-[300]">
-                          <div className="glass-panel flex flex-col gap-4 py-4 rounded-sm">
-                            {sectoresQuito.map(sector => (
-                              <span 
-                                key={sector.nombre} 
-                                onClick={() => { setEnvioConfig({...envioConfig, sectorNombre: sector.nombre, sectorPrecio: sector.precio}); setOpenFormSelect(null); }} 
-                                className="cursor-pointer transition-colors w-full text-right px-6 py-1 text-gray-400 hover:text-white hover:bg-white/5 text-[10px] tracking-[0.1em] uppercase"
-                              >
-                                {sector.nombre} - ${sector.precio.toFixed(2)} USD
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex flex-col items-stretch gap-4 mb-8 animate-fade-in w-full relative z-[150]">
                     <button
                       type="button"
                       onClick={obtenerUbicacionExacta}
                       disabled={isLocating}
                       className={`w-full sm:w-80 border py-3 text-[8px] tracking-[0.2em] uppercase transition-colors outline-none ${isLocating ? 'border-white/10 text-gray-500 cursor-wait' : 'border-white/20 text-white hover:border-white/60 cursor-pointer'}`}
                     >
-                      {isLocating ? 'Obteniendo ubicación...' : envioConfig.linkMaps ? 'Ubicación exacta confirmada' : 'Mi ubicación exacta'}
+                      {isLocating ? 'Obteniendo ubicación...' : ubicacionEntrega ? 'Actualizar con mi ubicación' : 'Usar mi ubicación actual'}
                     </button>
-                    <p className="text-[7px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm uppercase">Nota: Al usar envío a domicilio, deberá cancelar el valor del envío previo al despacho para garantizar la logística.</p>
+                    <p className="text-[8px] text-gray-400 tracking-[0.1em] uppercase">
+                      {ubicacionEntrega
+                        ? 'Haz clic en el mapa o arrastra el marcador para ajustar la entrega.'
+                        : 'Haz clic en el mapa o usa tu ubicación actual para seleccionar la entrega.'}
+                    </p>
+                    <Suspense fallback={<p className="p-4 text-[10px] text-gray-400">Cargando mapa de entrega...</p>}>
+                      <DeliveryMap
+                        mapRef={mapRef}
+                        location={ubicacionEntrega}
+                        onLocationChange={actualizarUbicacionEntrega}
+                      />
+                    </Suspense>
+                    {distanciaKm !== null && (
+                      <div className="border border-white/10 bg-black/30 p-4 text-[10px] tracking-[0.1em] uppercase">
+                        <p className="text-gray-400">Distancia desde la tienda: <span className="text-white">{distanciaKm.toFixed(2)} km</span></p>
+                        <p className="mt-2 text-gray-400">Costo de envío: <span className="font-bold text-white">{formatUSD(tarifaEnvio)}</span></p>
+                      </div>
+                    )}
+                    <p className="text-[7px] text-gray-500 tracking-[0.1em] text-right mt-2 max-w-sm uppercase self-end">Nota: El envío cubre el transporte público de ida y vuelta del repartidor.</p>
                   </div>
                 )}
               </div>
 
               <div className="mt-4 flex flex-col items-end gap-3 text-[10px] tracking-[0.1em] uppercase">
-                <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6 font-bold">$ {subtotalCarrito.toFixed(2)} USD</span></p>
-                <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6 font-bold">{envioConfig.tipo === 'local' ? 'GRATIS' : `$ ${envioConfig.sectorPrecio.toFixed(2)} USD`}</span></p>
+                <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Subtotal: <span className="text-white ml-0 sm:ml-6 font-bold">{formatUSD(subtotalCarrito)}</span></p>
+                <p className="text-gray-400 w-full sm:w-auto flex justify-between sm:justify-end">Envío: <span className="text-white ml-0 sm:ml-6 font-bold">{envioConfig.tipo === 'local' ? 'GRATIS' : ubicacionEntrega ? formatUSD(tarifaEnvio) : 'Por calcular'}</span></p>
                 <div className="w-full sm:w-64 h-px bg-white/20 my-2 md:my-4"></div>
-                <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6 text-[14px] drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">$ {(subtotalCarrito + (envioConfig.tipo === 'domicilio' ? envioConfig.sectorPrecio : 0)).toFixed(2)} USD</span></p>
+                <p className="text-[12px] text-white font-light w-full sm:w-auto flex justify-between sm:justify-end">Total: <span className="font-bold ml-0 sm:ml-6 text-[14px] drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">{formatUSD(totalPedido)}</span></p>
               </div>
               
               <div className="flex justify-center mt-10 md:mt-16">
@@ -209,7 +239,7 @@ export default function Cart() {
               <h3 className="text-[12px] tracking-[0.4em] uppercase text-white mb-8 text-center font-light drop-shadow-md">Confirmación de Pago</h3>
               
               <p className="text-[8px] tracking-[0.1em] text-gray-400 text-center max-w-lg mb-8 leading-loose uppercase">
-                Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">${envioConfig.sectorPrecio.toFixed(2)} USD</strong>.
+                Para habilitar la logística de entrega a domicilio, requerimos el comprobante de transferencia SOLO por el valor del envío: <strong className="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{formatUSD(tarifaEnvio)}</strong>.
               </p>
 
               <div className="w-full max-w-md border border-white/10 p-6 mb-8 text-center bg-black/40 backdrop-blur-md rounded-sm shadow-inner">

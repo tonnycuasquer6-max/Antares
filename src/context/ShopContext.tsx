@@ -17,7 +17,6 @@ interface ShopContextType {
   tallasDisponibles: string[];
   estructuraCatalogo: Record<string, string[]>;
   subcategoriasJoyeria: string[];
-  sectoresQuito: { nombre: string; precio: number }[];
   parseTallasseguro: (tallasData: any) => Record<string, number | string>;
   triggerStarAnimation: (e: React.MouseEvent) => void;
   agregarAlCarrito: (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad?: number, cantidadesPorTalla?: Record<string, number>) => void;
@@ -80,16 +79,6 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
     'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
   };
-  const sectoresQuito = [
-    { nombre: 'Quito Centro', precio: 1.00 },
-    { nombre: 'Quito Sur (Quitumbe)', precio: 1.50 },
-    { nombre: 'Quito Sur (De Quitumbe hacia el sur)', precio: 2.00 },
-    { nombre: 'Quito Norte', precio: 2.00 },
-    { nombre: 'Tumbaco', precio: 2.50 },
-    { nombre: 'Los Chillos', precio: 2.00 },
-    { nombre: 'Provincias', precio: 6.50 },
-  ];
-
   const fetchProductos = useCallback(async () => {
     const { data } = await supabase.from('productos').select('*').order('id', { ascending: false });
     if (data) setProductos(data);
@@ -226,7 +215,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       favoritos, setFavoritos,
       hiddenItems, setHiddenItems,
       stars, cartPulse,
-      tallasDisponibles, estructuraCatalogo, subcategoriasJoyeria, sectoresQuito,
+      tallasDisponibles, estructuraCatalogo, subcategoriasJoyeria,
       parseTallasseguro, triggerStarAnimation, agregarAlCarrito, updateCantidad, toggleFavorito, fetchProductos
     }}>
       {children}
