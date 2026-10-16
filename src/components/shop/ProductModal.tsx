@@ -66,11 +66,12 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
   return createPortal((
     <div 
-      className="fixed inset-0 z-[100] flex h-[100dvh] w-screen items-center justify-center bg-black/80 p-0 backdrop-blur-md sm:p-4 animate-fade-in" 
+      className="fixed inset-0 z-[100] flex h-[100dvh] w-screen touch-none items-center justify-center overscroll-none bg-black/80 p-0 backdrop-blur-md sm:p-4 animate-fade-in" 
       onClick={onClose}
+      onWheel={e => e.preventDefault()}
     >
       <div 
-        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:overflow-hidden sm:rounded-sm md:max-h-[80vh] md:max-w-3xl md:flex-row lg:max-w-4xl" 
+        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:overflow-hidden sm:rounded-sm md:h-[min(80dvh,52rem)] md:max-h-none md:max-w-3xl md:flex-row lg:max-w-4xl" 
         onClick={e => e.stopPropagation()}
       >
         
@@ -81,12 +82,12 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
           ×
         </button>
 
-        <div className="relative m-0 flex h-[18dvh] max-h-36 min-h-20 w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:h-auto md:min-h-0 md:w-1/2 md:flex-1">
+        <div className="relative m-0 flex h-[40dvh] max-h-[45dvh] min-h-48 w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:h-full md:min-h-0 md:w-1/2 md:flex-1">
           <img 
             loading="lazy" 
             src={producto.imagen_url} 
             alt={producto.titulo} 
-            className="block h-full w-full object-contain p-0 opacity-90 md:object-contain" 
+            className="block h-full w-full object-contain p-0 opacity-90" 
           />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
