@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, DollarSign, Download, Package, Percent, RotateCcw, Search, TrendingUp } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import BulkProductForm from './BulkProductForm';
@@ -46,6 +46,16 @@ type VentaManualRegistro = {
   costo: number;
   pvp: number;
   fecha_venta: string;
+};
+
+type PeriodoVentas = 'este-mes' | 'mes-pasado' | 'ultimos-3-meses' | 'todo';
+
+const parseFechaVenta = (fecha: string): Date | null => {
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+  const date = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(fecha);
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 const esProductoPedido = (value: unknown): value is ProductoPedido => (
@@ -118,8 +128,19 @@ export default function AdminInventory() {
   const [contrasenaDeshacer, setContrasenaDeshacer] = useState('');
   const [errorDeshacer, setErrorDeshacer] = useState('');
   const [deshaciendoVenta, setDeshaciendoVenta] = useState(false);
+  const [periodoVentas, setPeriodoVentas] = useState<PeriodoVentas>('todo');
+  const [busquedaVentas, setBusquedaVentas] = useState('');
+  const [isRankingVisible, setIsRankingVisible] = useState(false);
   const formatCurrency = useMemo(
     () => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
+    []
+  );
+  const formatPercentage = useMemo(
+    () => new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 1 }),
+    []
+  );
+  const formatDate = useMemo(
+    () => new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'UTC' }),
     []
   );
 
@@ -202,6 +223,107 @@ export default function AdminInventory() {
       (a, b) => new Date(b.fecha_venta).getTime() - new Date(a.fecha_venta).getTime()
     );
   }, [listaPedidos, ventasManuales]);
+
+  const ventasFiltradas = useMemo(() => {
+    const now = new Date();
+    const inicioEsteMes = new Date(now.getFullYear(), now.getMonth(), 1);
+    const inicioMesPasado = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const inicioUltimosTresMeses = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    const query = busquedaVentas.trim().toLocaleLowerCase('es');
+
+    return ventasDesglosadas.filter(venta => {
+      const fecha = parseFechaVenta(venta.fecha_venta);
+      if (periodoVentas !== 'todo') {
+        if (!fecha) return false;
+        if (periodoVentas === 'este-mes' && fecha < inicioEsteMes) return false;
+        if (periodoVentas === 'mes-pasado' && (fecha < inicioMesPasado || fecha >= inicioEsteMes)) return false;
+        if (periodoVentas === 'ultimos-3-meses' && fecha < inicioUltimosTresMeses) return false;
+      }
+
+      if (!query) return true;
+      const pedidoId = venta.pedidoId === undefined ? 'venta manual' : String(venta.pedidoId);
+      return [venta.titulo, venta.talla_especifica, pedidoId]
+        .some(value => value.toLocaleLowerCase('es').includes(query));
+    });
+  }, [ventasDesglosadas, periodoVentas, busquedaVentas]);
+
+  const resumenVentas = useMemo(() => {
+    const totales = ventasFiltradas.reduce((resumen, venta) => {
+      resumen.ingresos += venta.precio * venta.cantidad;
+      resumen.costo += venta.costo * venta.cantidad;
+      return resumen;
+    }, { ingresos: 0, costo: 0 });
+    const gananciaNeta = totales.ingresos - totales.costo;
+
+    return {
+      ...totales,
+      gananciaNeta,
+      margen: totales.ingresos === 0 ? 0 : gananciaNeta / totales.ingresos
+    };
+  }, [ventasFiltradas]);
+
+  const rankingProductos = useMemo(() => {
+    const productosAgrupados = new Map<string, {
+      nombre: string;
+      unidades: number;
+      ingresos: number;
+      gananciaNeta: number;
+    }>();
+
+    ventasDesglosadas.forEach(venta => {
+      const clave = venta.titulo.trim().toLocaleLowerCase('es');
+      const resumen = productosAgrupados.get(clave) ?? {
+        nombre: venta.titulo,
+        unidades: 0,
+        ingresos: 0,
+        gananciaNeta: 0
+      };
+      resumen.unidades += venta.cantidad;
+      resumen.ingresos += venta.precio * venta.cantidad;
+      resumen.gananciaNeta += (venta.precio - venta.costo) * venta.cantidad;
+      productosAgrupados.set(clave, resumen);
+    });
+
+    return [...productosAgrupados.values()].sort(
+      (a, b) => b.unidades - a.unidades || b.ingresos - a.ingresos || a.nombre.localeCompare(b.nombre, 'es')
+    );
+  }, [ventasDesglosadas]);
+
+  const exportarVentasCSV = () => {
+    const escaparCampo = (valor: string | number) => `"${String(valor).replaceAll('"', '""')}"`;
+    const filas = [
+      ['Pieza', 'Fecha', 'Talla', 'ID de Pedido', 'Cantidad', 'Costo unitario (USD)', 'PVP unitario (USD)', 'Ganancia neta (USD)', 'Margen (%)'],
+      ...ventasFiltradas.map(venta => {
+        const fecha = /^\d{4}-\d{2}-\d{2}$/.test(venta.fecha_venta)
+          ? new Date(`${venta.fecha_venta}T00:00:00Z`)
+          : parseFechaVenta(venta.fecha_venta);
+        const ganancia = (venta.precio - venta.costo) * venta.cantidad;
+        const margen = venta.precio === 0 ? 0 : ((venta.precio - venta.costo) / venta.precio) * 100;
+
+        return [
+          venta.titulo,
+          fecha ? formatDate.format(fecha) : '',
+          venta.talla_especifica,
+          venta.pedidoId === undefined ? 'Venta manual' : String(venta.pedidoId),
+          venta.cantidad,
+          venta.costo,
+          venta.precio,
+          ganancia.toFixed(2),
+          margen.toFixed(1)
+        ];
+      })
+    ];
+    const contenidoCSV = `\uFEFF${filas.map(fila => fila.map(escaparCampo).join(';')).join('\r\n')}`;
+    const archivo = new Blob([contenidoCSV], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `historial-ventas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const tallasVendidas = useMemo(
     () => new Set(
@@ -330,24 +452,152 @@ export default function AdminInventory() {
       </div>
 
       <div className="glass-panel p-4 md:p-8 w-full overflow-x-auto rounded-sm">
-        <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6 drop-shadow-md">Historial de Ventas (Ganancia Real)</h3>
+        <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-white mb-6 drop-shadow-md">Dashboard Financiero · Historial de Ventas</h3>
         {errorVentas && <p role="alert" className="mb-4 text-xs text-red-400">{errorVentas}</p>}
-        <div className="min-w-[1000px]">
-          <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <label className="relative block w-full md:max-w-sm">
+            <Search size={15} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              type="search"
+              value={busquedaVentas}
+              onChange={event => setBusquedaVentas(event.target.value)}
+              placeholder="Buscar pieza, talla o pedido..."
+              aria-label="Buscar ventas por pieza, talla o pedido"
+              className="w-full border border-white/10 bg-black/40 py-2 pl-9 pr-3 text-xs text-white outline-none placeholder:text-gray-600 focus:border-white/30"
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">
+              Periodo
+              <select
+                value={periodoVentas}
+                onChange={event => setPeriodoVentas(event.target.value as PeriodoVentas)}
+                className="border border-white/10 bg-black/60 px-3 py-2 text-xs normal-case tracking-normal text-white outline-none focus:border-white/30"
+              >
+                <option value="este-mes">Este mes</option>
+                <option value="mes-pasado">Mes pasado</option>
+                <option value="ultimos-3-meses">Últimos 3 meses</option>
+                <option value="todo">Todo</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={exportarVentasCSV}
+              disabled={ventasFiltradas.length === 0}
+              className="inline-flex items-center gap-2 border border-white/15 bg-white/[0.03] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-gray-300 transition-colors hover:border-white/30 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Download size={13} aria-hidden="true" />
+              Exportar CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsRankingVisible(visible => !visible)}
+              aria-expanded={isRankingVisible}
+              aria-controls="ranking-productos"
+              className="inline-flex items-center gap-2 border border-white/15 bg-white/[0.03] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-gray-300 transition-colors hover:border-white/30 hover:bg-white/[0.08] hover:text-white"
+            >
+              {isRankingVisible ? 'Ocultar Ranking' : 'Ver Ranking de Productos'}
+              {isRankingVisible
+                ? <ChevronUp size={13} aria-hidden="true" />
+                : <ChevronDown size={13} aria-hidden="true" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: 'Ingresos totales', value: resumenVentas.ingresos, Icon: DollarSign, detail: 'Ventas registradas' },
+            { label: 'Costo de mercancía', value: resumenVentas.costo, Icon: Package, detail: 'COGS · costo base' },
+            { label: 'Ganancia neta total', value: resumenVentas.gananciaNeta, Icon: TrendingUp, detail: 'Ingresos menos costos' }
+          ].map(({ label, value, Icon, detail }) => (
+            <article key={label} className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">{label}</p>
+                <Icon size={16} aria-hidden="true" className="text-[#a8b8d0]" />
+              </div>
+              <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatCurrency.format(value)}</p>
+              <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">{detail}</p>
+            </article>
+          ))}
+          <article className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Margen de rentabilidad</p>
+              <Percent size={16} aria-hidden="true" className="text-[#a8b8d0]" />
+            </div>
+            <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatPercentage.format(resumenVentas.margen)}</p>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ganancia neta sobre ingresos</p>
+          </article>
+        </div>
+
+        {isRankingVisible && <section id="ranking-productos" aria-labelledby="ranking-productos-title" className="glass-panel mb-8 rounded-sm border border-white/5 bg-white/[0.02] p-4 md:p-6">
+          <div className="mb-4 flex flex-col gap-1 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h4 id="ranking-productos-title" className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+                Ranking de rendimiento de productos
+              </h4>
+              <p className="mt-1 text-[9px] uppercase tracking-[0.12em] text-gray-600">
+                Historial completo · ordenado por unidades vendidas
+              </p>
+            </div>
+            <span className="text-[9px] uppercase tracking-[0.15em] text-gray-600">
+              {rankingProductos.length} {rankingProductos.length === 1 ? 'producto' : 'productos'}
+            </span>
+          </div>
+          <div className="max-h-64 overflow-y-auto pr-1">
+            {rankingProductos.length > 0 ? (
+              <ol className="divide-y divide-white/5">
+                {rankingProductos.map((producto, index) => (
+                  <li key={producto.nombre.trim().toLocaleLowerCase('es')} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 py-3 sm:grid-cols-[2rem_minmax(0,1fr)_auto_auto_auto] sm:gap-5">
+                    <span className="text-center text-[10px] font-bold tabular-nums text-gray-600">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="truncate text-[10px] font-bold uppercase tracking-[0.08em] text-gray-200" title={producto.nombre}>
+                      {producto.nombre}
+                    </span>
+                    <span className="text-right text-[9px] text-gray-400">
+                      <span className="block font-bold text-white">{producto.unidades}</span>
+                      unidades
+                    </span>
+                    <span className="col-start-2 text-[9px] text-gray-500 sm:col-start-auto sm:text-right">
+                      <span className="block font-bold text-[#a8b8d0]">{formatCurrency.format(producto.ingresos)}</span>
+                      Ingresos
+                    </span>
+                    <span className="col-start-3 row-start-2 text-right text-[9px] text-gray-500 sm:col-start-auto sm:row-start-auto">
+                      <span className="block font-bold text-emerald-300/80">{formatCurrency.format(producto.gananciaNeta)}</span>
+                      Ganancia neta
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="py-8 text-center text-[10px] uppercase tracking-[0.15em] text-gray-600">
+                Aún no hay ventas para generar el ranking.
+              </p>
+            )}
+          </div>
+        </section>}
+
+        <div className="min-w-[1450px]">
+          <div className="grid grid-cols-9 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
             <div className="col-span-2 text-left pl-4">Pieza Vendida</div>
             <div>Fecha</div>
             <div>Talla</div>
+            <div>ID de Pedido</div>
             <div>Costo</div>
             <div>PVP</div>
             <div>Ganancia Neta</div>
+            <div>Margen %</div>
           </div>
-          {ventasDesglosadas.map(item => {
+          {ventasFiltradas.map(item => {
             const ganancia = (item.precio - item.costo) * item.cantidad;
-            const fecha = item.fecha_venta
-              ? new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(item.fecha_venta))
-              : '-';
+            const margen = item.precio === 0 ? 0 : (item.precio - item.costo) / item.precio;
+            const fechaVenta = parseFechaVenta(item.fecha_venta);
+            const fechaFormateada = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha_venta)
+              ? new Date(`${item.fecha_venta}T00:00:00Z`)
+              : fechaVenta;
+            const fecha = fechaFormateada ? formatDate.format(fechaFormateada) : '-';
             return (
-              <div key={item.clave} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
+              <div key={item.clave} className="grid grid-cols-9 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-12 h-12 object-contain bg-black/60 rounded-sm shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
                   <div className="flex flex-col truncate">
@@ -372,12 +622,19 @@ export default function AdminInventory() {
                 </div>
                 <div className="text-gray-400">{fecha}</div>
                 <div className="text-white/80 font-bold">{item.talla_especifica}</div>
+                <div className="text-gray-400">{item.pedidoId === undefined ? 'Venta manual' : `#${item.pedidoId}`}</div>
                 <div className="text-gray-400">{formatCurrency.format(item.costo)}</div>
                 <div className="text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{formatCurrency.format(item.precio)}</div>
                 <div className="text-[#a8b8d0] font-bold drop-shadow-[0_0_8px_rgba(168,184,208,0.5)]">{ganancia >= 0 ? '+' : ''}{formatCurrency.format(ganancia)}</div>
+                <div className={margen < 0.3 ? 'font-bold text-amber-300/80' : 'font-bold text-emerald-300/80'}>{formatPercentage.format(margen)}</div>
               </div>
             );
           })}
+          {ventasFiltradas.length === 0 && (
+            <p className="py-10 text-center text-xs uppercase tracking-[0.15em] text-gray-500">
+              No hay ventas para los filtros seleccionados.
+            </p>
+          )}
         </div>
       </div>
 
