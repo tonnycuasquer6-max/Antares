@@ -124,7 +124,7 @@ export default function AdminInventory() {
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
   const [ventasManuales, setVentasManuales] = useState<VentaManualRegistro[]>([]);
   const [errorVentas, setErrorVentas] = useState('');
-  const [productosComprobando, setProductosComprobando] = useState<Set<string | number>>(() => new Set());
+  const [comprobandoFacebook, setComprobandoFacebook] = useState(false);
   const [ventaPorDeshacer, setVentaPorDeshacer] = useState<VentaDesglosada | null>(null);
   const [contrasenaDeshacer, setContrasenaDeshacer] = useState('');
   const [errorDeshacer, setErrorDeshacer] = useState('');
@@ -366,37 +366,33 @@ export default function AdminInventory() {
     if (!error && data) setProductos(current => current.map(product => product.id === id ? data : product));
   };
 
-  const handleComprobarFacebook = async (id: string | number) => {
-    if (productosComprobando.has(id)) return;
-    setProductosComprobando(current => new Set(current).add(id));
+  const handleComprobarTodoFacebook = async () => {
+    if (comprobandoFacebook) return;
+    setComprobandoFacebook(true);
 
     try {
       const { error } = await supabase
         .from('productos')
         .update({ requiere_comprobacion: true })
-        .eq('id', id)
-        .select('id')
-        .single();
+        .or('estado_facebook.is.null,estado_facebook.neq.publicado');
 
       if (error) {
-        console.error('No se pudo solicitar la comprobación de Facebook:', error);
+        console.error('No se pudo solicitar la comprobación masiva de Facebook:', error);
         alert(`No se pudo solicitar la comprobación: ${error.message}`);
         return;
       }
 
       setProductos(current => current.map(product => (
-        product.id === id ? { ...product, requiere_comprobacion: true } : product
+        product.estado_facebook !== 'publicado'
+          ? { ...product, requiere_comprobacion: true }
+          : product
       )));
-      alert('Comprobación solicitada');
+      alert('Comprobación solicitada para todos los productos no publicados en Facebook');
     } catch (error) {
-      console.error('No se pudo solicitar la comprobación de Facebook:', error);
+      console.error('No se pudo solicitar la comprobación masiva de Facebook:', error);
       alert('No se pudo solicitar la comprobación. Inténtalo nuevamente.');
     } finally {
-      setProductosComprobando(current => {
-        const next = new Set(current);
-        next.delete(id);
-        return next;
-      });
+      setComprobandoFacebook(false);
     }
   };
 
@@ -450,7 +446,17 @@ export default function AdminInventory() {
             <div>Costo</div>
             <div>Precio</div>
             <div>Ganancia Potencial</div>
-            <div>Facebook</div>
+            <div className="flex flex-col items-center gap-2">
+              <span>FACEBOOK</span>
+              <button
+                type="button"
+                onClick={handleComprobarTodoFacebook}
+                disabled={comprobandoFacebook}
+                className="rounded-sm border border-white/10 px-2 py-1 text-[8px] tracking-normal normal-case text-gray-400 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Comprobar todo
+              </button>
+            </div>
           </div>
           {stockProyeccion.map(item => {
             const costo = Number.parseFloat(String(item.costo)) || 0;
@@ -462,11 +468,11 @@ export default function AdminInventory() {
                 ? 'bg-red-500'
                 : 'bg-gray-300';
             return (
-              <div key={`inv-${item.id}`} className="grid grid-cols-8 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
+              <div key={`inv-${item.id}`} className="grid grid-cols-8 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-1 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-black/60 shadow-inner">
-                    <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="h-full w-full rounded-sm object-cover" />
+                  <div className="w-20 h-20 shrink-0 overflow-hidden rounded-md bg-black/60 shadow-inner">
+                    <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-full h-full object-cover rounded-md" />
                   </div>
                   <div className="flex flex-col truncate">
                     <span className="uppercase truncate font-bold text-white/90">{item.titulo}</span>
@@ -488,16 +494,8 @@ export default function AdminInventory() {
                 <div className="text-gray-400">{formatCurrency.format(costo)}</div>
                 <div className="text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{formatCurrency.format(precio)}</div>
                 <div className="text-[#a8b8d0] font-bold">{ganancia > 0 ? `+${formatCurrency.format(ganancia)}` : formatCurrency.format(ganancia)}</div>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center">
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${facebookStatusColor}`} title={`Estado de Facebook: ${item.estado_facebook || 'no publicado'}`} />
-                  <button
-                    type="button"
-                    onClick={() => handleComprobarFacebook(item.id)}
-                    disabled={item.requiere_comprobacion || productosComprobando.has(item.id)}
-                    className="rounded-sm border border-white/10 px-2 py-1 text-[9px] text-gray-400 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {item.requiere_comprobacion ? 'Solicitado' : 'Comprobar'}
-                  </button>
                 </div>
               </div>
             );
