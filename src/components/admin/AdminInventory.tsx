@@ -124,7 +124,6 @@ export default function AdminInventory() {
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
   const [ventasManuales, setVentasManuales] = useState<VentaManualRegistro[]>([]);
   const [errorVentas, setErrorVentas] = useState('');
-  const [comprobandoFacebook, setComprobandoFacebook] = useState(false);
   const [ventaPorDeshacer, setVentaPorDeshacer] = useState<VentaDesglosada | null>(null);
   const [contrasenaDeshacer, setContrasenaDeshacer] = useState('');
   const [errorDeshacer, setErrorDeshacer] = useState('');
@@ -144,6 +143,23 @@ export default function AdminInventory() {
     () => new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'UTC' }),
     []
   );
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('realtime-productos')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'productos' }, payload => {
+        setProductos(prevProductos =>
+          prevProductos.map(producto =>
+            producto.id === payload.new.id ? { ...producto, ...payload.new } : producto
+          )
+        );
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [setProductos]);
 
   const fetchSales = useCallback(async () => {
     const [ordersResult, manualSalesResult] = await Promise.all([
@@ -366,36 +382,6 @@ export default function AdminInventory() {
     if (!error && data) setProductos(current => current.map(product => product.id === id ? data : product));
   };
 
-  const handleComprobarTodoFacebook = async () => {
-    if (comprobandoFacebook) return;
-    setComprobandoFacebook(true);
-
-    try {
-      const { error } = await supabase
-        .from('productos')
-        .update({ requiere_comprobacion: true })
-        .or('estado_facebook.is.null,estado_facebook.neq.publicado');
-
-      if (error) {
-        console.error('No se pudo solicitar la comprobación masiva de Facebook:', error);
-        alert(`No se pudo solicitar la comprobación: ${error.message}`);
-        return;
-      }
-
-      setProductos(current => current.map(product => (
-        product.estado_facebook !== 'publicado'
-          ? { ...product, requiere_comprobacion: true }
-          : product
-      )));
-      alert('Comprobación solicitada para todos los productos no publicados en Facebook');
-    } catch (error) {
-      console.error('No se pudo solicitar la comprobación masiva de Facebook:', error);
-      alert('No se pudo solicitar la comprobación. Inténtalo nuevamente.');
-    } finally {
-      setComprobandoFacebook(false);
-    }
-  };
-
   const deshacerVenta = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!ventaPorDeshacer) return;
@@ -446,17 +432,7 @@ export default function AdminInventory() {
             <div>Costo</div>
             <div>Precio</div>
             <div>Ganancia Potencial</div>
-            <div className="flex flex-col items-center gap-2">
-              <span>FACEBOOK</span>
-              <button
-                type="button"
-                onClick={handleComprobarTodoFacebook}
-                disabled={comprobandoFacebook}
-                className="rounded-sm border border-white/10 px-2 py-1 text-[8px] tracking-normal normal-case text-gray-400 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Comprobar todo
-              </button>
-            </div>
+            <div>FACEBOOK</div>
           </div>
           {stockProyeccion.map(item => {
             const costo = Number.parseFloat(String(item.costo)) || 0;
