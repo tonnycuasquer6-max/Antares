@@ -1,0 +1,1 @@
+import{s as e}from"./index-CAV4CsyF.js";var t=e();function n(){return(0,t.jsxs)(`footer`,{className:`screen-only bg-transparent py-8 md:py-12 text-center text-gray-600 text-xs md:text-sm tracking-[0.28em] md:tracking-[0.5em] uppercase border-none mt-auto px-4 w-full z-10 relative`,children:[`© `,new Date().getFullYear(),` ANTARES. Elegancia Atemporal.`]})}export{n as default};
