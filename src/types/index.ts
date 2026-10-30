@@ -13,6 +13,8 @@ export interface Product {
   vendido: boolean;
   publicado?: boolean;
   vendidos: number;
+  estado_facebook?: 'no_publicado' | 'en_revision' | 'publicado' | 'error';
+  requiere_comprobacion?: boolean;
   created_at?: string;
 }
 

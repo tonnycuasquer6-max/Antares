@@ -1358,12 +1358,6 @@ input:-webkit-autofill:active{
   .catalog-logo { display: block; width: 150mm; height: auto; margin: 0 0 18mm; object-fit: contain; }
   .catalog-product-page { position: relative; width: 100%; height: 297mm; min-height: 297mm; max-height: 297mm; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; break-inside: avoid; }
   .catalog-products-grid { height: calc(100% - 18mm); }
-  .catalog-products-grid-accessories { grid-template-rows: repeat(3, minmax(0, 1fr)) !important; }
-  .catalog-products-grid-rings { grid-template-rows: repeat(2, minmax(0, 1fr)) !important; }
   .catalog-subcategory-title { height: 18mm; padding: 5mm 0 2mm; font-size: 15pt; color: #888888; }
   .catalog-product-card { min-width: 0; min-height: 0; overflow: hidden; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; break-inside: avoid; }
-  .catalog-product-card-accessory { padding: 2mm !important; }
-  .catalog-product-image-accessory { flex: 1 1 0% !important; width: 100% !important; height: auto !important; min-height: 0 !important; margin: 0 0 1mm !important; }
-  .catalog-product-image-accessory img { display: block; width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }
-  .catalog-accessory-details { flex: 0 0 auto; margin: 0 !important; padding: 0 1mm 1mm; }
 }

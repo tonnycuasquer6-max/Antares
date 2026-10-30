@@ -124,6 +124,7 @@ export default function AdminInventory() {
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
   const [ventasManuales, setVentasManuales] = useState<VentaManualRegistro[]>([]);
   const [errorVentas, setErrorVentas] = useState('');
+  const [productosComprobando, setProductosComprobando] = useState<Set<string | number>>(() => new Set());
   const [ventaPorDeshacer, setVentaPorDeshacer] = useState<VentaDesglosada | null>(null);
   const [contrasenaDeshacer, setContrasenaDeshacer] = useState('');
   const [errorDeshacer, setErrorDeshacer] = useState('');
@@ -365,6 +366,40 @@ export default function AdminInventory() {
     if (!error && data) setProductos(current => current.map(product => product.id === id ? data : product));
   };
 
+  const handleComprobarFacebook = async (id: string | number) => {
+    if (productosComprobando.has(id)) return;
+    setProductosComprobando(current => new Set(current).add(id));
+
+    try {
+      const { error } = await supabase
+        .from('productos')
+        .update({ requiere_comprobacion: true })
+        .eq('id', id)
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('No se pudo solicitar la comprobación de Facebook:', error);
+        alert(`No se pudo solicitar la comprobación: ${error.message}`);
+        return;
+      }
+
+      setProductos(current => current.map(product => (
+        product.id === id ? { ...product, requiere_comprobacion: true } : product
+      )));
+      alert('Comprobación solicitada');
+    } catch (error) {
+      console.error('No se pudo solicitar la comprobación de Facebook:', error);
+      alert('No se pudo solicitar la comprobación. Inténtalo nuevamente.');
+    } finally {
+      setProductosComprobando(current => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
   const deshacerVenta = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!ventaPorDeshacer) return;
@@ -407,24 +442,32 @@ export default function AdminInventory() {
       
       <div className="glass-panel p-4 md:p-8 w-full overflow-x-auto mb-16 rounded-sm">
         <h3 className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-gray-400 mb-6 drop-shadow-md">Stock Disponible (Proyección)</h3>
-        <div className="min-w-[800px]">
-          <div className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
+        <div className="min-w-[1000px]">
+          <div className="grid grid-cols-8 gap-4 text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 border-b border-white/10 pb-4 mb-4 font-bold text-center">
             <div className="col-span-2 text-left pl-4">Pieza</div>
             <div>Talla</div>
             <div>Stock</div>
             <div>Costo</div>
             <div>Precio</div>
             <div>Ganancia Potencial</div>
+            <div>Facebook</div>
           </div>
           {stockProyeccion.map(item => {
             const costo = Number.parseFloat(String(item.costo)) || 0;
             const precio = Number.parseFloat(String(item.precio)) || 0;
             const ganancia = (precio - costo) * item.existencias;
+            const facebookStatusColor = item.estado_facebook === 'publicado'
+              ? 'bg-blue-500'
+              : item.estado_facebook === 'error'
+                ? 'bg-red-500'
+                : 'bg-gray-300';
             return (
-              <div key={`inv-${item.id}`} className="grid grid-cols-7 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
+              <div key={`inv-${item.id}`} className="grid grid-cols-8 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
-                  <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-12 h-12 object-contain bg-black/60 rounded-sm shadow-inner p-1" />
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-black/60 shadow-inner">
+                    <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="h-full w-full rounded-sm object-cover" />
+                  </div>
                   <div className="flex flex-col truncate">
                     <span className="uppercase truncate font-bold text-white/90">{item.titulo}</span>
                     <span className="text-[8px] text-gray-500 uppercase mt-1 truncate tracking-[0.2em]">{item.categoria}</span>
@@ -445,6 +488,17 @@ export default function AdminInventory() {
                 <div className="text-gray-400">{formatCurrency.format(costo)}</div>
                 <div className="text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{formatCurrency.format(precio)}</div>
                 <div className="text-[#a8b8d0] font-bold">{ganancia > 0 ? `+${formatCurrency.format(ganancia)}` : formatCurrency.format(ganancia)}</div>
+                <div className="flex items-center justify-center gap-3">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${facebookStatusColor}`} title={`Estado de Facebook: ${item.estado_facebook || 'no publicado'}`} />
+                  <button
+                    type="button"
+                    onClick={() => handleComprobarFacebook(item.id)}
+                    disabled={item.requiere_comprobacion || productosComprobando.has(item.id)}
+                    className="rounded-sm border border-white/10 px-2 py-1 text-[9px] text-gray-400 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {item.requiere_comprobacion ? 'Solicitado' : 'Comprobar'}
+                  </button>
+                </div>
               </div>
             );
           })}

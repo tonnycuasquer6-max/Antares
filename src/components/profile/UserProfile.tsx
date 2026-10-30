@@ -406,28 +406,22 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                 </div>
               </div>
               {Object.entries(piezasPorSub).map(([subcat, piezasDeSub]) => {
-             const esAnillos = subcat === 'Anillos';
-             const productosPorPagina = esAnillos ? 4 : 6;
-             const gruposPorPagina = [];
-             for (let i = 0; i < piezasDeSub.length; i += productosPorPagina) {
-               gruposPorPagina.push(piezasDeSub.slice(i, i + productosPorPagina));
+             const gruposDe4 = [];
+             for (let i = 0; i < piezasDeSub.length; i += 4) {
+               gruposDe4.push(piezasDeSub.slice(i, i + 4));
              }
 
              return (
               <div key={`${cat}-${subcat}`}>
                 {/* PÁGINAS DE PRODUCTOS */}
-                {gruposPorPagina.map((grupo, indexGrupo) => (
-                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page bg-transparent ${indexGrupo < gruposPorPagina.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`}>
+                {gruposDe4.map((grupo, indexGrupo) => (
+                  <div key={`${cat}-${subcat}-${indexGrupo}`} className={`catalog-product-page bg-transparent ${indexGrupo < gruposDe4.length - 1 ? 'break-after-page' : ''} w-full flex flex-col box-border`}>
                     <h4 className="catalog-subcategory-title">{subcat}</h4>
-                    <div className={`catalog-products-grid grid grid-cols-2 ${esAnillos ? 'grid-rows-2 catalog-products-grid-rings' : 'grid-rows-3 catalog-products-grid-accessories'} w-full border-t border-l border-white/10`}>
+                    <div className="catalog-products-grid grid grid-cols-2 grid-rows-2 w-full border-t border-l border-white/10">
                       {grupo.map((p) => (
-                        <div key={p.id} className={`catalog-product-card ${esAnillos ? 'catalog-product-card-ring' : 'catalog-product-card-accessory'} flex flex-col items-center text-center relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg ${esAnillos ? 'p-6' : 'p-3'} h-full`}>
-                          <div className={`relative w-full ${esAnillos ? 'h-[240px] mb-4 mt-2' : 'catalog-product-image-accessory mb-1 mt-0'} flex min-h-0 items-center justify-center bg-transparent`}>
-                            <img
-                              src={p.imagen_url}
-                              className={`object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] ${esAnillos ? 'max-h-full max-w-full' : 'h-full w-full max-h-full max-w-full'}`}
-                              alt={p.titulo}
-                            />
+                        <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 h-full">
+                          <div className="relative w-full h-[240px] flex items-center justify-center bg-transparent mb-4 mt-2">
+                            <img src={p.imagen_url} className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
                             {p.vendido && (
                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                                 <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-6 py-3 bg-black/90 text-white border-white/50 shadow-[0_0_20px_rgba(0,0,0,0.8)]">Agotado</span>
@@ -435,22 +429,13 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                             )}
                           </div>
                           
-                          {esAnillos ? (
-                            <div className="w-full flex flex-row justify-between items-start gap-3 mb-4 text-left">
-                              <div className="flex min-w-0 flex-col">
-                                <h3 className="text-[14px] tracking-[0.2em] font-bold uppercase break-words line-clamp-2 text-white drop-shadow-md">{p.titulo}</h3>
-                              </div>
-                              <p className="text-white text-xl text-right font-light tracking-[0.1em] font-serif whitespace-nowrap">${p.precio} USD</p>
+                          <div className="w-full flex flex-row justify-between items-start gap-3 mb-4 text-left">
+                            <div className="flex min-w-0 flex-col">
+                              <h3 className="text-[14px] tracking-[0.2em] font-bold uppercase break-words line-clamp-2 text-white drop-shadow-md">{p.titulo}</h3>
+                              {p.subcategoria !== 'Anillos' && <p className="text-[10px] text-gray-400 mt-1">Stock: {p.disponibilidad || 0}</p>}
                             </div>
-                          ) : (
-                            <div className="catalog-accessory-details w-full text-left">
-                              <div className="flex w-full min-w-0 items-center justify-between gap-2">
-                                <h3 className="min-w-0 truncate text-left text-[12px] font-bold uppercase tracking-[0.08em] text-white drop-shadow-md">{p.titulo}</h3>
-                                <p className="shrink-0 whitespace-nowrap text-right font-serif text-sm font-light tracking-wide text-white">${p.precio} USD</p>
-                              </div>
-                              <p className="mt-1 text-left text-xs font-bold text-gray-300">Stock: {p.disponibilidad || 0}</p>
-                            </div>
-                          )}
+                            <p className="text-white text-xl font-light tracking-[0.1em] font-serif text-right whitespace-nowrap">${p.precio} USD</p>
+                          </div>
                           
                           {p.subcategoria === 'Anillos' ? (
                             <div className="grid grid-cols-4 w-full mt-4 gap-2 justify-items-center mb-4">
