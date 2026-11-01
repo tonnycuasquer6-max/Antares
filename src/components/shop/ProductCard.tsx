@@ -253,7 +253,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                  className={`shrink-0 px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
+                  className={`shrink-0 px-2 sm:px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
                 >
                   {favoritos.includes(producto.id) ? '♥' : '♡'}
                 </button>

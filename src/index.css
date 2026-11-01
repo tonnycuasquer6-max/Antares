@@ -1239,7 +1239,7 @@ textarea {
     left: 50%;
     right: auto;
     width: min(90vw, 24rem);
-    transform: none;
+    transform: translateX(-50%);
   }
 
   .header-dropdown-panel {

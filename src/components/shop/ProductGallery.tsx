@@ -525,7 +525,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 md:gap-5 mt-8">
+      <div className="grid w-full grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 md:gap-5 mt-8">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../services/supabase';
-import type { Product, CartItem, Star } from '../types';
+import type { Product, CartItem, Star, TallasType } from '../types';
 
 interface ShopContextType {
   productos: Product[];
@@ -17,7 +17,7 @@ interface ShopContextType {
   tallasDisponibles: string[];
   estructuraCatalogo: Record<string, string[]>;
   subcategoriasJoyeria: string[];
-  parseTallasseguro: (tallasData: any) => Record<string, number | string>;
+  parseTallasseguro: (tallasData: Product['tallas']) => TallasType;
   triggerStarAnimation: (e: React.MouseEvent) => void;
   agregarAlCarrito: (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad?: number, cantidadesPorTalla?: Record<string, number>) => void;
   updateCantidad: (id: string | number, tallaSeleccionada: string | undefined, delta: number) => void;
@@ -27,6 +27,39 @@ interface ShopContextType {
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 const CONFIG_HIDDEN_ITEMS_KEY = 'antares_hidden_items';
+const TALLAS_DISPONIBLES = ['5', '6', '7', '8', '9', '10', '11', '12'];
+const SUBCATEGORIAS_JOYERIA = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
+const ESTRUCTURA_CATALOGO: Record<string, string[]> = {
+  Atelier: ['Joyería Exclusiva', 'Prêt-à-Porter'],
+  Joyería: ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
+  Esenciales: ['Básicos de Joyería', 'Básicos de Vestuario'],
+  Sartorial: ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
+};
+
+const queryProductos = () => supabase.from('productos').select('*').order('id', { ascending: false });
+
+const parseTallasseguro = (tallasData: Product['tallas']): TallasType => {
+  if (!tallasData) return {};
+  if (typeof tallasData === 'object') return tallasData;
+
+  try {
+    const parsed: unknown = JSON.parse(tallasData);
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([, value]) => typeof value === 'number' || typeof value === 'string')
+      );
+    }
+  } catch {
+    // Legacy comma-separated sizes are parsed below.
+  }
+
+  const tallas: TallasType = {};
+  tallasData.split(',').forEach(talla => {
+    const valor = talla.trim();
+    if (valor) tallas[valor] = 1;
+  });
+  return tallas;
+};
 
 const normalizeMenuKey = (value: string) => value
   .normalize('NFD')
@@ -71,16 +104,12 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   const [stars, setStars] = useState<Star[]>([]);
   const [cartPulse, setCartPulse] = useState(false);
 
-  const tallasDisponibles = ['5', '6', '7', '8', '9', '10', '11', '12'];
-  const subcategoriasJoyeria = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
-  const estructuraCatalogo = {
-    'Atelier': ['Joyería Exclusiva', 'Prêt-à-Porter'],
-    'Joyería': ['Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'],
-    'Esenciales': ['Básicos de Joyería', 'Básicos de Vestuario'],
-    'Sartorial': ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
-  };
   const fetchProductos = useCallback(async () => {
-    const { data } = await supabase.from('productos').select('*').order('id', { ascending: false });
+    const { data, error } = await queryProductos();
+    if (error) {
+      console.error('No se pudieron cargar los productos:', error);
+      return;
+    }
     if (data) setProductos(data);
   }, []);
 
@@ -100,9 +129,24 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   }, [hiddenItems]);
 
   useEffect(() => {
-    fetchProductos();
-    fetchConfiguracion();
-  }, [fetchProductos, fetchConfiguracion]);
+    let isCurrent = true;
+    const loadInitialProducts = async () => {
+      const { data, error } = await queryProductos();
+      if (error) {
+        console.error('No se pudieron cargar los productos:', error);
+        return;
+      }
+      if (isCurrent && data) setProductos(data);
+    };
+
+    const loadInitialData = async () => {
+      await Promise.all([loadInitialProducts(), fetchConfiguracion()]);
+    };
+    void loadInitialData();
+    return () => {
+      isCurrent = false;
+    };
+  }, [fetchConfiguracion]);
 
   useEffect(() => {
     const refreshConfiguracion = () => { fetchConfiguracion(); };
@@ -117,24 +161,6 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       void supabase.removeChannel(channel);
     };
   }, [fetchConfiguracion]);
-
-  const parseTallasseguro = (tallasData: any): Record<string, number | string> => {
-    if (!tallasData) return {};
-    if (typeof tallasData === 'object') return tallasData;
-    try {
-      const parsed = JSON.parse(tallasData);
-      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) return parsed;
-    } catch (e) {}
-    if (typeof tallasData === 'string') {
-      const obj: Record<string, number> = {};
-      tallasData.split(',').forEach(t => { 
-        const val = t.trim();
-        if(val) obj[val] = 1; 
-      });
-      return obj;
-    }
-    return {};
-  };
 
   const triggerStarAnimation = (e: React.MouseEvent) => {
     if (!e || !e.currentTarget) return;
@@ -215,7 +241,9 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       favoritos, setFavoritos,
       hiddenItems, setHiddenItems,
       stars, cartPulse,
-      tallasDisponibles, estructuraCatalogo, subcategoriasJoyeria,
+      tallasDisponibles: TALLAS_DISPONIBLES,
+      estructuraCatalogo: ESTRUCTURA_CATALOGO,
+      subcategoriasJoyeria: SUBCATEGORIAS_JOYERIA,
       parseTallasseguro, triggerStarAnimation, agregarAlCarrito, updateCantidad, toggleFavorito, fetchProductos
     }}>
       {children}
