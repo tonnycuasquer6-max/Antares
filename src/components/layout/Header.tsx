@@ -13,6 +13,7 @@ interface HeaderProps {
 export default function Header({ activeView, setActiveView, setActiveCategory }: HeaderProps) {
   const { user, userRole, setShowLoginModal } = useAuth();
   const { carrito, cartPulse, favoritos, estructuraCatalogo, hiddenItems } = useShop();
+  const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
   
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
   const [menuUsuarioActivo, setMenuUsuarioActivo] = useState(false);
@@ -70,7 +71,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   };
 
   return (
-    <header ref={headerRef} onMouseLeave={handleHeaderMouseLeave} className="site-header screen-only fixed top-0 left-0 w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500">
+    <header ref={headerRef} onMouseLeave={handleHeaderMouseLeave} className={`site-header screen-only ${isAdminPanel ? 'relative' : 'fixed top-0 left-0'} w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500`}>
       
       {/* Botón Volver */}
       {user && activeView !== 'home' && (

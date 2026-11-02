@@ -28,6 +28,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string>('cliente');
   const [user, setUser] = useState<User | null>(null);
+  const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
 
   const handleUserSession = async (currentUser: User | null) => {
     setUser(currentUser);
@@ -119,7 +120,7 @@ export default function App() {
               setActiveCategory={setActiveCategory} 
             />
 
-            <main className="flex-grow flex flex-col items-center w-full min-w-0 px-3 sm:px-6 md:px-8 pt-36 sm:pt-40 animate-fade-in print-root">
+            <main className={`flex-grow flex flex-col items-center w-full min-w-0 px-3 sm:px-6 md:px-8 ${isAdminPanel ? 'pt-12 sm:pt-12' : 'pt-36 sm:pt-40'} animate-fade-in print-root`}>
               <Suspense fallback={<div className="flex min-h-[40vh] w-full items-center justify-center text-xs uppercase tracking-[0.2em] text-white/60" role="status">Cargando...</div>}>
                 {renderView()}
               </Suspense>

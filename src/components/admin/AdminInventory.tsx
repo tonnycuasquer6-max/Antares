@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronUp, DollarSign, Download, Package, Percent, RotateCcw, Search, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, DollarSign, Download, Info, Package, Percent, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import BulkProductForm from './BulkProductForm';
@@ -20,11 +20,15 @@ type ProductoPedido = {
   cantidad?: string | number;
   costo?: string | number;
   precio?: string | number;
+  porcentaje_inversionista?: string | number;
+  retiro_socio?: boolean;
 };
 
 type VentaDesglosada = Pick<Product, 'id' | 'titulo' | 'costo' | 'precio'> & {
   categoria?: string;
   imagen_url?: string;
+  porcentaje_inversionista: number;
+  retiro_socio: boolean;
   talla_especifica: string;
   fecha_venta: string;
   cantidad: number;
@@ -46,6 +50,7 @@ type VentaManualRegistro = {
   costo: number;
   pvp: number;
   fecha_venta: string;
+  retiro_socio?: boolean;
 };
 
 type PeriodoVentas = 'este-mes' | 'mes-pasado' | 'ultimos-3-meses' | 'todo';
@@ -71,6 +76,8 @@ const esProductoPedido = (value: unknown): value is ProductoPedido => (
   && (!('cantidad' in value) || typeof value.cantidad === 'string' || typeof value.cantidad === 'number')
   && (!('costo' in value) || typeof value.costo === 'string' || typeof value.costo === 'number')
   && (!('precio' in value) || typeof value.precio === 'string' || typeof value.precio === 'number')
+  && (!('porcentaje_inversionista' in value) || typeof value.porcentaje_inversionista === 'string' || typeof value.porcentaje_inversionista === 'number')
+  && (!('retiro_socio' in value) || typeof value.retiro_socio === 'boolean')
 );
 
 const agruparProductosPorProducto = (
@@ -131,6 +138,7 @@ export default function AdminInventory() {
   const [periodoVentas, setPeriodoVentas] = useState<PeriodoVentas>('todo');
   const [busquedaVentas, setBusquedaVentas] = useState('');
   const [isRankingVisible, setIsRankingVisible] = useState(false);
+  const [isRetirosModalOpen, setIsRetirosModalOpen] = useState(false);
   const formatCurrency = useMemo(
     () => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
     []
@@ -189,6 +197,12 @@ export default function AdminInventory() {
 
   const ventasDesglosadas = useMemo(() => {
     const desglosadas: VentaDesglosada[] = [];
+    const productosPorId = new Map(productos.map(producto => [String(producto.id), producto]));
+    const porcentajeInversionista = (id: string | number, porcentajeGuardado?: string | number) => {
+      const porcentaje = Number(porcentajeGuardado ?? productosPorId.get(String(id))?.porcentaje_inversionista ?? 0);
+      return Number.isFinite(porcentaje) ? Math.min(100, Math.max(0, porcentaje)) : 0;
+    };
+
     listaPedidos.filter(ped => ped.estado === 'Completado').forEach(ped => {
       let items: unknown;
       try {
@@ -207,6 +221,8 @@ export default function AdminInventory() {
             titulo: value.titulo,
             categoria: value.categoria,
             imagen_url: value.imagen_url,
+            porcentaje_inversionista: porcentajeInversionista(value.id, value.porcentaje_inversionista),
+            retiro_socio: ped.retiro_socio === true || value.retiro_socio === true,
             talla_especifica: value.tallaSeleccionada || 'N/A',
             costo: Number.parseFloat(String(value.costo)) || 0,
             precio: Number.parseFloat(String(value.precio)) || 0,
@@ -226,6 +242,8 @@ export default function AdminInventory() {
         titulo: venta.producto_titulo,
         categoria: venta.categoria || undefined,
         imagen_url: venta.imagen_url || undefined,
+        porcentaje_inversionista: porcentajeInversionista(venta.producto_id ?? `manual-${venta.id}`),
+        retiro_socio: venta.retiro_socio === true,
         talla_especifica: venta.talla,
         costo: Number(venta.costo) || 0,
         precio: Number(venta.pvp) || 0,
@@ -239,7 +257,7 @@ export default function AdminInventory() {
     return desglosadas.sort(
       (a, b) => new Date(b.fecha_venta).getTime() - new Date(a.fecha_venta).getTime()
     );
-  }, [listaPedidos, ventasManuales]);
+  }, [listaPedidos, ventasManuales, productos]);
 
   const ventasFiltradas = useMemo(() => {
     const now = new Date();
@@ -270,14 +288,40 @@ export default function AdminInventory() {
       resumen.costo += venta.costo * venta.cantidad;
       return resumen;
     }, { ingresos: 0, costo: 0 });
+    const ventasParaMargen = ventasFiltradas.filter(venta => !venta.retiro_socio);
+    const ingresosParaMargen = ventasParaMargen.reduce(
+      (total, venta) => total + venta.precio * venta.cantidad,
+      0
+    );
+    const gananciaParaMargen = ventasParaMargen.reduce(
+      (total, venta) => total + (venta.precio - venta.costo) * venta.cantidad,
+      0
+    );
     const gananciaNeta = totales.ingresos - totales.costo;
 
     return {
       ...totales,
       gananciaNeta,
-      margen: totales.ingresos === 0 ? 0 : gananciaNeta / totales.ingresos
+      margen: ingresosParaMargen === 0 ? 0 : gananciaParaMargen / ingresosParaMargen
     };
   }, [ventasFiltradas]);
+
+  const distribucionCapital = useMemo(
+    () => ventasFiltradas
+      .filter(venta => !venta.retiro_socio && venta.porcentaje_inversionista > 0)
+      .reduce((totales, venta) => {
+        const ingresos = venta.precio * venta.cantidad;
+        totales.admin += ingresos * (100 - venta.porcentaje_inversionista) / 100;
+        totales.inversionista += ingresos * venta.porcentaje_inversionista / 100;
+        return totales;
+      }, { admin: 0, inversionista: 0 }),
+    [ventasFiltradas]
+  );
+
+  const retirosSocio = useMemo(
+    () => ventasDesglosadas.filter(venta => venta.retiro_socio),
+    [ventasDesglosadas]
+  );
 
   const rankingProductos = useMemo(() => {
     const productosAgrupados = new Map<string, {
@@ -377,6 +421,27 @@ export default function AdminInventory() {
     };
   }, [ventaPorDeshacer, deshaciendoVenta]);
 
+  useEffect(() => {
+    if (!isRetirosModalOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const appContainer = document.querySelector<HTMLElement>('#root > div');
+    const previousAppOverflowY = appContainer?.style.overflowY;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsRetirosModalOpen(false);
+    };
+
+    document.body.style.overflow = 'hidden';
+    if (appContainer) appContainer.style.overflowY = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      if (appContainer && previousAppOverflowY !== undefined) appContainer.style.overflowY = previousAppOverflowY;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isRetirosModalOpen]);
+
   const publicarProducto = async (id: string | number) => {
     const { data, error } = await supabase.from('productos').update({ publicado: true }).eq('id', id).select().single();
     if (!error && data) setProductos(current => current.map(product => product.id === id ? data : product));
@@ -447,7 +512,7 @@ export default function AdminInventory() {
               <div key={`inv-${item.id}`} className="grid grid-cols-8 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-1 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
-                  <div className="w-20 h-20 shrink-0 overflow-hidden rounded-md bg-black/60 shadow-inner">
+                  <div className="w-24 h-24 shrink-0 overflow-hidden rounded-md bg-black/60 shadow-inner">
                     <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-full h-full object-cover rounded-md" />
                   </div>
                   <div className="flex flex-col truncate">
@@ -532,7 +597,7 @@ export default function AdminInventory() {
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[
             { label: 'Ingresos totales', value: resumenVentas.ingresos, Icon: DollarSign, detail: 'Ventas registradas' },
             { label: 'Costo de mercancía', value: resumenVentas.costo, Icon: Package, detail: 'COGS · costo base' },
@@ -553,7 +618,28 @@ export default function AdminInventory() {
               <Percent size={16} aria-hidden="true" className="text-[#a8b8d0]" />
             </div>
             <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatPercentage.format(resumenVentas.margen)}</p>
-            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ganancia neta sobre ingresos</p>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ganancia sobre ingresos · sin retiros</p>
+          </article>
+          <article className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Distribución de capital</p>
+              <DollarSign size={16} aria-hidden="true" className="text-[#a8b8d0]" />
+            </div>
+            <p className="text-[9px] uppercase tracking-[0.15em] text-gray-500">Admin</p>
+            <p className="mb-3 text-lg font-bold tracking-wide text-white">{formatCurrency.format(distribucionCapital.admin)}</p>
+            <button
+              type="button"
+              onClick={() => setIsRetirosModalOpen(true)}
+              aria-haspopup="dialog"
+              className="group flex w-full items-center justify-between border-t border-white/10 pt-2 text-left transition-colors hover:text-white"
+            >
+              <span>
+                <span className="block text-[9px] uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-300">Inversionista</span>
+                <span className="block text-lg font-bold tracking-wide text-[#a8b8d0] group-hover:text-white">{formatCurrency.format(distribucionCapital.inversionista)}</span>
+              </span>
+              <Info size={14} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-white" />
+            </button>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ventas con participación · retiros excluidos</p>
           </article>
         </div>
 
@@ -627,7 +713,7 @@ export default function AdminInventory() {
             return (
               <div key={item.clave} className="grid grid-cols-9 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
-                  <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-12 h-12 object-contain bg-black/60 rounded-sm shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
+                  <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-20 h-20 shrink-0 object-cover bg-black/60 rounded-md shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
                   <div className="flex flex-col truncate">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="uppercase truncate text-gray-300 font-bold">{item.titulo}</span>
@@ -701,6 +787,69 @@ export default function AdminInventory() {
               </button>
             </div>
           </form>
+        </div>,
+        document.body
+      )}
+      {isRetirosModalOpen && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-y-auto bg-black/80 p-4"
+          onClick={() => setIsRetirosModalOpen(false)}
+        >
+          <section
+            className="glass-panel my-auto max-h-[85vh] w-full max-w-2xl overflow-hidden border border-white/10 bg-black/90"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="partner-withdrawals-title"
+            onClick={event => event.stopPropagation()}
+          >
+            <header className="flex items-start justify-between border-b border-white/10 p-5 md:p-6">
+              <div>
+                <h3 id="partner-withdrawals-title" className="text-sm uppercase tracking-[0.2em] text-white">Historial de Retiros de Socio</h3>
+                <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-500">{retirosSocio.length} {retirosSocio.length === 1 ? 'retiro registrado' : 'retiros registrados'}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRetirosModalOpen(false)}
+                aria-label="Cerrar historial de retiros"
+                className="p-1 text-gray-500 transition-colors hover:text-white"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="max-h-[65vh] overflow-y-auto p-5 md:p-6">
+              {retirosSocio.length > 0 ? (
+                <ul className="divide-y divide-white/10">
+                  {retirosSocio.map(venta => {
+                    const fecha = /^\d{4}-\d{2}-\d{2}$/.test(venta.fecha_venta)
+                      ? new Date(`${venta.fecha_venta}T00:00:00Z`)
+                      : parseFechaVenta(venta.fecha_venta);
+                    return (
+                      <li key={venta.clave} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[4rem_minmax(0,1fr)_auto_auto] sm:gap-4">
+                        {venta.imagen_url ? (
+                          <img src={venta.imagen_url} alt="" className="h-14 w-14 object-cover" />
+                        ) : (
+                          <div aria-hidden="true" className="h-14 w-14 bg-white/5" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate text-[10px] font-bold uppercase tracking-[0.08em] text-white" title={venta.titulo}>{venta.titulo}</p>
+                          <p className="mt-1 text-[9px] uppercase tracking-[0.12em] text-gray-500">
+                            {fecha ? formatDate.format(fecha) : venta.fecha_venta || 'Fecha no disponible'}
+                            {venta.cantidad > 1 ? ` · ${venta.cantidad} unidades` : ''}
+                          </p>
+                        </div>
+                        <span className="col-start-2 text-[9px] uppercase tracking-[0.12em] text-gray-500 sm:col-start-auto">Costo unitario {formatCurrency.format(venta.costo)}</span>
+                        <span className="col-start-3 row-start-1 text-right text-xs font-bold text-white sm:col-start-auto sm:row-start-auto">
+                          {formatCurrency.format(venta.costo * venta.cantidad)}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="py-10 text-center text-[10px] uppercase tracking-[0.15em] text-gray-500">Aún no hay retiros de socio registrados.</p>
+              )}
+            </div>
+          </section>
         </div>,
         document.body
       )}

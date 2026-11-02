@@ -39,7 +39,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
   const originalPieza = useRef<NuevaPieza | null>(null);
   const [nuevaPieza, setNuevaPieza] = useState<NuevaPieza>({ 
-    titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
+    titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
 
   const isJewelryCategory = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(category);
@@ -79,6 +79,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       descripcion: producto.descripcion || '', 
       costo: producto.costo || '', 
       precio: producto.precio, 
+      porcentaje_inversionista: producto.porcentaje_inversionista ?? 0,
       disponibilidad: String(producto.disponibilidad || ''), 
       subcategoria: producto.subcategoria || '',
       tallas: parseTallasseguro(producto.tallas), 
@@ -98,13 +99,13 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     setShowCloseConfirmation(false);
     setEditandoId(null);
     originalPieza.current = null;
-    setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' });
+    setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' });
   }, []);
 
   const solicitarCierre = useCallback(() => {
     const original = originalPieza.current;
     const changedFields: (keyof NuevaPieza)[] = [
-      'titulo', 'categoria', 'descripcion', 'costo', 'precio',
+      'titulo', 'categoria', 'descripcion', 'costo', 'precio', 'porcentaje_inversionista',
       'disponibilidad', 'subcategoria', 'color', 'imagen', 'imagen_url'
     ];
     const hasChanges = original !== null && (
@@ -141,6 +142,10 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const handlePublicarLocal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nuevaPieza.titulo || !nuevaPieza.precio) return alert('Ponle un título y precio.');
+    const porcentajeInversionista = Number(nuevaPieza.porcentaje_inversionista ?? 0);
+    if (!Number.isFinite(porcentajeInversionista) || porcentajeInversionista < 0 || porcentajeInversionista > 100) {
+      return alert('El porcentaje del inversionista debe estar entre 0 y 100.');
+    }
     
     let imageUrl = nuevaPieza.imagen_url || 'https://images.unsplash.com/photo-1610486241074-b778f69d2d0b?q=80&w=1000';
 
@@ -157,6 +162,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       descripcion: nuevaPieza.descripcion, 
       costo: Number(nuevaPieza.costo) || 0, 
       precio: Number(nuevaPieza.precio), 
+      porcentaje_inversionista: porcentajeInversionista,
       categoria: category, 
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
       subcategoria: nuevaPieza.subcategoria || 'General', 
@@ -408,6 +414,20 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               </div>
 
               <input type="number" value={nuevaPieza.precio} onChange={e => setNuevaPieza({...nuevaPieza, precio: e.target.value})} placeholder="PRECIO VENTA (USD)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 focus:border-white transition-colors font-serif" required />
+
+              <label className="w-full text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-gray-400">
+                Porcentaje del Inversionista (%)
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={nuevaPieza.porcentaje_inversionista ?? 0}
+                  onChange={e => setNuevaPieza(current => ({ ...current, porcentaje_inversionista: e.target.value }))}
+                  className="mt-2 w-full bg-transparent border-b border-white/20 text-white text-center py-2 outline-none hover:border-white/50 focus:border-white transition-colors"
+                  required
+                />
+              </label>
               
               {nuevaPieza.subcategoria !== 'Anillos' && (
                 <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 focus:border-white transition-colors" />

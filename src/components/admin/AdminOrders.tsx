@@ -148,21 +148,21 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                             </div>
                             
                             {isExpanded && (
-                              <div className="mt-6 border-t border-white/10 pt-6 space-y-6 animate-fade-in">
+                              <div className="mt-3 border-t border-white/10 pt-3 space-y-3 animate-fade-in">
                                   {[...clientPedidos].reverse().map((pedido) => (
-                                    <div key={pedido.id} className="bg-black/60 p-4 sm:p-6 border border-white/5 rounded-sm shadow-inner">
-                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 border-b border-white/10 pb-3 gap-3 sm:gap-0">
+                                    <div key={pedido.id} className="bg-black/60 p-3 sm:p-4 border border-white/5 rounded-sm shadow-inner">
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 border-b border-white/10 pb-2 gap-3 sm:gap-0">
                                           <span className="text-white font-bold text-[10px] sm:text-[12px] tracking-[0.3em]">PEDIDO #{pedido.orderNumber}</span>
                                           <span className={`text-[8px] sm:text-[10px] md:text-[11px] px-4 py-1.5 font-bold uppercase tracking-[0.2em] text-center w-fit rounded-sm ${pedido.estado === 'Completado' ? 'bg-white/10 text-white border border-white/30 shadow-[0_0_10px_rgba(255,255,255,0.2)]' : pedido.estado === 'Cancelado' ? 'bg-red-500/10 text-red-500 border border-red-500/30' : 'bg-black/80 text-gray-300 border border-gray-600'}`}>
                                             {pedido.estado}
                                           </span>
                                         </div>
                                         
-                                        <div className="space-y-4 mb-6">
+                                        <div className="space-y-2 mb-2">
                                           {(JSON.parse(pedido.productos) as PedidoProducto[]).map((prod, i) => (
-                                            <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-3">
+                                            <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-2">
                                               <div className="flex items-center gap-4 text-left w-full">
-                                                <img loading="lazy" src={prod.imagen_url} alt={prod.titulo} className="w-12 h-12 sm:w-16 sm:h-16 object-contain bg-black/40 rounded-sm shadow-inner p-1" />
+                                                <img loading="lazy" src={prod.imagen_url} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-black/40 rounded-md shadow-inner p-1" />
                                                 <div className="flex flex-col text-left flex-grow">
                                                   <span className="truncate pr-2 uppercase text-white tracking-[0.2em] font-bold drop-shadow-sm">{prod.cantidad}x {prod.titulo}</span>
                                                   {prod.tallaSeleccionada && <span className="text-gray-500 mt-1.5 uppercase tracking-[0.2em] text-[8px] sm:text-[10px]">Talla: {prod.tallaSeleccionada}</span>}
@@ -171,7 +171,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                               <span className="font-serif text-[12px] sm:text-[14px] font-bold whitespace-nowrap text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">${(prod.precio * prod.cantidad).toFixed(2)}</span>
                                             </div>
                                           ))}
-                                          <div className="pt-3 mt-3 flex justify-between items-center text-[10px] sm:text-[12px] font-bold text-white tracking-[0.3em] uppercase">
+                                          <div className="pt-2 mt-1 flex justify-between items-center text-[10px] sm:text-[12px] font-bold text-white tracking-[0.3em] uppercase">
                                             <span className="text-gray-400">Logística de Envío:</span>
                                             <span className="font-serif text-[14px] drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">${Number(pedido.total_envio).toFixed(2)}</span>
                                           </div>

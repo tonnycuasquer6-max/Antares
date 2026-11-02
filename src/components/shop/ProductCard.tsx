@@ -32,6 +32,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   const [showSaleForm, setShowSaleForm] = useState(false);
   const [saleDate, setSaleDate] = useState(obtenerFechaLocal);
   const [salePrice, setSalePrice] = useState('');
+  const [retiroSocio, setRetiroSocio] = useState(false);
   const [saleError, setSaleError] = useState('');
   const [isSavingSale, setIsSavingSale] = useState(false);
 
@@ -93,6 +94,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
     }
     setSaleDate(obtenerFechaLocal());
     setSalePrice('');
+    setRetiroSocio(false);
     setSaleError('');
     setShowSaleForm(true);
   };
@@ -100,7 +102,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   const handleSaveSale = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const parsedPrice = Number(salePrice);
+    const parsedPrice = retiroSocio ? Number(producto.costo || 0) : Number(salePrice);
     if (!salePrice.trim() || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
       setSaleError('Ingresa un PVP válido.');
       return;
@@ -123,7 +125,8 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
         p_producto_id: producto.id,
         p_fecha_venta: saleDate,
         p_pvp: parsedPrice,
-        p_unidades: unidades
+        p_unidades: unidades,
+        p_retiro_socio: retiroSocio
       });
 
       if (error) {
@@ -334,17 +337,32 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                   required
                   value={salePrice}
                   onChange={e => setSalePrice(e.target.value)}
+                  readOnly={retiroSocio}
                   className="min-w-0 flex-1 border-b border-white/30 bg-transparent py-2 text-sm text-white outline-none"
-                  placeholder="Precio al que se vendió"
+                  placeholder={retiroSocio ? undefined : 'Precio al que se vendió'}
                 />
                 <button
                   type="button"
+                  disabled={retiroSocio}
                   onClick={() => setSalePrice(String(producto.precio))}
-                  className="border border-white/30 px-4 text-[10px] font-bold tracking-[0.15em] text-white transition-colors hover:bg-white hover:text-black"
+                  className="border border-white/30 px-4 text-[10px] font-bold tracking-[0.15em] text-white transition-colors hover:bg-white hover:text-black disabled:opacity-40"
                 >
                   PVP
                 </button>
               </div>
+            </label>
+            <label className="mt-5 flex items-center gap-3 text-[10px] tracking-[0.12em] uppercase text-gray-300">
+              <input
+                type="checkbox"
+                checked={retiroSocio}
+                onChange={e => {
+                  const checked = e.target.checked;
+                  setRetiroSocio(checked);
+                  setSalePrice(checked ? String(Number(producto.costo || 0)) : '');
+                }}
+                className="h-4 w-4 accent-white"
+              />
+              Retiro de socio (Venta al costo)
             </label>
             {saleError && <p role="alert" className="mt-4 text-xs text-red-400">{saleError}</p>}
             <div className="mt-7 flex justify-end gap-3">

@@ -4,6 +4,7 @@ export interface Product {
   descripcion: string;
   costo: number;
   precio: number;
+  porcentaje_inversionista?: number;
   categoria: string;
   disponibilidad: string | number;
   subcategoria: string;
@@ -54,6 +55,7 @@ export interface PedidoData {
   estado: 'En progreso' | 'Completado' | 'Cancelado';
   comprobante_url: string;
   link_maps: string;
+  retiro_socio?: boolean;
   created_at?: string;
 }
 
@@ -74,6 +76,7 @@ export interface NuevaPieza {
   descripcion: string;
   costo: string | number;
   precio: string | number;
+  porcentaje_inversionista?: string | number;
   disponibilidad: string;
   subcategoria: string;
   tallas: Record<string, any>;
