@@ -597,7 +597,7 @@ export default function AdminInventory() {
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-6">
           {[
             { label: 'Ingresos totales', value: resumenVentas.ingresos, Icon: DollarSign, detail: 'Ventas registradas' },
             { label: 'Costo de mercancía', value: resumenVentas.costo, Icon: Package, detail: 'COGS · costo base' },
@@ -622,23 +622,26 @@ export default function AdminInventory() {
           </article>
           <article className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Distribución de capital</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Capital Admin</p>
               <DollarSign size={16} aria-hidden="true" className="text-[#a8b8d0]" />
             </div>
-            <p className="text-[9px] uppercase tracking-[0.15em] text-gray-500">Admin</p>
-            <p className="mb-3 text-lg font-bold tracking-wide text-white">{formatCurrency.format(distribucionCapital.admin)}</p>
-            <button
-              type="button"
-              onClick={() => setIsRetirosModalOpen(true)}
-              aria-haspopup="dialog"
-              className="group flex w-full items-center justify-between border-t border-white/10 pt-2 text-left transition-colors hover:text-white"
-            >
-              <span>
-                <span className="block text-[9px] uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-300">Inversionista</span>
-                <span className="block text-lg font-bold tracking-wide text-[#a8b8d0] group-hover:text-white">{formatCurrency.format(distribucionCapital.inversionista)}</span>
-              </span>
-              <Info size={14} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-white" />
-            </button>
+            <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatCurrency.format(distribucionCapital.admin)}</p>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ventas con participación · retiros excluidos</p>
+          </article>
+          <article className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Capital Inversionista</p>
+              <button
+                type="button"
+                onClick={() => setIsRetirosModalOpen(true)}
+                aria-label="Abrir historial de retiros de socio"
+                aria-haspopup="dialog"
+                className="text-[#a8b8d0] transition-colors hover:text-white"
+              >
+                <Info size={16} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatCurrency.format(distribucionCapital.inversionista)}</p>
             <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ventas con participación · retiros excluidos</p>
           </article>
         </div>
