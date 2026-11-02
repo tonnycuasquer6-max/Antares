@@ -307,14 +307,22 @@ export default function AdminInventory() {
   }, [ventasFiltradas]);
 
   const distribucionCapital = useMemo(
-    () => ventasFiltradas
-      .filter(venta => !venta.retiro_socio && venta.porcentaje_inversionista > 0)
-      .reduce((totales, venta) => {
+    () => {
+      const totales = ventasFiltradas.reduce((totales, venta) => {
         const ingresos = venta.precio * venta.cantidad;
         totales.admin += ingresos * (100 - venta.porcentaje_inversionista) / 100;
         totales.inversionista += ingresos * venta.porcentaje_inversionista / 100;
+        if (venta.retiro_socio) {
+          totales.retiros += ingresos;
+        }
         return totales;
-      }, { admin: 0, inversionista: 0 }),
+      }, { admin: 0, inversionista: 0, retiros: 0 });
+
+      return {
+        admin: totales.admin,
+        inversionista: totales.inversionista - totales.retiros
+      };
+    },
     [ventasFiltradas]
   );
 
@@ -626,7 +634,7 @@ export default function AdminInventory() {
               <DollarSign size={16} aria-hidden="true" className="text-[#a8b8d0]" />
             </div>
             <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatCurrency.format(distribucionCapital.admin)}</p>
-            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ventas con participación · retiros excluidos</p>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Incluye la parte admin de los retiros</p>
           </article>
           <article className="glass-panel rounded-sm border border-white/5 bg-white/[0.03] p-4 md:p-5">
             <div className="mb-4 flex items-center justify-between">
@@ -642,7 +650,7 @@ export default function AdminInventory() {
               </button>
             </div>
             <p className="text-xl font-bold tracking-wide text-white md:text-2xl">{formatCurrency.format(distribucionCapital.inversionista)}</p>
-            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Ventas con participación · retiros excluidos</p>
+            <p className="mt-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">Menos el costo total de sus retiros</p>
           </article>
         </div>
 
