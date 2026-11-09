@@ -5,6 +5,7 @@ import { supabase } from '../../services/supabase';
 import patron from '../../assets/patron.jpeg';
 import logo from '../../assets/logo.png';
 import LiquidBackground from '../layout/LiquidBackground';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 
 interface UserProfileProps {
   onNavigate: (view: string) => void;
@@ -17,12 +18,49 @@ const normalizeMenuKey = (value: string) => value
   .replace(/[^a-z0-9]+/g, ' ')
   .trim();
 
+function waitForCatalogImages(container: HTMLElement): Promise<void> {
+  const images = Array.from(container.querySelectorAll('img'));
+
+  return Promise.all(images.map(image => new Promise<void>(resolve => {
+    image.removeAttribute('loading');
+
+    const finish = () => {
+      if (typeof image.decode === 'function') {
+        void image.decode().catch(() => undefined).finally(resolve);
+      } else {
+        resolve();
+      }
+    };
+
+    if (image.complete) {
+      finish();
+      return;
+    }
+
+    image.addEventListener('load', finish, { once: true });
+    image.addEventListener('error', () => resolve(), { once: true });
+  }))).then(() => undefined);
+}
+
 export default function UserProfile({ onNavigate }: UserProfileProps) {
   const { user, userRole } = useAuth();
   const { hiddenItems, setHiddenItems, estructuraCatalogo, subcategoriasJoyeria, productos, parseTallasseguro, tallasDisponibles } = useShop();
 
   const [menuPdfExpandido, setMenuPdfExpandido] = useState<string | null>(null);
   const [categoriasDescarga, setCategoriasDescarga] = useState<string[]>([]);
+  const catalogPrintRef = useRef<HTMLDivElement>(null);
+
+  const generarCatalogoPdf = async () => {
+    const catalogRoot = catalogPrintRef.current;
+    if (!catalogRoot) {
+      console.error('No se encontró el contenedor del catálogo para imprimir.');
+      return;
+    }
+
+    await waitForCatalogImages(catalogRoot);
+    window.print();
+  };
+
   const profileDraftKey = `antares_profile_draft_${user?.id || 'guest'}`;
   let savedDraft: Partial<{ tratamiento: string; firstName: string; secondName: string; lastName: string; secondLastName: string; telefono: string }> | null = null;
   try {
@@ -367,7 +405,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
               </div>
               <div className="flex justify-center">
                 <button 
-                  onClick={() => window.print()} 
+                  onClick={() => { void generarCatalogoPdf(); }} 
                   disabled={categoriasDescarga.length === 0}
                   className="text-black text-[10px] md:text-[12px] font-bold tracking-[0.3em] uppercase px-8 md:px-10 py-4 md:py-5 bg-white hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] flex items-center justify-center gap-3 rounded-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
@@ -382,7 +420,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
 
       {/* BLOQUE OCULTO PARA IMPRESIÓN PDF (GÓTICO / LIQUID) */}
       {userRole === 'admin' && (
-      <div className="hidden print-only catalog-print-root relative isolate w-full font-serif pb-0" style={{ color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+      <div ref={catalogPrintRef} className="hidden print-only catalog-print-root relative isolate w-full font-serif pb-0" style={{ color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
         <LiquidBackground className="print:hidden" />
         
         {categoriasSeleccionadasPdf.map(({ parentMenu, categoria: cat }, indiceCategoria) => {
@@ -421,7 +459,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                       {grupo.map((p) => (
                         <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 h-full">
                           <div className="relative w-full h-[240px] flex items-center justify-center bg-transparent mb-4 mt-2">
-                            <img src={p.imagen_url} className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
+                            <img loading="lazy" src={optimizeCloudinaryUrl(p.imagen_url, 600)} className="max-w-full max-h-full object-cover bg-neutral-900/40 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
                             {p.vendido && (
                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                                 <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-6 py-3 bg-black/90 text-white border-white/50 shadow-[0_0_20px_rgba(0,0,0,0.8)]">Agotado</span>

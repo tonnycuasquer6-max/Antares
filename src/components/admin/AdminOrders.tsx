@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { useShop } from '../../context/ShopContext';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { PedidoData } from '../../types';
 
 interface AdminOrdersProps {
@@ -162,7 +163,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                           {(JSON.parse(pedido.productos) as PedidoProducto[]).map((prod, i) => (
                                             <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-2">
                                               <div className="flex items-center gap-4 text-left w-full">
-                                                <img loading="lazy" src={prod.imagen_url} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-black/40 rounded-md shadow-inner p-1" />
+                                                <img loading="lazy" src={optimizeCloudinaryUrl(prod.imagen_url, 200)} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1" />
                                                 <div className="flex flex-col text-left flex-grow">
                                                   <span className="truncate pr-2 uppercase text-white tracking-[0.2em] font-bold drop-shadow-sm">{prod.cantidad}x {prod.titulo}</span>
                                                   {prod.tallaSeleccionada && <span className="text-gray-500 mt-1.5 uppercase tracking-[0.2em] text-[8px] sm:text-[10px]">Talla: {prod.tallaSeleccionada}</span>}

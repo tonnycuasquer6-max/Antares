@@ -5,6 +5,7 @@ import { useShop } from '../../context/ShopContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { EnvioConfig } from '../../types';
 const DeliveryMap = lazy(() => import('./DeliveryMap'));
 
@@ -22,7 +23,7 @@ const calcularTarifaEnvio = (distanciaKm: number) => {
 };
 
 export default function Cart() {
-  const { user } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
   const { carrito, setCarrito, updateCantidad } = useShop();
   const mapRef = useRef<MapRef>(null);
 
@@ -79,6 +80,11 @@ export default function Cart() {
 
   const enviarPedidoWhatsApp = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
+    if (!user) {
+      alert('Inicia sesión para registrar tu pedido.');
+      setShowLoginModal(true);
+      return;
+    }
     if (envioConfig.tipo === 'domicilio' && (!comprobantePago || !ubicacionEntrega)) {
       alert('Adjunta el comprobante de pago y selecciona tu ubicación de entrega en el mapa para continuar.');
       return;
@@ -100,15 +106,19 @@ export default function Cart() {
     const nombreCliente = `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`;
     const telfCliente = user?.user_metadata?.telefono || '';
     
-    await supabase.from('pedidos').insert([{
+    const { error: orderError } = await supabase.from('pedidos').insert([{
       cliente_nombre: nombreCliente,
       cliente_telefono: telfCliente,
       productos: JSON.stringify(carrito),
       total_envio: tarifaEnvio,
-      estado: 'En progreso',
       comprobante_url: urlComprobante,
       link_maps: envioConfig.linkMaps
     }]);
+    if (orderError) {
+      setIsUploading(false);
+      alert(`No se pudo registrar el pedido: ${orderError.message}`);
+      return;
+    }
 
     let mensaje = `*FACTURA VIRTUAL - ANTARES*%0A------------------------%0A*Cliente:* ${nombreCliente}%0A*Tel:* ${telfCliente}%0A*Productos:*%0A`;
     
@@ -155,7 +165,7 @@ export default function Cart() {
                   >
                     ×
                   </button>
-                  <img src={item.imagen_url} alt={item.titulo} className="w-24 h-24 object-contain bg-black/40 shadow-inner rounded-sm" />
+                  <img loading="lazy" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-24 h-24 object-cover bg-neutral-900/40 shadow-inner rounded-sm" />
                   <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                     <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
                     <p className="text-[8px] tracking-[0.1em] text-gray-400 uppercase line-clamp-1 mb-2">

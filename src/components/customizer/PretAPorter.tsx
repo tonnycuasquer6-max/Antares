@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useShop } from '../../context/ShopContext';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 
 const getMockupUrl = (prenda: string, vista: string) => {
   if (prenda === 'Capucha') return vista === 'frente' ? "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/IMG_1120.png" : "https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/IMG_1121.png";
@@ -218,7 +219,7 @@ export default function PretAPorter() {
             
             <div className="glass-panel w-full relative aspect-[3/4] flex items-center justify-center overflow-hidden group rounded-sm mx-auto">
               <img 
-                src={customRenderedImage || getMockupUrl(customPrenda, customVista)} 
+                src={optimizeCloudinaryUrl(customRenderedImage || getMockupUrl(customPrenda, customVista), 1000)} 
                 alt="Renderizado Prêt-à-Porter" 
                 className="w-full h-full object-contain z-10 transition-opacity duration-500" 
               />

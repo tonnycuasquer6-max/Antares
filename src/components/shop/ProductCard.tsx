@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product } from '../../types';
 
 const obtenerFechaLocal = () => {
@@ -154,7 +155,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
 
       {/* Imagen */}
       <div className={`overflow-hidden aspect-square relative w-full mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
-        <img loading="lazy" decoding="async" src={producto.imagen_url} alt={producto.titulo} className="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+        <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className="w-full h-full object-cover bg-neutral-900/40 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
         
         {producto.vendido && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">

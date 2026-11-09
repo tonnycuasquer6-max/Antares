@@ -5,6 +5,7 @@ import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product, NuevaPieza } from '../../types';
 import { Filter } from 'lucide-react';
 
@@ -402,7 +403,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
               <div className="mb-6 flex justify-center bg-transparent p-0">
-                <img src={nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                <img src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
               </div>
             )}
 

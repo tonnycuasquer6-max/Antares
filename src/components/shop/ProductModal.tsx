@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useShop } from '../../context/ShopContext';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product } from '../../types';
 
 interface ProductModalProps {
@@ -83,10 +84,9 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
         <div className="relative m-0 flex aspect-square w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:w-1/2 md:flex-none">
           <img 
-            loading="lazy" 
-            src={producto.imagen_url} 
+            src={optimizeCloudinaryUrl(producto.imagen_url, 1000)}
             alt={producto.titulo} 
-            className="block h-full w-full object-contain p-0 opacity-90" 
+            className="block h-full w-full object-contain bg-neutral-900/40 p-0 opacity-90" 
           />
           {producto.vendido && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">

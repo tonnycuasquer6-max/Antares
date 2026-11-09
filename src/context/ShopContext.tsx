@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../services/supabase';
+import { useAuth } from './AuthContext';
 import type { Product, CartItem, Star, TallasType } from '../types';
 
 interface ShopContextType {
@@ -36,7 +37,10 @@ const ESTRUCTURA_CATALOGO: Record<string, string[]> = {
   Sartorial: ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
 };
 
-const queryProductos = () => supabase.from('productos').select('*').order('id', { ascending: false });
+const queryProductos = (isAdmin: boolean) => {
+  const table = isAdmin ? 'productos' : 'productos_publicos';
+  return supabase.from(table).select('*').order('id', { ascending: false });
+};
 
 const parseTallasseguro = (tallasData: Product['tallas']): TallasType => {
   if (!tallasData) return {};
@@ -97,6 +101,7 @@ const persistHiddenItems = (items: string[]) => {
 };
 
 export const ShopProvider = ({ children }: { children: ReactNode }) => {
+  const { userRole } = useAuth();
   const [productos, setProductos] = useState<Product[]>([]);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [favoritos, setFavoritos] = useState<(string | number)[]>([]);
@@ -105,13 +110,13 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   const [cartPulse, setCartPulse] = useState(false);
 
   const fetchProductos = useCallback(async () => {
-    const { data, error } = await queryProductos();
+    const { data, error } = await queryProductos(userRole === 'admin');
     if (error) {
       console.error('No se pudieron cargar los productos:', error);
       return;
     }
     if (data) setProductos(data);
-  }, []);
+  }, [userRole]);
 
   const fetchConfiguracion = useCallback(async () => {
     const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).maybeSingle();
@@ -131,7 +136,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let isCurrent = true;
     const loadInitialProducts = async () => {
-      const { data, error } = await queryProductos();
+      const { data, error } = await queryProductos(userRole === 'admin');
       if (error) {
         console.error('No se pudieron cargar los productos:', error);
         return;
@@ -146,7 +151,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isCurrent = false;
     };
-  }, [fetchConfiguracion]);
+  }, [fetchConfiguracion, userRole]);
 
   useEffect(() => {
     const refreshConfiguracion = () => { fetchConfiguracion(); };

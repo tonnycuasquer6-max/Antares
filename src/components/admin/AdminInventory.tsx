@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronUp, DollarSign, Download, Info, Package, Percent, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, DollarSign, Download, Info, Package, Percent, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import { supabase } from '../../services/supabase';
 import BulkProductForm from './BulkProductForm';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { PedidoData, Product } from '../../types';
 
 type ProductoStock = Omit<Product, 'tallas'> & {
@@ -24,7 +25,8 @@ type ProductoPedido = {
   retiro_socio?: boolean;
 };
 
-type VentaDesglosada = Pick<Product, 'id' | 'titulo' | 'costo' | 'precio'> & {
+type VentaDesglosada = Pick<Product, 'id' | 'titulo' | 'precio'> & {
+  costo: number;
   categoria?: string;
   imagen_url?: string;
   porcentaje_inversionista: number;
@@ -132,7 +134,6 @@ export default function AdminInventory() {
   const [ventasManuales, setVentasManuales] = useState<VentaManualRegistro[]>([]);
   const [errorVentas, setErrorVentas] = useState('');
   const [ventaPorDeshacer, setVentaPorDeshacer] = useState<VentaDesglosada | null>(null);
-  const [contrasenaDeshacer, setContrasenaDeshacer] = useState('');
   const [errorDeshacer, setErrorDeshacer] = useState('');
   const [deshaciendoVenta, setDeshaciendoVenta] = useState(false);
   const [periodoVentas, setPeriodoVentas] = useState<PeriodoVentas>('todo');
@@ -463,26 +464,21 @@ export default function AdminInventory() {
 
     const { error } = ventaPorDeshacer.origen === 'manual'
       ? await supabase.rpc('deshacer_venta_manual', {
-        p_venta_id: ventaPorDeshacer.ventaManualId,
-        p_password: contrasenaDeshacer
+        p_venta_id: ventaPorDeshacer.ventaManualId
       })
       : await supabase.rpc('deshacer_venta_pedido', {
         p_pedido_id: ventaPorDeshacer.pedidoId,
-        p_item_index: ventaPorDeshacer.pedidoItemIndex,
-        p_password: contrasenaDeshacer
+        p_item_index: ventaPorDeshacer.pedidoItemIndex
       });
 
     if (error) {
       console.error('No se pudo deshacer la venta:', error);
-      setErrorDeshacer(error.message.includes('Contraseña incorrecta')
-        ? 'La contraseña no es correcta.'
-        : `No se pudo deshacer la venta: ${error.message}`);
+      setErrorDeshacer(`No se pudo deshacer la venta: ${error.message}`);
       setDeshaciendoVenta(false);
       return;
     }
 
     setVentaPorDeshacer(null);
-    setContrasenaDeshacer('');
     setDeshaciendoVenta(false);
     await Promise.all([fetchProductos(), fetchSales()]);
   };
@@ -511,9 +507,10 @@ export default function AdminInventory() {
             const costo = Number.parseFloat(String(item.costo)) || 0;
             const precio = Number.parseFloat(String(item.precio)) || 0;
             const ganancia = (precio - costo) * item.existencias;
-            const facebookStatusColor = item.estado_facebook === 'publicado'
+            const facebookStatus = item.estado_facebook ?? 'no_publicado';
+            const facebookStatusColor = facebookStatus === 'publicado'
               ? 'bg-blue-500'
-              : item.estado_facebook === 'error'
+              : facebookStatus === 'agotado'
                 ? 'bg-red-500'
                 : 'bg-gray-300';
             return (
@@ -521,7 +518,7 @@ export default function AdminInventory() {
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
                   <div className="w-24 h-24 shrink-0 overflow-hidden rounded-md bg-black/60 shadow-inner">
-                    <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-full h-full object-cover rounded-md" />
+                    <img loading="lazy" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-full h-full object-cover bg-neutral-900/40 rounded-md" />
                   </div>
                   <div className="flex flex-col truncate">
                     <span className="uppercase truncate font-bold text-white/90">{item.titulo}</span>
@@ -544,7 +541,20 @@ export default function AdminInventory() {
                 <div className="text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{formatCurrency.format(precio)}</div>
                 <div className="text-[#a8b8d0] font-bold">{ganancia > 0 ? `+${formatCurrency.format(ganancia)}` : formatCurrency.format(ganancia)}</div>
                 <div className="flex items-center justify-center">
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${facebookStatusColor}`} title={`Estado de Facebook: ${item.estado_facebook || 'no publicado'}`} />
+                  {facebookStatus === 'error' ? (
+                    <AlertTriangle
+                      className="h-4 w-4 shrink-0 text-amber-400"
+                      role="img"
+                      aria-label="Error en Facebook"
+                    />
+                  ) : (
+                    <span
+                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${facebookStatusColor}`}
+                      title={`Estado de Facebook: ${facebookStatus}`}
+                      role="img"
+                      aria-label={`Estado de Facebook: ${facebookStatus}`}
+                    />
+                  )}
                 </div>
               </div>
             );
@@ -724,7 +734,7 @@ export default function AdminInventory() {
             return (
               <div key={item.clave} className="grid grid-cols-9 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
-                  <img loading="lazy" src={item.imagen_url} alt={item.titulo} className="w-20 h-20 shrink-0 object-cover bg-black/60 rounded-md shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
+                  <img loading="lazy" src={item.imagen_url ? optimizeCloudinaryUrl(item.imagen_url, 200) : undefined} alt={item.titulo} className="w-20 h-20 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
                   <div className="flex flex-col truncate">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="uppercase truncate text-gray-300 font-bold">{item.titulo}</span>
@@ -732,7 +742,6 @@ export default function AdminInventory() {
                         type="button"
                         onClick={() => {
                           setVentaPorDeshacer(item);
-                          setContrasenaDeshacer('');
                           setErrorDeshacer('');
                         }}
                         className="shrink-0 text-gray-400 hover:text-white transition-colors"
@@ -777,23 +786,12 @@ export default function AdminInventory() {
             <p className="text-xs text-gray-400 mb-5">
               Se restaurará el stock de {ventaPorDeshacer.titulo} y se eliminará la venta del historial.
             </p>
-            <label htmlFor="undo-sale-password" className="block text-[10px] tracking-[0.15em] uppercase text-gray-400 mb-2">Contraseña</label>
-            <input
-              id="undo-sale-password"
-              type="password"
-              value={contrasenaDeshacer}
-              onChange={event => setContrasenaDeshacer(event.target.value)}
-              autoComplete="current-password"
-              autoFocus
-              required
-              className="w-full bg-black/50 border border-white/20 px-3 py-2 text-white outline-none focus:border-white/60"
-            />
             {errorDeshacer && <p role="alert" className="text-xs text-red-400 mt-3">{errorDeshacer}</p>}
             <div className="flex justify-end gap-3 mt-6">
               <button type="button" disabled={deshaciendoVenta} onClick={() => setVentaPorDeshacer(null)} className="px-4 py-2 text-[10px] uppercase tracking-widest text-gray-400 hover:text-white disabled:opacity-50">
                 Cancelar
               </button>
-              <button type="submit" disabled={deshaciendoVenta || !contrasenaDeshacer} className="px-4 py-2 text-[10px] uppercase tracking-widest bg-white text-black disabled:opacity-50">
+              <button type="submit" disabled={deshaciendoVenta} className="px-4 py-2 text-[10px] uppercase tracking-widest bg-white text-black disabled:opacity-50">
                 {deshaciendoVenta ? 'Procesando...' : 'Confirmar'}
               </button>
             </div>
@@ -837,7 +835,7 @@ export default function AdminInventory() {
                     return (
                       <li key={venta.clave} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[4rem_minmax(0,1fr)_auto_auto] sm:gap-4">
                         {venta.imagen_url ? (
-                          <img src={venta.imagen_url} alt="" className="h-14 w-14 object-cover" />
+                          <img loading="lazy" src={optimizeCloudinaryUrl(venta.imagen_url, 200)} alt="" className="h-14 w-14 object-cover bg-neutral-900/40" />
                         ) : (
                           <div aria-hidden="true" className="h-14 w-14 bg-white/5" />
                         )}

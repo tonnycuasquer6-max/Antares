@@ -2,7 +2,7 @@ export interface Product {
   id: string | number;
   titulo: string;
   descripcion: string;
-  costo: number;
+  costo?: number;
   precio: number;
   porcentaje_inversionista?: number;
   categoria: string;
@@ -14,7 +14,7 @@ export interface Product {
   vendido: boolean;
   publicado?: boolean;
   vendidos: number;
-  estado_facebook?: 'no_publicado' | 'en_revision' | 'publicado' | 'error';
+  estado_facebook?: 'publicado' | 'agotado' | 'no_publicado' | 'error';
   requiere_comprobacion?: boolean;
   created_at?: string;
 }
