@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../../services/supabase';
+import { getAuthRedirectUrl, supabase } from '../../services/supabase';
 
 interface AuthProps {
   onClose: () => void;
@@ -33,8 +33,8 @@ export default function Auth({ onClose }: AuthProps) {
         if (error) throw error;
         setErrorMsg('Registro exitoso. Revisa tu correo electrónico para confirmar.');
       }
-    } catch (error: any) {
-      setErrorMsg(error.message || 'Ocurrió un error de autenticación.');
+    } catch (error: unknown) {
+      setErrorMsg(error instanceof Error ? error.message : 'Ocurrió un error de autenticación.');
     } finally {
       setLoading(false);
     }
@@ -43,10 +43,13 @@ export default function Auth({ onClose }: AuthProps) {
   const handleGoogleLogin = async () => {
     setErrorMsg('');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: getAuthRedirectUrl() }
+      });
       if (error) throw error;
-    } catch (error: any) {
-      setErrorMsg(error.message);
+    } catch (error: unknown) {
+      setErrorMsg(error instanceof Error ? error.message : 'No se pudo iniciar sesión con Google.');
     }
   };
 
@@ -56,9 +59,9 @@ export default function Auth({ onClose }: AuthProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/80 p-2 font-serif backdrop-blur-md animate-fade-in sm:p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-md p-3 sm:p-4 font-serif animate-fade-in">
       
-      <div className="glass-panel liquid-form relative my-auto max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-[2rem] p-4 sm:p-6 md:p-8">
+      <div className="glass-panel liquid-form relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[2rem] p-6 sm:p-8 md:p-12">
         
         <button 
           onClick={onClose}

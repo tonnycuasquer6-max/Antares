@@ -19,7 +19,6 @@
     font-size: 1rem;
     line-height: 1.6;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;
   }
   
   * {
@@ -62,15 +61,6 @@
 
     /* Sombra suave para separar la tarjeta del fondo de estrellas */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
   }
 
   .product-modal-info {

@@ -9,8 +9,6 @@ import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product, NuevaPieza } from '../../types';
 import { Filter } from 'lucide-react';
 
-const normalizeCatalogValue = (value: string | null | undefined) => (value ?? '').toLowerCase().trim();
-
 interface ProductGalleryProps {
   category: string;
   userRole: string;
@@ -46,18 +44,14 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   });
 
   const isJewelryCategory = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(category);
+
   // Filtros
   const productosMostrar = useMemo(() => {
     if (category === 'deseos') {
       return productos.filter(p => favoritos.includes(p.id));
     }
 
-    const selectedCategory = normalizeCatalogValue(category);
-    const selectedSubCategory = normalizeCatalogValue(activeSubCategory);
-    let filtrados = productos.filter(p => (
-      normalizeCatalogValue(p.categoria) === selectedCategory
-      && (activeSubCategory === 'Todo' || normalizeCatalogValue(p.subcategoria) === selectedSubCategory)
-    ));
+    let filtrados = productos.filter(p => p.publicado !== false && p.categoria === category && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
 
     if (category === 'Acero Fino') {
       if (filtroColor !== 'Todo') {
@@ -207,12 +201,12 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
         <div className="relative z-20 flex w-full flex-col items-center gap-2">
           <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            <ul className="no-scrollbar flex w-full max-w-full flex-nowrap items-center justify-start gap-x-4 overflow-x-auto whitespace-nowrap px-4 sm:w-auto sm:justify-center sm:gap-4">
+            <ul className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:w-auto sm:flex-nowrap sm:gap-4">
               {subcategoriasJoyeria.map(sub => (
                 <li 
                   key={sub} 
                   onClick={() => setActiveSubCategory(sub)} 
-                  className={`shrink-0 cursor-pointer px-1 py-2 text-xs uppercase tracking-[0.12em] transition-colors duration-300 sm:text-sm sm:tracking-[0.16em] ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`px-1 py-1 text-xs sm:text-sm tracking-[0.12em] sm:tracking-[0.16em] uppercase cursor-pointer transition-colors duration-300 ${activeSubCategory === sub ? 'text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   {sub}
                 </li>
@@ -402,14 +396,14 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-product-form-title"
-            className="glass-panel liquid-form relative my-auto max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto rounded-[2rem] p-4 sm:p-6 md:p-10"
+            className="glass-panel liquid-form p-6 md:p-10 relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto"
           >
             <button type="button" onClick={solicitarCierre} aria-label="Cerrar edición" className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50 transition-colors">×</button>
             <h3 id="admin-product-form-title" className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-6 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
               <div className="mb-6 flex justify-center bg-transparent p-0">
-                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                <img src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
               </div>
             )}
 
@@ -519,7 +513,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                 aria-modal="true"
                 aria-labelledby="discard-product-changes-title"
                 aria-describedby="discard-product-changes-description"
-                className="glass-panel max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-2xl p-4 text-center sm:p-6 md:p-8"
+                className="glass-panel w-full max-w-md rounded-2xl p-6 md:p-8 text-center"
               >
                 <h4 id="discard-product-changes-title" className="text-xs md:text-sm tracking-[0.2em] uppercase text-white">
                   ¿Seguro deseas cerrar sin guardar los cambios?
@@ -552,7 +546,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid w-full grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 md:gap-5 mt-8">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 

@@ -165,7 +165,7 @@ export default function Cart() {
                   >
                     ×
                   </button>
-                  <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-24 h-24 object-cover bg-neutral-900/40 shadow-inner rounded-sm" />
+                  <img loading="lazy" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-24 h-24 object-cover bg-neutral-900/40 shadow-inner rounded-sm" />
                   <div className="flex-grow text-center sm:text-left w-full sm:w-auto">
                     <h4 className="text-[10px] tracking-[0.2em] uppercase text-white mb-1 line-clamp-2 break-words">{item.titulo}</h4>
                     <p className="text-[8px] tracking-[0.1em] text-gray-400 uppercase line-clamp-1 mb-2">
@@ -289,8 +289,6 @@ export default function Cart() {
                       <strong className="text-white block mb-4 uppercase tracking-[0.2em]">Escanea con DeUna</strong>
                       <div className="p-2 bg-white rounded-sm shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                         <img 
-                          loading="lazy"
-                          decoding="async"
                           src="https://ifdvcxlbikqhmdnuxmuy.supabase.co/storage/v1/object/public/assets/qrPichincha_page-0001.jpg" 
                           alt="QR DeUna" 
                           className="w-40 h-auto object-contain mix-blend-multiply"

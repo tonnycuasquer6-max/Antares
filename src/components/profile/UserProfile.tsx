@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
-import { supabase } from '../../services/supabase';
+import { getAuthRedirectUrl, supabase } from '../../services/supabase';
 import patron from '../../assets/patron.jpeg';
 import logo from '../../assets/logo.png';
 import LiquidBackground from '../layout/LiquidBackground';
@@ -159,10 +159,11 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   const solicitarCambioContrasena = async () => {
     if (!user || !user.email) return;
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: getAuthRedirectUrl() });
       if (error) throw error;
       alert(`Se ha enviado un enlace oficial de ANTARES al correo ${user.email}. Por favor, revise su bandeja de entrada.`);
-    } catch (error) { 
+    } catch (error: unknown) {
+      console.error('No se pudo enviar el enlace para cambiar la contraseña.', error);
       alert('Hubo un error al procesar su solicitud. Inténtelo más tarde.'); 
     }
   };
@@ -459,7 +460,7 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
                       {grupo.map((p) => (
                         <div key={p.id} className="catalog-product-card flex flex-col items-center text-center relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-lg p-6 h-full">
                           <div className="relative w-full h-[240px] flex items-center justify-center bg-transparent mb-4 mt-2">
-                            <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(p.imagen_url, 600)} className="max-w-full max-h-full object-cover bg-neutral-900/40 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
+                            <img loading="lazy" src={optimizeCloudinaryUrl(p.imagen_url, 600)} className="max-w-full max-h-full object-cover bg-neutral-900/40 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" alt={p.titulo} />
                             {p.vendido && (
                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                                 <span className="tracking-[0.4em] text-[12px] font-bold uppercase border px-6 py-3 bg-black/90 text-white border-white/50 shadow-[0_0_20px_rgba(0,0,0,0.8)]">Agotado</span>

@@ -21,5 +21,5 @@ export async function uploadToCloudinary(file: File, folder: string): Promise<st
     throw new Error(result.error?.message || 'Cloudinary no pudo subir el archivo.');
   }
 
-  return result.secure_url;
+  return result.secure_url.replace(/^http:\/\//i, 'https://');
 }

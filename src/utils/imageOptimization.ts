@@ -1,11 +1,16 @@
 export function optimizeCloudinaryUrl(url: string, width?: number): string {
   try {
-    const optimizedUrl = new URL(url);
+    const normalizedUrl = url.trim().replace(/^\/\//, 'https://');
+    const optimizedUrl = new URL(normalizedUrl);
+    if (optimizedUrl.protocol === 'http:') {
+      optimizedUrl.protocol = 'https:';
+    }
+
     const hostname = optimizedUrl.hostname.toLowerCase();
     const isCloudinary = hostname === 'cloudinary.com' || hostname.endsWith('.cloudinary.com');
 
     if (!isCloudinary || !/\/upload\//.test(optimizedUrl.pathname)) {
-      return url;
+      return optimizedUrl.toString();
     }
 
     const transformations = ['f_auto', 'q_auto'];
@@ -20,6 +25,6 @@ export function optimizeCloudinaryUrl(url: string, width?: number): string {
 
     return optimizedUrl.toString();
   } catch {
-    return url;
+    return url.trim().replace(/^(?:http:)?\/\//i, 'https://');
   }
 }

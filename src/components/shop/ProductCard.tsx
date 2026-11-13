@@ -290,7 +290,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       </div>
       {showSaleForm && (
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto bg-black/75 p-2 backdrop-blur-sm sm:p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
           onClick={() => !isSavingSale && setShowSaleForm(false)}
         >
           <form
@@ -299,7 +299,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
             aria-labelledby={`sale-form-title-${producto.id}`}
             onSubmit={handleSaveSale}
             onClick={e => e.stopPropagation()}
-            className="glass-panel my-auto max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-sm p-4 sm:p-6 md:p-8"
+            className="glass-panel w-full max-w-md rounded-sm p-6 md:p-8"
           >
             <h3 id={`sale-form-title-${producto.id}`} className="text-sm tracking-[0.2em] uppercase text-white">
               Registrar venta: {producto.titulo}

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { supabase, areSupabaseCredentialsSet } from './services/supabase';
 import type { User } from './types';
 
@@ -29,20 +29,26 @@ export default function App() {
   const [userRole, setUserRole] = useState<string>('cliente');
   const [user, setUser] = useState<User | null>(null);
   const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
+  const sessionVersion = useRef(0);
 
   const handleUserSession = async (currentUser: User | null) => {
+    const currentVersion = ++sessionVersion.current;
     setUser(currentUser);
     if (currentUser) {
       setShowLoginModal(false);
+      setUserRole('cliente');
       try {
         const { data } = await supabase
           .from('perfiles')
           .select('rol')
           .eq('id', currentUser.id)
           .single();
-        setUserRole(data?.rol || 'cliente');
-      } catch {
-        setUserRole('cliente');
+        if (currentVersion === sessionVersion.current) {
+          setUserRole(data?.rol || 'cliente');
+        }
+      } catch (error: unknown) {
+        console.error('No se pudo cargar el rol de usuario desde Supabase.', error);
+        if (currentVersion === sessionVersion.current) setUserRole('cliente');
       }
     } else {
       setUserRole('cliente');
@@ -51,15 +57,17 @@ export default function App() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleUserSession(session?.user ?? null);
-    });
-
+    let active = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleUserSession(session?.user ?? null);
+      window.setTimeout(() => {
+        if (active) void handleUserSession(session?.user ?? null);
+      }, 0);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
