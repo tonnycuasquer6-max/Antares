@@ -164,7 +164,7 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
           <div className="bulk-preview-cascade mt-8" aria-label="Previsualización de productos">
             {products.map(product => (
               <div key={product.id} role="button" tabIndex={0} onClick={() => setSelectedId(product.id)} onKeyDown={event => { if (event.key === 'Enter') setSelectedId(product.id); }} className={`bulk-preview-item ${selectedId === product.id ? 'is-selected' : 'is-secondary'}`}>
-                <img loading="lazy" src={optimizeCloudinaryUrl(product.previewUrl, 200)} alt={product.titulo} className="object-cover bg-neutral-900/40" />
+                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(product.previewUrl, 200)} alt={product.titulo} className="object-cover bg-neutral-900/40" />
                 <span>{product.titulo || "\u00A0"}</span>
                 <button type="button" onClick={event => { event.stopPropagation(); removeProduct(product.id); }} className="bulk-preview-remove" aria-label={`Eliminar ${product.titulo}`}>×</button>
               </div>
@@ -228,10 +228,10 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
 
       {previewProduct && (
         createPortal(
-          <div className="bulk-product-preview-overlay fixed inset-0 z-[10000] flex items-center justify-center bg-transparent backdrop-blur-xl p-4" onClick={() => setPreviewProduct(null)}>
+          <div className="bulk-product-preview-overlay fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto bg-transparent p-2 backdrop-blur-xl sm:p-4" onClick={() => setPreviewProduct(null)}>
             <div className="bulk-product-card glass-panel" role="dialog" aria-modal="true" aria-label={`Vista previa de ${previewProduct.titulo}`} onClick={event => event.stopPropagation()}>
               <button type="button" onClick={() => setPreviewProduct(null)} aria-label="Cerrar vista previa" className="absolute top-3 right-4 text-white text-2xl bg-transparent border-0 cursor-pointer z-10">×</button>
-              <img src={optimizeCloudinaryUrl(previewProduct.previewUrl, 600)} alt={previewProduct.titulo} className="object-cover bg-neutral-900/40" />
+              <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(previewProduct.previewUrl, 600)} alt={previewProduct.titulo} className="object-cover bg-neutral-900/40" />
               <div className="bulk-product-card-info">
                 <h2>{previewProduct.titulo || "\u00A0"}</h2>
                 <p>{previewProduct.color || 'Color no especificado'}</p>

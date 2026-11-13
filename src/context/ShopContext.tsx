@@ -37,10 +37,7 @@ const ESTRUCTURA_CATALOGO: Record<string, string[]> = {
   Sartorial: ['Chaquetas', 'Camisetas', 'Buzos', 'Pantalones']
 };
 
-const queryProductos = (isAdmin: boolean) => {
-  const table = isAdmin ? 'productos' : 'productos_publicos';
-  return supabase.from(table).select('*').order('id', { ascending: false });
-};
+const queryProductos = () => supabase.from('productos').select('*').order('id', { ascending: false });
 
 const parseTallasseguro = (tallasData: Product['tallas']): TallasType => {
   if (!tallasData) return {};
@@ -110,13 +107,13 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   const [cartPulse, setCartPulse] = useState(false);
 
   const fetchProductos = useCallback(async () => {
-    const { data, error } = await queryProductos(userRole === 'admin');
+    const { data, error } = await queryProductos();
     if (error) {
       console.error('No se pudieron cargar los productos:', error);
       return;
     }
     if (data) setProductos(data);
-  }, [userRole]);
+  }, []);
 
   const fetchConfiguracion = useCallback(async () => {
     const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).maybeSingle();
@@ -136,7 +133,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let isCurrent = true;
     const loadInitialProducts = async () => {
-      const { data, error } = await queryProductos(userRole === 'admin');
+      const { data, error } = await queryProductos();
       if (error) {
         console.error('No se pudieron cargar los productos:', error);
         return;

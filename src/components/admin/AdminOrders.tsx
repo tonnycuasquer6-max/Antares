@@ -130,9 +130,9 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                       const isExpanded = pedidoExpandido === expandKey;
                       
                       return (
-                        <div key={clientKey} className="glass-panel p-4 md:p-6 rounded-sm w-full transition-all duration-300">
-                            <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
-                              <div className="flex items-center gap-4">
+                        <div key={clientKey} className="glass-panel w-full min-w-0 rounded-sm p-3 transition-all duration-300 sm:p-4 md:p-6">
+                            <div className="flex min-w-0 items-center justify-between gap-2 cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
+                              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white text-black flex items-center justify-center font-bold text-lg sm:text-xl rounded-full uppercase shadow-[0_0_15px_rgba(255,255,255,0.4)]">{nombre.charAt(0)}</div>
                                   <div>
                                     <p className="text-white text-[10px] sm:text-[12px] tracking-[0.2em] uppercase font-bold drop-shadow-md">{nombre}</p>
@@ -142,7 +142,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                     </p>
                                   </div>
                               </div>
-                              <div className="text-right text-gray-400 text-[8px] sm:text-[10px] tracking-[0.3em] uppercase flex items-center gap-2">
+                              <div className="flex shrink-0 items-center gap-2 text-right text-gray-400 text-[8px] sm:text-[10px] tracking-[0.3em] uppercase">
                                   {clientPedidos.length} Pedido(s)
                                   <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" height="14" width="14" className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                               </div>
@@ -161,10 +161,10 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                         
                                         <div className="space-y-2 mb-2">
                                           {(JSON.parse(pedido.productos) as PedidoProducto[]).map((prod, i) => (
-                                            <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-2">
-                                              <div className="flex items-center gap-4 text-left w-full">
-                                                <img loading="lazy" src={optimizeCloudinaryUrl(prod.imagen_url, 200)} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1" />
-                                                <div className="flex flex-col text-left flex-grow">
+                                            <div key={i} className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2 text-[10px] text-gray-300 sm:flex-nowrap sm:gap-4 sm:text-[12px]">
+                                              <div className="flex min-w-0 w-full items-center gap-3 text-left sm:gap-4">
+                                                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(prod.imagen_url, 200)} alt={prod.titulo} className="h-16 w-16 shrink-0 rounded-md bg-neutral-900/40 object-cover shadow-inner p-1 sm:h-24 sm:w-24 md:h-32 md:w-32" />
+                                                <div className="flex min-w-0 flex-grow flex-col text-left">
                                                   <span className="truncate pr-2 uppercase text-white tracking-[0.2em] font-bold drop-shadow-sm">{prod.cantidad}x {prod.titulo}</span>
                                                   {prod.tallaSeleccionada && <span className="text-gray-500 mt-1.5 uppercase tracking-[0.2em] text-[8px] sm:text-[10px]">Talla: {prod.tallaSeleccionada}</span>}
                                                 </div>

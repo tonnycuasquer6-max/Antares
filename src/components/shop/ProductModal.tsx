@@ -67,11 +67,11 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
   return createPortal((
     <div 
-      className="fixed inset-0 z-[100] flex h-[100dvh] w-full items-center justify-center overscroll-none bg-black/80 p-0 backdrop-blur-md sm:p-4 animate-fade-in" 
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 p-2 backdrop-blur-md sm:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div 
-        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-y-auto rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:rounded-sm md:h-auto md:max-h-[90dvh] md:max-w-3xl md:flex-row md:overflow-hidden lg:max-w-4xl" 
+        className="glass-panel relative flex max-h-[90vh] w-[95vw] max-w-lg flex-col items-stretch overflow-y-auto rounded-sm sm:max-w-lg md:max-w-3xl md:flex-row md:overflow-hidden lg:max-w-4xl"
         onClick={e => e.stopPropagation()}
       >
         
@@ -84,7 +84,9 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
         <div className="relative m-0 flex aspect-square w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:w-1/2 md:flex-none">
           <img 
-            src={optimizeCloudinaryUrl(producto.imagen_url, 1000)}
+            loading="lazy"
+            decoding="async"
+            src={optimizeCloudinaryUrl(producto.imagen_url, 800)}
             alt={producto.titulo} 
             className="block h-full w-full object-contain bg-neutral-900/40 p-0 opacity-90" 
           />

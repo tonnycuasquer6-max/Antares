@@ -219,7 +219,9 @@ export default function PretAPorter() {
             
             <div className="glass-panel w-full relative aspect-[3/4] flex items-center justify-center overflow-hidden group rounded-sm mx-auto">
               <img 
-                src={optimizeCloudinaryUrl(customRenderedImage || getMockupUrl(customPrenda, customVista), 1000)} 
+                loading="lazy"
+                decoding="async"
+                src={optimizeCloudinaryUrl(customRenderedImage || getMockupUrl(customPrenda, customVista), 800)} 
                 alt="Renderizado Prêt-à-Porter" 
                 className="w-full h-full object-contain z-10 transition-opacity duration-500" 
               />
