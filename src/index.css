@@ -134,14 +134,6 @@
     }
   }
 
-  .liquid-header {
-    @apply bg-black/45 backdrop-blur-md border border-gray-800 shadow-2xl;
-  }
-
-  .liquid-header :where(button, nav, nav *) {
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.55);
-  }
-
   .product-card-surface {
     position: relative;
     isolation: isolate;
@@ -165,63 +157,12 @@
     transform: translateX(120%);
   }
 
-  .filter-panel {
-    @apply bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl;
-  }
-
   .menu-item-visibility {
     max-width: 18rem;
     overflow: visible;
     opacity: 1;
     transform: translateY(0);
     transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, transform 0.45s ease, margin 0.45s ease, padding 0.45s ease;
-  }
-
-  .menu-item-hidden {
-    max-width: 0;
-    overflow: hidden;
-    margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-4px);
-  }
-
-  .liquid-glass {
-    @apply bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl;
-    position: relative;
-    overflow: hidden;
-    background:
-      radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.2), transparent 30%),
-      linear-gradient(145deg, rgba(35, 38, 43, 0.64), rgba(16, 17, 20, 0.54) 52%, rgba(4, 5, 7, 0.7));
-    backdrop-filter: blur(20px) saturate(130%);
-    -webkit-backdrop-filter: blur(20px) saturate(130%);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.12), inset 0 -1px rgba(0, 0, 0, 0.34);
-    animation: glassRise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .liquid-glass::before {
-    content: '';
-    position: absolute;
-    inset: -45% 35% 50% -25%;
-    width: 42%;
-    height: 180%;
-    background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.02) 38%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.035) 62%, transparent 100%);
-    filter: blur(18px);
-    transform: translateX(-150%) rotate(16deg);
-    pointer-events: none;
-    animation: glassReflection 8s ease-in-out infinite;
-  }
-
-  .liquid-glass::after {
-    content: '';
-    position: absolute;
-    inset: 1px;
-    border-radius: inherit;
-    background: radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.1), transparent 24%);
-    opacity: 0.72;
-    pointer-events: none;
   }
 
   .jewelry-gallery {
@@ -257,29 +198,6 @@
 
   .jewelry-product-card:hover::before {
     transform: translateX(120%);
-  }
-
-  .liquid-submenu {
-    @apply bg-black/80 backdrop-blur-md border border-gray-800 shadow-2xl;
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    animation: glassRise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .liquid-submenu::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(110deg, transparent 15%, rgba(255, 255, 255, 0.08) 48%, transparent 72%);
-    transform: translateX(-120%);
-    pointer-events: none;
-    animation: submenuReflection 7s ease-in-out infinite;
-  }
-
-  .liquid-submenu > * {
-    position: relative;
-    z-index: 1;
   }
 
   .liquid-form {
@@ -684,26 +602,6 @@
   .inventory-status-dot.is-sold-out { color: #ef4444; background: #ef4444; cursor: default; }
 
   @media (max-width: 640px) {
-      .liquid-header {
-        padding-inline: 0.75rem;
-      }
-
-      .liquid-header nav ul {
-        column-gap: 1rem;
-        row-gap: 0.5rem;
-        font-size: 0.75rem;
-        letter-spacing: 0.14em;
-      }
-
-      .liquid-header nav {
-        padding-inline: 0;
-      }
-
-      .liquid-glass {
-        backdrop-filter: blur(14px) saturate(115%);
-        -webkit-backdrop-filter: blur(14px) saturate(115%);
-      }
-
     .bulk-product-card {
       grid-template-columns: 1fr;
       grid-template-rows: minmax(0, 32dvh) minmax(0, 1fr);
@@ -1141,20 +1039,6 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  @keyframes glassReflection {
-    0%, 100% { transform: translateX(-150%) rotate(16deg); opacity: 0; }
-    18% { opacity: 0.35; }
-    52% { transform: translateX(270%) rotate(16deg); opacity: 0.16; }
-    70% { opacity: 0; }
-  }
-
-  @keyframes submenuReflection {
-    0%, 100% { transform: translateX(-120%); opacity: 0; }
-    22% { opacity: 0.18; }
-    52% { transform: translateX(120%); opacity: 0.08; }
-    68% { opacity: 0; }
-  }
-  
   @keyframes pulseSlow {
     0%, 100% { opacity: 1; }
     50% { opacity: .7; }
@@ -1260,15 +1144,9 @@ textarea {
   }
 
   .glass-panel,
-  .product-card-surface,
-  .filter-panel {
+  .product-card-surface {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-  }
-
-  .liquid-glass {
-    backdrop-filter: blur(10px) saturate(110%);
-    -webkit-backdrop-filter: blur(10px) saturate(110%);
   }
 
   .bulk-preview-cascade {
@@ -1291,8 +1169,6 @@ textarea {
   .site-header,
   .glass-panel,
   .product-card-surface,
-  .filter-panel,
-  .liquid-glass,
   .liquid-select-menu,
   .product-modal-info {
     backdrop-filter: none !important;
@@ -1321,9 +1197,7 @@ textarea {
     transform: none;
   }
 
-  .product-card-surface::before,
-  .liquid-glass::before,
-  .liquid-submenu::before {
+  .product-card-surface::before {
     animation: none;
   }
 }
