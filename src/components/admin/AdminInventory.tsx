@@ -135,6 +135,7 @@ export default function AdminInventory() {
   const [errorVentas, setErrorVentas] = useState('');
   const [ventaPorDeshacer, setVentaPorDeshacer] = useState<VentaDesglosada | null>(null);
   const [errorDeshacer, setErrorDeshacer] = useState('');
+  const [pin, setPin] = useState('');
   const [deshaciendoVenta, setDeshaciendoVenta] = useState(false);
   const [periodoVentas, setPeriodoVentas] = useState<PeriodoVentas>('todo');
   const [busquedaVentas, setBusquedaVentas] = useState('');
@@ -424,6 +425,12 @@ export default function AdminInventory() {
     [productos, parseTallasseguro, tallasVendidas]
   );
 
+  const cerrarModalDeshacer = useCallback(() => {
+    setVentaPorDeshacer(null);
+    setPin('');
+    setErrorDeshacer('');
+  }, []);
+
   useEffect(() => {
     if (!ventaPorDeshacer) return;
 
@@ -431,7 +438,7 @@ export default function AdminInventory() {
     const previousBodyOverflow = document.body.style.overflow;
     const previousAppOverflowY = appContainer?.style.overflowY;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !deshaciendoVenta) setVentaPorDeshacer(null);
+      if (event.key === 'Escape' && !deshaciendoVenta) cerrarModalDeshacer();
     };
 
     document.body.style.overflow = 'hidden';
@@ -443,7 +450,7 @@ export default function AdminInventory() {
       if (appContainer && previousAppOverflowY !== undefined) appContainer.style.overflowY = previousAppOverflowY;
       window.removeEventListener('keydown', closeOnEscape);
     };
-  }, [ventaPorDeshacer, deshaciendoVenta]);
+  }, [ventaPorDeshacer, deshaciendoVenta, cerrarModalDeshacer]);
 
   useEffect(() => {
     if (!isRetirosModalOpen) return;
@@ -474,28 +481,38 @@ export default function AdminInventory() {
   const deshacerVenta = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!ventaPorDeshacer) return;
-    setDeshaciendoVenta(true);
-    setErrorDeshacer('');
-
-    const { error } = ventaPorDeshacer.origen === 'manual'
-      ? await supabase.rpc('deshacer_venta_manual', {
-        p_venta_id: ventaPorDeshacer.ventaManualId
-      })
-      : await supabase.rpc('deshacer_venta_pedido', {
-        p_pedido_id: ventaPorDeshacer.pedidoId,
-        p_item_index: ventaPorDeshacer.pedidoItemIndex
-      });
-
-    if (error) {
-      console.error('No se pudo deshacer la venta:', error);
-      setErrorDeshacer(`No se pudo deshacer la venta: ${error.message}`);
-      setDeshaciendoVenta(false);
+    if (pin !== '0211') {
+      setErrorDeshacer('Código incorrecto');
       return;
     }
 
-    setVentaPorDeshacer(null);
-    setDeshaciendoVenta(false);
-    await Promise.all([fetchProductos(), fetchSales()]);
+    setDeshaciendoVenta(true);
+    setErrorDeshacer('');
+
+    try {
+      const { error } = ventaPorDeshacer.origen === 'manual'
+        ? await supabase.rpc('deshacer_venta_manual', {
+          p_venta_id: ventaPorDeshacer.ventaManualId
+        })
+        : await supabase.rpc('deshacer_venta_pedido', {
+          p_pedido_id: ventaPorDeshacer.pedidoId,
+          p_item_index: ventaPorDeshacer.pedidoItemIndex
+        });
+
+      if (error) {
+        console.error('No se pudo deshacer la venta:', error);
+        setErrorDeshacer(`No se pudo deshacer la venta: ${error.message}`);
+        return;
+      }
+
+      cerrarModalDeshacer();
+      await Promise.all([fetchProductos(), fetchSales()]);
+    } catch (error) {
+      console.error('Error inesperado al deshacer la venta:', error);
+      setErrorDeshacer(`No se pudo deshacer la venta: ${error instanceof Error ? error.message : 'Error inesperado'}`);
+    } finally {
+      setDeshaciendoVenta(false);
+    }
   };
 
   return (
@@ -757,6 +774,7 @@ export default function AdminInventory() {
                         type="button"
                         onClick={() => {
                           setVentaPorDeshacer(item);
+                          setPin('');
                           setErrorDeshacer('');
                         }}
                         className="shrink-0 text-gray-400 hover:text-white transition-colors"
@@ -788,7 +806,7 @@ export default function AdminInventory() {
       </div>
 
       {ventaPorDeshacer && createPortal(
-        <div className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-y-auto bg-black/80 p-4" onClick={() => !deshaciendoVenta && setVentaPorDeshacer(null)}>
+        <div className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-y-auto bg-black/80 p-4" onClick={() => !deshaciendoVenta && cerrarModalDeshacer()}>
           <form
             className="glass-panel my-auto max-h-[90vh] w-[95vw] max-w-md overflow-y-auto p-4 sm:p-6 md:p-8"
             role="dialog"
@@ -801,9 +819,24 @@ export default function AdminInventory() {
             <p className="text-xs text-gray-400 mb-5">
               Se restaurará el stock de {ventaPorDeshacer.titulo} y se eliminará la venta del historial.
             </p>
-            {errorDeshacer && <p role="alert" className="text-xs text-red-400 mt-3">{errorDeshacer}</p>}
+            <label htmlFor="undo-sale-pin" className="mb-2 block text-[10px] uppercase tracking-[0.2em] text-gray-400">
+              Código de confirmación
+            </label>
+            <input
+              id="undo-sale-pin"
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
+              value={pin}
+              onChange={event => setPin(event.target.value)}
+              placeholder="••••"
+              aria-describedby={errorDeshacer ? 'undo-sale-error' : undefined}
+              className="w-full border border-gray-700 bg-black px-4 py-3 text-center text-sm tracking-[0.5em] text-white outline-none placeholder:text-gray-600 focus:border-gray-400"
+            />
+            {errorDeshacer && <p id="undo-sale-error" role="alert" className="text-xs text-red-400 mt-3">{errorDeshacer}</p>}
             <div className="flex justify-end gap-3 mt-6">
-              <button type="button" disabled={deshaciendoVenta} onClick={() => setVentaPorDeshacer(null)} className="px-4 py-2 text-[10px] uppercase tracking-widest text-gray-400 hover:text-white disabled:opacity-50">
+              <button type="button" disabled={deshaciendoVenta} onClick={cerrarModalDeshacer} className="px-4 py-2 text-[10px] uppercase tracking-widest text-gray-400 hover:text-white disabled:opacity-50">
                 Cancelar
               </button>
               <button type="submit" disabled={deshaciendoVenta} className="px-4 py-2 text-[10px] uppercase tracking-widest bg-white text-black disabled:opacity-50">
