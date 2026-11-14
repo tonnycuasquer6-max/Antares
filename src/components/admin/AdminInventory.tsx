@@ -518,7 +518,7 @@ export default function AdminInventory() {
                 <div className="col-span-2 flex items-center gap-4 text-left">
                   <button type="button" onClick={() => !item.publicado && publicarProducto(item.id)} className={`inventory-status-dot ${item.vendido ? 'is-sold-out' : item.publicado ? 'is-published' : 'is-draft'}`} title={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Guardar y publicar'} aria-label={item.vendido ? 'Agotado' : item.publicado ? 'Publicado' : 'Publicar producto'} />
                   <div className="w-24 h-24 shrink-0 overflow-hidden rounded-md bg-black/60 shadow-inner">
-                    <img loading="lazy" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-full h-full object-cover bg-neutral-900/40 rounded-md" />
+                    <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(item.imagen_url, 200)} alt={item.titulo} className="w-full h-full object-cover bg-neutral-900/40 rounded-md" />
                   </div>
                   <div className="flex flex-col truncate">
                     <span className="uppercase truncate font-bold text-white/90">{item.titulo}</span>
@@ -734,7 +734,7 @@ export default function AdminInventory() {
             return (
               <div key={item.clave} className="grid grid-cols-9 gap-4 text-[10px] md:text-xs tracking-[0.1em] text-white border-b border-white/5 py-4 items-center text-center hover:bg-white/5 transition-colors duration-300 px-4 rounded-sm">
                 <div className="col-span-2 flex items-center gap-4 text-left">
-                  <img loading="lazy" src={item.imagen_url ? optimizeCloudinaryUrl(item.imagen_url, 200) : undefined} alt={item.titulo} className="w-20 h-20 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
+                  <img loading="lazy" decoding="async" src={item.imagen_url ? optimizeCloudinaryUrl(item.imagen_url, 200) : undefined} alt={item.titulo} className="w-20 h-20 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1 opacity-70 filter grayscale hover:grayscale-0 transition-all" />
                   <div className="flex flex-col truncate">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="uppercase truncate text-gray-300 font-bold">{item.titulo}</span>
@@ -775,7 +775,7 @@ export default function AdminInventory() {
       {ventaPorDeshacer && createPortal(
         <div className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-y-auto bg-black/80 p-4" onClick={() => !deshaciendoVenta && setVentaPorDeshacer(null)}>
           <form
-            className="glass-panel my-auto w-full max-w-md p-6 md:p-8"
+            className="glass-panel my-auto max-h-[90vh] w-[95vw] max-w-md overflow-y-auto p-4 sm:p-6 md:p-8"
             role="dialog"
             aria-modal="true"
             aria-labelledby="undo-sale-title"
@@ -805,7 +805,7 @@ export default function AdminInventory() {
           onClick={() => setIsRetirosModalOpen(false)}
         >
           <section
-            className="glass-panel my-auto max-h-[85vh] w-full max-w-2xl overflow-hidden border border-white/10 bg-black/90"
+            className="glass-panel my-auto max-h-[85vh] w-[95vw] max-w-2xl overflow-hidden border border-white/10 bg-black/90"
             role="dialog"
             aria-modal="true"
             aria-labelledby="partner-withdrawals-title"
@@ -835,7 +835,7 @@ export default function AdminInventory() {
                     return (
                       <li key={venta.clave} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[4rem_minmax(0,1fr)_auto_auto] sm:gap-4">
                         {venta.imagen_url ? (
-                          <img loading="lazy" src={optimizeCloudinaryUrl(venta.imagen_url, 200)} alt="" className="h-14 w-14 object-cover bg-neutral-900/40" />
+                          <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(venta.imagen_url, 200)} alt="" className="h-14 w-14 object-cover bg-neutral-900/40" />
                         ) : (
                           <div aria-hidden="true" className="h-14 w-14 bg-white/5" />
                         )}

@@ -33,8 +33,8 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.5);
+    const isMobile = window.innerWidth < 768;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     const resizeCanvas = () => {
       width = window.innerWidth;
       height = window.innerHeight;

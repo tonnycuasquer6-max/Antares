@@ -14,6 +14,8 @@ interface ProductGalleryProps {
   userRole: string;
 }
 
+const normalizeCatalogValue = (value: string | null | undefined) => value?.toLowerCase().trim() ?? '';
+
 export default function ProductGallery({ category, userRole }: ProductGalleryProps) {
   const { 
     productos, 
@@ -43,23 +45,28 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
 
-  const isJewelryCategory = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(category);
+  const categoryKey = normalizeCatalogValue(category);
+  const isJewelryCategory = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(categoryKey);
 
   // Filtros
   const productosMostrar = useMemo(() => {
-    if (category === 'deseos') {
+    if (categoryKey === 'deseos') {
       return productos.filter(p => favoritos.includes(p.id));
     }
 
-    let filtrados = productos.filter(p => p.publicado !== false && p.categoria === category && (activeSubCategory === 'Todo' || p.subcategoria === activeSubCategory));
+    const subCategoryKey = normalizeCatalogValue(activeSubCategory);
+    let filtrados = productos.filter(p =>
+      normalizeCatalogValue(p.categoria) === categoryKey
+      && (subCategoryKey === 'todo' || normalizeCatalogValue(p.subcategoria) === subCategoryKey)
+    );
 
-    if (category === 'Acero Fino') {
+    if (categoryKey === 'acero fino') {
       if (filtroColor !== 'Todo') {
         filtrados = filtrados.filter(p => p.color === filtroColor);
       }
       if (filtroTalla !== 'Todo') {
         filtrados = filtrados.filter(p => {
-          if (p.subcategoria !== 'Anillos') return false;
+          if (normalizeCatalogValue(p.subcategoria) !== 'anillos') return false;
           const tallasObj = parseTallasseguro(p.tallas);
           return parseInt(String(tallasObj[filtroTalla] || 0)) > 0;
         });
@@ -71,7 +78,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       }
     }
     return filtrados;
-  }, [productos, category, activeSubCategory, filtroColor, filtroTalla, ordenPrecio, favoritos, parseTallasseguro]);
+  }, [productos, categoryKey, activeSubCategory, filtroColor, filtroTalla, ordenPrecio, favoritos, parseTallasseguro]);
 
   // Funciones Admin
   const prepararEdicion = (producto: Product) => {
@@ -168,7 +175,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       disponibilidad: nuevaPieza.disponibilidad || 'Bajo Pedido',
       subcategoria: nuevaPieza.subcategoria || 'General', 
       color: nuevaPieza.color || '',
-      tallas: nuevaPieza.subcategoria === 'Anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
+      tallas: normalizeCatalogValue(nuevaPieza.subcategoria) === 'anillos' ? JSON.stringify(nuevaPieza.tallas) : null,
       imagen_url: imageUrl 
     };
 
@@ -198,10 +205,10 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Filtros Subcategorías */}
-      {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
+      {isJewelryCategory && (
         <div className="relative z-20 flex w-full flex-col items-center gap-2">
-          <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            <ul className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:w-auto sm:flex-nowrap sm:gap-4">
+          <div className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-3">
+            <ul className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-2 px-2 text-[10px] sm:w-auto sm:gap-4 sm:px-0 sm:text-xs">
               {subcategoriasJoyeria.map(sub => (
                 <li 
                   key={sub} 
@@ -214,7 +221,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             </ul>
 
             {/* Filtros (Acero Fino) */}
-            {category === 'Acero Fino' && (
+            {categoryKey === 'acero fino' && (
               <button
                 type="button"
                 onClick={() => {
@@ -231,7 +238,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             )}
           </div>
 
-          {category === 'Acero Fino' && (
+          {categoryKey === 'acero fino' && (
             <div
               id="product-filters"
               className={`relative z-20 w-full max-w-full self-center transition-all duration-300 ease-out ${showFilters ? 'pointer-events-auto mt-3 mb-5 max-h-[40rem] opacity-100' : 'pointer-events-none max-h-0 overflow-hidden opacity-0'}`}
@@ -396,14 +403,14 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-product-form-title"
-            className="glass-panel liquid-form p-6 md:p-10 relative w-full max-w-4xl rounded-[2rem] max-h-[90vh] overflow-y-auto m-auto"
+            className="glass-panel liquid-form relative m-auto max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto rounded-[2rem] p-4 sm:p-6 md:p-10"
           >
             <button type="button" onClick={solicitarCierre} aria-label="Cerrar edición" className="absolute top-4 right-6 text-gray-500 hover:text-white text-3xl cursor-pointer bg-transparent border-none outline-none z-50 transition-colors">×</button>
             <h3 id="admin-product-form-title" className="text-[10px] md:text-sm tracking-[0.3em] uppercase text-white mb-6 text-center drop-shadow-md">{editandoId ? 'EDITAR PIEZA' : 'DETALLES DE LA NUEVA PIEZA'}</h3>
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
               <div className="mb-6 flex justify-center bg-transparent p-0">
-                <img src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
               </div>
             )}
 
@@ -430,11 +437,11 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                 />
               </label>
               
-              {nuevaPieza.subcategoria !== 'Anillos' && (
+              {normalizeCatalogValue(nuevaPieza.subcategoria) !== 'anillos' && (
                 <input type="text" value={nuevaPieza.disponibilidad} onChange={e => setNuevaPieza({...nuevaPieza, disponibilidad: e.target.value})} placeholder="DISPONIBILIDAD (EJ: 5 EN STOCK)" className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-400 text-center hover:border-white/50 focus:border-white transition-colors" />
               )}
               
-              {['Acero Fino', 'Plata de Ley 925'].includes(category) && (
+              {isJewelryCategory && (
                 <div className="relative w-full z-[160]" onMouseLeave={() => setOpenFormSelect(null)}>
                   <div onClick={() => setOpenFormSelect(openFormSelect === 'subcat' ? null : 'subcat')} className="w-full bg-transparent border-b border-white/20 text-gray-500 hover:text-white text-[10px] md:text-xs tracking-[0.2em] py-2 cursor-pointer text-center transition-colors uppercase">
                     {nuevaPieza.subcategoria || 'TIPO DE JOYA (OPCIONAL)'}
@@ -485,7 +492,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
               </div>
             )}
 
-            {nuevaPieza.subcategoria === 'Anillos' && (
+            {normalizeCatalogValue(nuevaPieza.subcategoria) === 'anillos' && (
               <div className="w-full flex flex-col items-center mt-4 mb-8 pb-6 border-b border-white/5">
                 <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                 <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
@@ -513,7 +520,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                 aria-modal="true"
                 aria-labelledby="discard-product-changes-title"
                 aria-describedby="discard-product-changes-description"
-                className="glass-panel w-full max-w-md rounded-2xl p-6 md:p-8 text-center"
+                className="glass-panel max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-2xl p-4 text-center sm:p-6 md:p-8"
               >
                 <h4 id="discard-product-changes-title" className="text-xs md:text-sm tracking-[0.2em] uppercase text-white">
                   ¿Seguro deseas cerrar sin guardar los cambios?
@@ -546,7 +553,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="grid w-full grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 md:gap-5 mt-8">
+      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 
@@ -559,7 +566,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
         {productosMostrar.length === 0 && (
           <div className="col-span-full text-center py-20">
             <p className="text-gray-400 tracking-[0.14em] uppercase text-[11px]">
-              {category === 'deseos' ? 'No hay piezas en su lista de deseos aún.' : 'No hay piezas en esta categoría aún.'}
+              {categoryKey === 'deseos' ? 'No hay piezas en su lista de deseos aún.' : 'No hay piezas en esta categoría aún.'}
             </p>
           </div>
         )}

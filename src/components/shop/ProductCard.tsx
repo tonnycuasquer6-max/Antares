@@ -38,8 +38,8 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   const [isSavingSale, setIsSavingSale] = useState(false);
 
   const tallasObj = parseTallasseguro(producto.tallas);
-  const isRing = producto.subcategoria === 'Anillos';
-  const isJewelry = ['Joyería Exclusiva', 'Acero Fino', 'Plata de Ley 925', 'Gemas y Piedras Naturales'].includes(producto.categoria);
+  const isRing = producto.subcategoria?.toLowerCase().trim() === 'anillos';
+  const isJewelry = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(producto.categoria?.toLowerCase().trim() ?? '');
   const stockDisponible = parseInt(String(producto.disponibilidad));
   const cantidadSeleccionada = cantidadesPorTalla.general || 0;
   const canBuy = isRing
@@ -299,7 +299,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
             aria-labelledby={`sale-form-title-${producto.id}`}
             onSubmit={handleSaveSale}
             onClick={e => e.stopPropagation()}
-            className="glass-panel w-full max-w-md rounded-sm p-6 md:p-8"
+            className="glass-panel max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-sm p-4 sm:p-6 md:p-8"
           >
             <h3 id={`sale-form-title-${producto.id}`} className="text-sm tracking-[0.2em] uppercase text-white">
               Registrar venta: {producto.titulo}

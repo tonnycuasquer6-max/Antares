@@ -131,10 +131,10 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                       
                       return (
                         <div key={clientKey} className="glass-panel p-4 md:p-6 rounded-sm w-full transition-all duration-300">
-                            <div className="flex justify-between items-center cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
-                              <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-between gap-3 cursor-pointer" onClick={() => setPedidoExpandido(isExpanded ? null : expandKey)}>
+                              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white text-black flex items-center justify-center font-bold text-lg sm:text-xl rounded-full uppercase shadow-[0_0_15px_rgba(255,255,255,0.4)]">{nombre.charAt(0)}</div>
-                                  <div>
+                                  <div className="min-w-0">
                                     <p className="text-white text-[10px] sm:text-[12px] tracking-[0.2em] uppercase font-bold drop-shadow-md">{nombre}</p>
                                     <p className="text-gray-400 text-[8px] sm:text-[10px] tracking-[0.1em] mt-1 flex items-center gap-2">
                                       <svg fill="currentColor" viewBox="0 0 16 16" height="10" width="10"><path fillRule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/></svg>
@@ -163,7 +163,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
                                           {(JSON.parse(pedido.productos) as PedidoProducto[]).map((prod, i) => (
                                             <div key={i} className="flex items-center justify-between text-[10px] sm:text-[12px] text-gray-300 border-b border-white/5 pb-2">
                                               <div className="flex items-center gap-4 text-left w-full">
-                                                <img loading="lazy" src={optimizeCloudinaryUrl(prod.imagen_url, 200)} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1" />
+                                                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(prod.imagen_url, 200)} alt={prod.titulo} className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 object-cover bg-neutral-900/40 rounded-md shadow-inner p-1" />
                                                 <div className="flex flex-col text-left flex-grow">
                                                   <span className="truncate pr-2 uppercase text-white tracking-[0.2em] font-bold drop-shadow-sm">{prod.cantidad}x {prod.titulo}</span>
                                                   {prod.tallaSeleccionada && <span className="text-gray-500 mt-1.5 uppercase tracking-[0.2em] text-[8px] sm:text-[10px]">Talla: {prod.tallaSeleccionada}</span>}

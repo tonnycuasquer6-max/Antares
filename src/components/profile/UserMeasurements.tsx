@@ -56,10 +56,10 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
 
   return (
     <section className="container mx-auto px-4 py-12 md:py-20 flex-grow animate-fade-in w-full max-w-4xl relative z-10">
-      <div className="glass-panel p-6 md:p-12 relative rounded-[2rem]">
+      <div className="glass-panel relative rounded-[2rem] p-4 sm:p-6 md:p-12">
         
-        <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
-          <h2 className="text-[12px] md:text-[16px] tracking-[0.4em] uppercase text-white font-light drop-shadow-md">Configuración de Medidas</h2>
+        <div className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-[12px] font-light uppercase tracking-[0.2em] text-white drop-shadow-md sm:tracking-[0.4em] md:text-[16px]">Configuración de Medidas</h2>
           <button 
             onClick={() => onNavigate('perfil')} 
             className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase text-gray-500 hover:text-white transition-colors bg-transparent border-none cursor-pointer outline-none flex items-center gap-2"
@@ -70,16 +70,16 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
         </div>
 
         {/* TABS */}
-        <div className="flex justify-center gap-8 mb-10 border-b border-white/10 pb-0">
+        <div className="mb-10 flex flex-wrap justify-center gap-x-6 gap-y-2 border-b border-white/10 pb-0 sm:gap-8">
           <button 
             onClick={() => setTabMedidas('anillos')} 
-            className={`text-[10px] md:text-[12px] tracking-[0.2em] uppercase transition-all duration-300 pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'anillos' ? 'text-white border-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+            className={`pb-4 -mb-[2px] border-b-2 bg-transparent text-[9px] uppercase tracking-[0.12em] transition-all duration-300 outline-none cursor-pointer sm:text-[12px] sm:tracking-[0.2em] ${tabMedidas === 'anillos' ? 'text-white border-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
           >
             Tallas de Anillos
           </button>
           <button 
             onClick={() => setTabMedidas('cuerpo')} 
-            className={`text-[10px] md:text-[12px] tracking-[0.2em] uppercase transition-all duration-300 pb-4 -mb-[2px] border-b-2 outline-none cursor-pointer bg-transparent ${tabMedidas === 'cuerpo' ? 'text-white border-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+            className={`pb-4 -mb-[2px] border-b-2 bg-transparent text-[9px] uppercase tracking-[0.12em] transition-all duration-300 outline-none cursor-pointer sm:text-[12px] sm:tracking-[0.2em] ${tabMedidas === 'cuerpo' ? 'text-white border-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
           >
             Medidas Corporales
           </button>

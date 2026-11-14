@@ -193,7 +193,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       triggerStarAnimation(e);
     }
 
-    const isRing = producto.subcategoria === 'Anillos';
+    const isRing = producto.subcategoria?.toLowerCase().trim() === 'anillos';
 
     setCarrito(prev => {
       const newCart = [...prev];

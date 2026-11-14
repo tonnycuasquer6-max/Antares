@@ -32,7 +32,7 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
   }, []);
 
   const tallasObj = parseTallasseguro(producto.tallas);
-  const isRing = producto.subcategoria === 'Anillos';
+  const isRing = producto.subcategoria?.toLowerCase().trim() === 'anillos';
   const stockDisponible = Number.parseInt(String(producto.disponibilidad), 10);
   const cantidadTotalTallas = Object.values(cantidadesPorTalla).reduce((total, value) => total + value, 0);
   const cantidadMaxima = Number.isFinite(stockDisponible) && stockDisponible >= 0 ? stockDisponible : 99;
@@ -67,24 +67,26 @@ export default function ProductModal({ producto, userRole, onClose }: ProductMod
 
   return createPortal((
     <div 
-      className="fixed inset-0 z-[100] flex h-[100dvh] w-full items-center justify-center overscroll-none bg-black/80 p-0 backdrop-blur-md sm:p-4 animate-fade-in" 
+      className="fixed inset-0 z-[100] flex h-[100dvh] w-full items-center justify-center overscroll-none bg-black/80 p-2 backdrop-blur-md sm:p-4 animate-fade-in" 
       onClick={onClose}
     >
       <div 
-        className="glass-panel relative flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col items-stretch overflow-y-auto rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:rounded-sm md:h-auto md:max-h-[90dvh] md:max-w-3xl md:flex-row md:overflow-hidden lg:max-w-4xl" 
+        className="glass-panel relative flex max-h-[90vh] w-[95vw] max-w-lg flex-col items-stretch overflow-y-auto rounded-sm md:max-h-[90dvh] md:max-w-3xl md:flex-row md:overflow-hidden lg:max-w-4xl" 
         onClick={e => e.stopPropagation()}
       >
         
         <button 
           onClick={onClose} 
-          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 z-[250] text-2xl sm:text-3xl cursor-pointer bg-black/50 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center border-none outline-none transition-transform hover:scale-110"
+          className="fixed right-[calc(2.5vw+0.5rem)] top-[calc(5vh+0.5rem)] text-white hover:text-gray-300 z-[250] text-2xl sm:text-3xl cursor-pointer bg-black/70 sm:bg-black/50 rounded-full w-9 h-9 flex items-center justify-center border-none outline-none transition-transform hover:scale-110"
         >
           ×
         </button>
 
         <div className="relative m-0 flex aspect-square w-full shrink-0 flex-col justify-center overflow-hidden bg-black/40 p-0 md:w-1/2 md:flex-none">
           <img 
-            src={optimizeCloudinaryUrl(producto.imagen_url, 1000)}
+            loading="lazy"
+            decoding="async"
+            src={optimizeCloudinaryUrl(producto.imagen_url, 800)}
             alt={producto.titulo} 
             className="block h-full w-full object-contain bg-neutral-900/40 p-0 opacity-90" 
           />

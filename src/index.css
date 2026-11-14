@@ -19,6 +19,7 @@
     font-size: 1rem;
     line-height: 1.6;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
   
   * {
@@ -1203,6 +1204,21 @@ textarea {
   max-height: min(60dvh, 26rem);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.delivery-map-container > div {
+  height: 50vh;
+}
+
+.delivery-map-container .mapboxgl-ctrl-top-right {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .delivery-map-container > div {
+    height: 65vh;
+  }
 }
 
 @media (max-width: 640px) {
