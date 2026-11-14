@@ -10,6 +10,14 @@ La tarifa se calcula exclusivamente con la distancia lineal desde `STORE_ORIGIN`
 
 Para habilitar la restauración de stock y la eliminación de ventas desde el historial, ejecuta el `supabase/schema.sql` actualizado en el SQL Editor de Supabase con un usuario propietario del proyecto. La reversión requiere la contraseña `0211` y una sesión de administrador.
 
+## Redirección de Google Auth
+
+En **Supabase → Authentication → URL Configuration**, configura el **Site URL** como `https://antares-beige.vercel.app` y agrega `https://antares-beige.vercel.app/` a **Redirect URLs**. Para desarrollo local, agrega también `http://localhost:5173/`. El flujo de autenticación en producción vuelve siempre a `https://antares-beige.vercel.app/`; `supabase/config.toml` mantiene permitidas las rutas locales para desarrollo.
+
+## Lectura pública del catálogo
+
+Si el catálogo no devuelve productos para clientes, ejecuta `supabase/public_catalog_access.sql` en el SQL Editor de Supabase como propietario del proyecto. El script concede `SELECT` a `anon` y `authenticated` sobre la vista `productos_publicos`, que solo expone productos publicados y omite los campos internos de costo y margen. No concedas lectura pública directa sobre `productos`.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
