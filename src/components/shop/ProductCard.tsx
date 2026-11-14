@@ -40,6 +40,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   const tallasObj = parseTallasseguro(producto.tallas);
   const isRing = producto.subcategoria?.toLowerCase().trim() === 'anillos';
   const isJewelry = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(producto.categoria?.toLowerCase().trim() ?? '');
+  const canFlipCard = userRole === 'admin';
   const stockDisponible = parseInt(String(producto.disponibilidad));
   const cantidadSeleccionada = cantidadesPorTalla.general || 0;
   const canBuy = isRing
@@ -151,16 +152,16 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   };
 
   return (
-    <div className="group relative w-full [perspective:1200px]">
-      <div className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] [-webkit-transform-style:preserve-3d] ${showSaleForm ? '[transform:rotateY(180deg)]' : ''}`}>
+    <div className={`group relative h-full w-full ${canFlipCard ? '[perspective:1200px]' : ''}`}>
+      <div className={`relative h-full w-full ${canFlipCard ? 'transition-transform duration-500 [transform-style:preserve-3d] [-webkit-transform-style:preserve-3d]' : ''} ${canFlipCard && showSaleForm ? '[transform:rotateY(180deg)]' : ''}`}>
         <div
           aria-hidden={showSaleForm}
-          className={`relative flex flex-col w-full p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel [backface-visibility:hidden] [-webkit-backface-visibility:hidden] ${showSaleForm ? '' : isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'} ${showSaleForm ? 'pointer-events-none' : ''}`}
+          className={`relative flex h-full w-full flex-col p-0 text-shadow transition-all duration-500 glass-panel [backface-visibility:hidden] [-webkit-backface-visibility:hidden] ${showSaleForm ? '' : isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'} ${showSaleForm ? 'pointer-events-none' : ''}`}
         >
 
       {/* Imagen */}
-      <div className="relative w-full aspect-[4/5] overflow-hidden bg-neutral-900" onClick={onClick}>
-        <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className={`w-full h-full object-cover bg-neutral-900/40 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} />
+      <div className="relative w-full aspect-square overflow-hidden bg-neutral-900" onClick={onClick}>
+        <img loading="lazy" decoding="async" fetchPriority="low" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className={`w-full h-full object-contain bg-neutral-900/40 opacity-80 group-hover:opacity-100 transition-opacity duration-700 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} />
         
         {producto.vendido && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -182,17 +183,17 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       </div>
       
       {/* Info */}
-      <div className="mt-3 sm:mt-4 flex flex-col flex-grow text-center w-full z-10 relative">
+      <div className="relative z-10 mt-2 flex w-full flex-1 flex-col px-3 pb-3 text-center sm:px-4 sm:pb-4">
         <div className="flex flex-row justify-between items-center w-full gap-3 mb-1.5">
           <h4 className="text-left text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white line-clamp-2 break-words min-w-0 group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
           <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
         </div>
         
-        <div className="flex flex-col w-full mt-auto">
-          <div className="flex flex-col w-full gap-4 mt-4">
-            <div className="w-full min-h-32 flex flex-col justify-center">
+        <div className="flex w-full flex-1 flex-col">
+          <div className={`flex w-full flex-col ${isRing ? 'mt-auto gap-4 pt-3' : 'flex-1 gap-2'}`}>
+            <div className={`flex w-full flex-col ${isRing ? '' : 'flex-1 items-center justify-center'}`}>
             {isDescriptionExpanded ? (
-              <div className="h-full max-h-full w-full overflow-y-auto text-center text-xs text-gray-300 leading-snug break-words uppercase">
+              <div className="w-full break-words text-center text-xs leading-snug text-gray-300 uppercase">
                 {producto.descripcion}
               </div>
             ) : (
@@ -214,13 +215,15 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                             >
                               <span>{talla}</span>
                             </button>
-                            {isAvailable ? (
-                              <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400">
+                            <div className="flex h-4 items-center justify-center gap-1 text-[9px] text-gray-400 sm:text-[10px]">
+                              {isAvailable ? (
+                                <>
                                 <button type="button" aria-label={`Reducir cantidad de talla ${talla}`} disabled={!isSelected || !(cantidadesPorTalla[talla] || 0)} onClick={(e) => handleCantidad(e, talla, -1, stock)} className="px-1 disabled:opacity-30">-</button>
                                 <span className="min-w-3 text-center">{cantidadesPorTalla[talla] || 0}</span>
                                 <button type="button" aria-label={`Aumentar cantidad de talla ${talla}`} disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock} onClick={(e) => handleCantidad(e, talla, 1, stock)} className="px-1 disabled:opacity-30">+</button>
-                              </div>
-                            ) : null}
+                                </>
+                              ) : null}
+                            </div>
                           </div>
                         );
                       })}
@@ -228,7 +231,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                 )}
                 
                 {!isRing && (
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex w-full items-center justify-center gap-3 text-center">
                     <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400">Cantidad</span>
                     <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="p-2 text-white disabled:opacity-30">-</button>
                     <span className="min-w-4 text-center text-white">{cantidadSeleccionada}</span>

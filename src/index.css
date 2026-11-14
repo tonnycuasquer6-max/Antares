@@ -147,6 +147,7 @@
     isolation: isolate;
     overflow: hidden;
     @apply bg-black/45 backdrop-blur-md border border-gray-800 shadow-2xl;
+    background-color: rgba(12, 12, 12, 0.82);
   }
 
   .product-card-surface::before {
@@ -1297,6 +1298,10 @@ textarea {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     background-color: rgba(12, 12, 12, 0.96);
+  }
+
+  .product-card-surface {
+    background-color: rgba(12, 12, 12, 0.82);
   }
 }
 

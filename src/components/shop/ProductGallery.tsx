@@ -14,7 +14,7 @@ interface ProductGalleryProps {
   userRole: string;
 }
 
-const PRODUCT_BATCH_SIZE = 16;
+const PRODUCT_BATCH_SIZE = 4;
 const normalizeCatalogValue = (value: string | null | undefined) => value?.toLowerCase().trim() ?? '';
 
 export default function ProductGallery({ category, userRole }: ProductGalleryProps) {
@@ -596,7 +596,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="mt-8 grid auto-rows-fr w-full grid-cols-1 items-stretch gap-2 px-0 sm:grid-cols-2 sm:gap-2 lg:grid-cols-3 xl:grid-cols-4">
         {productosMostrar.slice(0, visibleProductCount).map(producto => (
           <ProductCard 
             key={producto.id} 
