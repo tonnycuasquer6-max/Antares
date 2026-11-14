@@ -33,11 +33,14 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    const isMobile = window.innerWidth < 768;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const mobileQuery = window.matchMedia('(max-width: 768px), (pointer: coarse)');
+    let isMobile = mobileQuery.matches;
+    let pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.5);
     const resizeCanvas = () => {
       width = window.innerWidth;
       height = window.innerHeight;
+      isMobile = mobileQuery.matches;
+      pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.5);
       canvas.width = Math.floor(width * pixelRatio);
       canvas.height = Math.floor(height * pixelRatio);
       canvas.style.width = `${width}px`;
@@ -49,8 +52,8 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
     let time = 0;
     let animationFrame = 0;
     let lastFrameTime = 0;
-    const frameInterval = isMobile ? 1000 / 30 : 0;
-    const starCount = isMobile ? 90 : 180;
+    const frameInterval = 1000 / 30;
+    const starCount = isMobile ? 45 : 180;
     const skyStars: SkyStar[] = Array.from({ length: starCount }, (_, index) => ({
       x: (Math.sin(index * 12.9898) * 43758.5453) % 1,
       y: (Math.sin((index + 41) * 78.233) * 24634.6345) % 1,
@@ -99,7 +102,7 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
       });
 
       time += 0.01;
-      if (!document.hidden && !prefersReducedMotion) {
+      if (!isMobile && !document.hidden && !prefersReducedMotion) {
         animationFrame = requestAnimationFrame(draw);
       }
     };
@@ -108,8 +111,12 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
     draw();
 
     const handleResize = () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
       resizeCanvas();
-      if (!animationFrame && !document.hidden && !prefersReducedMotion) {
+      if (isMobile || document.hidden || prefersReducedMotion) {
+        draw(performance.now());
+      } else {
         animationFrame = requestAnimationFrame(draw);
       }
     };
@@ -117,28 +124,27 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
       if (document.hidden) {
         if (animationFrame) cancelAnimationFrame(animationFrame);
         animationFrame = 0;
-      } else if (!prefersReducedMotion && !animationFrame) {
+      } else if (!isMobile && !prefersReducedMotion && !animationFrame) {
         lastFrameTime = 0;
         animationFrame = requestAnimationFrame(draw);
       }
     };
 
     window.addEventListener('resize', handleResize);
+    mobileQuery.addEventListener('change', handleResize);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
+      mobileQuery.removeEventListener('change', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   return (
-    <>
-      <canvas 
-        ref={canvasRef} 
-        className={`liquid-background-canvas screen-only fixed inset-0 z-0 pointer-events-none opacity-100 ${className}`}
-      />
-      <div className={`screen-only fixed inset-0 z-0 pointer-events-none bg-transparent shadow-[inset_0_0_100px_rgba(0,0,0,0.28)] ${className}`}></div>
-    </>
+    <canvas
+      ref={canvasRef}
+      className={`liquid-background-canvas screen-only fixed inset-0 z-0 pointer-events-none opacity-100 shadow-[inset_0_0_100px_rgba(0,0,0,0.28)] ${className}`}
+    />
   );
 }

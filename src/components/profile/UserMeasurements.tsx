@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import manos from '../../assets/Manos.png';
 import iconos from '../../assets/ICONOS.png';
 import { femaleMeasurements, maleMeasurements, type BodyMeasurementDefinition } from '../../data/bodyMeasurements';
@@ -20,22 +20,34 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
   const [medidasCorporales, setMedidasCorporales] = useState<Record<string, string>>({});
   const [instruccionAbierta, setInstruccionAbierta] = useState<string | null>(null);
   const [guardandoMedidas, setGuardandoMedidas] = useState(false);
+  const isMounted = useRef(false);
   const bodyMeasurements: BodyMeasurementDefinition[] = bodyGender === 'female' ? femaleMeasurements : maleMeasurements;
 
   useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
+    let isCurrent = true;
     const cargarMedidas = async () => {
       const { data } = await supabase
         .from('perfiles')
         .select('medidas_anillos, medidas_corporales, genero_medidas')
         .eq('id', user.id)
         .single();
-      if (!data) return;
+      if (!isCurrent || !data) return;
       if (data.medidas_anillos && typeof data.medidas_anillos === 'object') setMedidasAnillo(data.medidas_anillos);
       if (data.medidas_corporales && typeof data.medidas_corporales === 'object') setMedidasCorporales(data.medidas_corporales);
       if (data.genero_medidas === 'female' || data.genero_medidas === 'male') setBodyGender(data.genero_medidas);
     };
-    cargarMedidas();
+    void cargarMedidas();
+    return () => {
+      isCurrent = false;
+    };
   }, [user]);
 
   const guardarMedidas = async () => {
@@ -46,6 +58,7 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
       medidas_corporales: medidasCorporales,
       genero_medidas: bodyGender
     }).eq('id', user.id);
+    if (!isMounted.current) return;
     setGuardandoMedidas(false);
     if (error) {
       alert('No se pudieron guardar las medidas. Inténtalo nuevamente.');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '../../services/supabase';
 import { useShop } from '../../context/ShopContext';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
@@ -23,6 +23,7 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
   const [listaPedidos, setListaPedidos] = useState<PedidoData[]>([]);
   const [pedidoExpandido, setPedidoExpandido] = useState<string | null>(null);
   const { parseTallasseguro, fetchProductos } = useShop();
+  const isMounted = useRef(false);
 
   const fetchPedidosAdmin = useCallback(async () => {
     const { data } = await supabase.from('pedidos').select('*').order('id', { ascending: false });
@@ -30,18 +31,18 @@ export default function AdminOrders({ userRole }: AdminOrdersProps) {
   }, []);
 
   useEffect(() => {
-    let isCurrent = true;
+    isMounted.current = true;
     void fetchPedidosAdmin().then(data => {
-      if (isCurrent && data) setListaPedidos(data);
+      if (isMounted.current && data) setListaPedidos(data);
     });
     return () => {
-      isCurrent = false;
+      isMounted.current = false;
     };
   }, [fetchPedidosAdmin]);
 
   const actualizarListaPedidos = async () => {
     const data = await fetchPedidosAdmin();
-    if (data) setListaPedidos(data);
+    if (isMounted.current && data) setListaPedidos(data);
   };
 
   const completarPedido = async (pedido: PedidoData) => {

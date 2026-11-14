@@ -32,10 +32,13 @@ export default function PretAPorter() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let isCurrent = true;
+    let logoImg: HTMLImageElement | null = null;
     const shirtImg = new Image();
     shirtImg.crossOrigin = "Anonymous";
     
     shirtImg.onload = () => {
+      if (!isCurrent) return;
       canvas.width = shirtImg.width;
       canvas.height = shirtImg.height;
       ctx.drawImage(shirtImg, 0, 0);
@@ -50,9 +53,10 @@ export default function PretAPorter() {
       }
       
       if (customLogo) {
-        const logoImg = new Image();
+        logoImg = new Image();
         logoImg.onload = () => {
-          let x = 0, y = 0, baseSize = 0;
+          if (!isCurrent || !logoImg) return;
+          let x: number, y: number, baseSize: number;
           const shirtWidth = canvas.width;
           const shirtHeight = canvas.height;
           
@@ -77,15 +81,26 @@ export default function PretAPorter() {
           const aspectLogo = logoImg.width / logoImg.height;
           
           ctx.drawImage(logoImg, x - finalSize/2, finalY - (finalSize/aspectLogo)/2, finalSize, finalSize/aspectLogo);
-          setCustomRenderedImage(canvas.toDataURL());
+          if (isCurrent) setCustomRenderedImage(canvas.toDataURL());
         };
         logoImg.src = customLogo;
       } else {
-        setCustomRenderedImage(canvas.toDataURL());
+        if (isCurrent) setCustomRenderedImage(canvas.toDataURL());
       }
     };
-    shirtImg.onerror = () => { setCustomRenderedImage(null); };
+    shirtImg.onerror = () => {
+      if (isCurrent) setCustomRenderedImage(null);
+    };
     shirtImg.src = getMockupUrl(customPrenda, customVista);
+
+    return () => {
+      isCurrent = false;
+      shirtImg.onload = null;
+      shirtImg.onerror = null;
+      if (logoImg) logoImg.onload = null;
+      canvas.width = 0;
+      canvas.height = 0;
+    };
   }, [customColor, customLogo, customPlacement, customVista, sizeOffset, yOffset, customPrenda]);
 
   const procesarInsigniaLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,14 +158,10 @@ export default function PretAPorter() {
   };
 
   const getCalculatedPrice = () => {
-     let basePrice = 0;
-     switch(customPrenda) {
-       case 'Camiseta': basePrice = 5.99; break;
-       case 'Buso': basePrice = 8.99; break;
-       case 'Hoodie': basePrice = 12.99; break;
-       case 'Capucha': basePrice = 16.99; break;
-       default: basePrice = 5.99;
-     }
+     const basePrice = customPrenda === 'Buso' ? 8.99
+       : customPrenda === 'Hoodie' ? 12.99
+         : customPrenda === 'Capucha' ? 16.99
+           : 5.99;
      let stampPrice = 0;
      if (customLogo) {
         if (customVista === 'frente') {

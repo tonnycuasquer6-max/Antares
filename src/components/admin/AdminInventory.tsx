@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, ChevronDown, ChevronUp, DollarSign, Download, Info, Package, Percent, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
@@ -140,6 +140,7 @@ export default function AdminInventory() {
   const [busquedaVentas, setBusquedaVentas] = useState('');
   const [isRankingVisible, setIsRankingVisible] = useState(false);
   const [isRetirosModalOpen, setIsRetirosModalOpen] = useState(false);
+  const isMounted = useRef(false);
   const formatCurrency = useMemo(
     () => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
     []
@@ -152,6 +153,13 @@ export default function AdminInventory() {
     () => new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'UTC' }),
     []
   );
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -170,11 +178,12 @@ export default function AdminInventory() {
     };
   }, [setProductos]);
 
-  const fetchSales = useCallback(async () => {
+  const fetchSales = useCallback(async (isActive: () => boolean = () => isMounted.current) => {
     const [ordersResult, manualSalesResult] = await Promise.all([
       supabase.from('pedidos').select('*').order('id', { ascending: false }),
       supabase.from('ventas_manuales').select('*').order('fecha_venta', { ascending: false }).order('id', { ascending: false })
     ]);
+    if (!isActive()) return;
     if (ordersResult.error) {
       console.error('No se pudo cargar el historial de pedidos:', ordersResult.error);
     } else if (ordersResult.data) {
@@ -190,10 +199,16 @@ export default function AdminInventory() {
   }, []);
 
   useEffect(() => {
-    const refreshSales = () => { void fetchSales(); };
+    let isCurrent = true;
+    const refreshSales = () => {
+      if (isCurrent) void fetchSales(() => isCurrent);
+    };
     window.addEventListener('antares-manual-sale-recorded', refreshSales);
     queueMicrotask(refreshSales);
-    return () => window.removeEventListener('antares-manual-sale-recorded', refreshSales);
+    return () => {
+      isCurrent = false;
+      window.removeEventListener('antares-manual-sale-recorded', refreshSales);
+    };
   }, [fetchSales]);
 
   const ventasDesglosadas = useMemo(() => {

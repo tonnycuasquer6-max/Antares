@@ -44,9 +44,22 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [nuevaPieza, setNuevaPieza] = useState<NuevaPieza>({ 
     titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
+  const [imagenPreviewUrl, setImagenPreviewUrl] = useState<string | null>(null);
+  const imagenPreviewRef = useRef<string | null>(null);
 
   const categoryKey = normalizeCatalogValue(category);
   const isJewelryCategory = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(categoryKey);
+
+  const actualizarImagenPreview = useCallback((file: File | null) => {
+    if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current);
+    const objectUrl = file ? URL.createObjectURL(file) : null;
+    imagenPreviewRef.current = objectUrl;
+    setImagenPreviewUrl(objectUrl);
+  }, []);
+
+  useEffect(() => () => {
+    if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current);
+  }, []);
 
   // Filtros
   const productosMostrar = useMemo(() => {
@@ -82,6 +95,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
 
   // Funciones Admin
   const prepararEdicion = (producto: Product) => {
+    actualizarImagenPreview(null);
     const pieza: NuevaPieza = {
       titulo: producto.titulo, 
       descripcion: producto.descripcion || '', 
@@ -103,12 +117,13 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   };
 
   const cerrarFormulario = useCallback(() => {
+    actualizarImagenPreview(null);
     setShowInlineForm(false);
     setShowCloseConfirmation(false);
     setEditandoId(null);
     originalPieza.current = null;
     setNuevaPieza({ titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' });
-  }, []);
+  }, [actualizarImagenPreview]);
 
   const solicitarCierre = useCallback(() => {
     const original = originalPieza.current;
@@ -410,7 +425,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             
             {(nuevaPieza.imagen || nuevaPieza.imagen_url) && (
               <div className="mb-6 flex justify-center bg-transparent p-0">
-                <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(nuevaPieza.imagen ? URL.createObjectURL(nuevaPieza.imagen) : nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                <img loading="lazy" decoding="async" src={imagenPreviewUrl || optimizeCloudinaryUrl(nuevaPieza.imagen_url, 600)} alt="Vista previa" className="h-40 md:h-64 w-auto object-contain bg-neutral-900/40 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
               </div>
             )}
 
@@ -509,7 +524,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             <textarea value={nuevaPieza.descripcion} onChange={e => setNuevaPieza({...nuevaPieza, descripcion: e.target.value})} placeholder="DESCRIPCIÓN EDITORIAL..." rows={3} className="w-full bg-transparent border-b border-white/20 text-white text-[10px] md:text-xs tracking-[0.2em] py-2 outline-none placeholder-gray-500 text-center hover:border-white/50 focus:border-white transition-colors mb-8 resize-none"></textarea>
             
             <div className="flex flex-col md:flex-row items-center justify-center gap-10 bg-transparent p-0 w-full">
-              <input type="file" onChange={e => setNuevaPieza({...nuevaPieza, imagen: e.target.files?.[0] || null})} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
+              <input type="file" onChange={e => { const file = e.target.files?.[0] || null; actualizarImagenPreview(file); setNuevaPieza(current => ({ ...current, imagen: file })); }} className="text-[10px] md:text-xs text-gray-500 file:mr-4 file:py-2 file:px-6 file:border file:border-gray-500 hover:file:border-white file:tracking-[0.2em] file:uppercase file:bg-transparent file:text-gray-500 hover:file:text-white transition-colors cursor-pointer w-full md:w-auto" />
               <button type="submit" className="bg-white text-black hover:bg-gray-300 transition-all duration-300 cursor-pointer outline-none border-none text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase px-12 py-4 w-full md:w-auto shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">{editandoId ? 'Guardar Cambios' : 'Publicar Pieza'}</button>
             </div>
           </form>

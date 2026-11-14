@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
-import type { NuevaPieza } from '../../types';
+import type { NuevaPieza, Product } from '../../types';
 
 interface BulkProductFormProps {
-  onSaved: (products: any[]) => void;
+  onSaved: (products: Product[]) => void;
 }
 
 interface BulkProduct extends NuevaPieza {
@@ -53,6 +53,18 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
   const [previewProduct, setPreviewProduct] = useState<BulkProduct | null>(null);
   const [saving, setSaving] = useState(false);
   const selected = products.find(product => product.id === selectedId) || null;
+  const selectedIndex = Math.max(0, products.findIndex(product => product.id === selectedId));
+  const visibleStart = Math.min(Math.max(0, selectedIndex - 4), Math.max(0, products.length - 9));
+  const visibleProducts = products.slice(visibleStart, visibleStart + 9);
+  const productsRef = useRef(products);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => () => {
+    productsRef.current.forEach(product => URL.revokeObjectURL(product.previewUrl));
+  }, []);
 
   useEffect(() => {
     if (!previewProduct) return;
@@ -89,6 +101,8 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
   };
 
   const removeProduct = (id: string) => {
+    const productToRemove = products.find(product => product.id === id);
+    if (productToRemove) URL.revokeObjectURL(productToRemove.previewUrl);
     setProducts(current => {
       const next = current.filter(product => product.id !== id);
       if (selectedId === id) setSelectedId(next[0]?.id || null);
@@ -162,13 +176,22 @@ export default function BulkProductForm({ onSaved }: BulkProductFormProps) {
       {products.length > 0 && (
         <>
           <div className="bulk-preview-cascade mt-8" aria-label="Previsualización de productos">
-            {products.map(product => (
+            {visibleProducts.map(product => (
               <div key={product.id} role="button" tabIndex={0} onClick={() => setSelectedId(product.id)} onKeyDown={event => { if (event.key === 'Enter') setSelectedId(product.id); }} className={`bulk-preview-item ${selectedId === product.id ? 'is-selected' : 'is-secondary'}`}>
                 <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(product.previewUrl, 200)} alt={product.titulo} className="object-cover bg-neutral-900/40" />
                 <span>{product.titulo || "\u00A0"}</span>
                 <button type="button" onClick={event => { event.stopPropagation(); removeProduct(product.id); }} className="bulk-preview-remove" aria-label={`Eliminar ${product.titulo}`}>×</button>
               </div>
             ))}
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-4 text-[9px] uppercase tracking-[0.15em] text-gray-500">
+            <button type="button" disabled={selectedIndex === 0} onClick={() => setSelectedId(products[selectedIndex - 1]?.id ?? null)} className="disabled:opacity-30">
+              Anterior
+            </button>
+            <span>{selectedIndex + 1} / {products.length}</span>
+            <button type="button" disabled={selectedIndex >= products.length - 1} onClick={() => setSelectedId(products[selectedIndex + 1]?.id ?? null)} className="disabled:opacity-30">
+              Siguiente
+            </button>
           </div>
 
           {selected && (

@@ -118,8 +118,9 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     if (data) setProductos(data);
   }, [userRole]);
 
-  const fetchConfiguracion = useCallback(async () => {
+  const fetchConfiguracion = useCallback(async (isActive: () => boolean = () => true) => {
     const { data } = await supabase.from('configuracion').select('menus_ocultos').eq('id', 1).maybeSingle();
+    if (!isActive()) return;
     const nextHiddenItems = normalizeHiddenItems(data?.menus_ocultos);
     const finalHiddenItems = nextHiddenItems.length > 0 ? nextHiddenItems : readStoredHiddenItems();
     setHiddenItems(current => {
@@ -145,7 +146,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const loadInitialData = async () => {
-      await Promise.all([loadInitialProducts(), fetchConfiguracion()]);
+      await Promise.all([loadInitialProducts(), fetchConfiguracion(() => isCurrent)]);
     };
     void loadInitialData();
     return () => {
@@ -154,7 +155,8 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchConfiguracion, userRole]);
 
   useEffect(() => {
-    const refreshConfiguracion = () => { fetchConfiguracion(); };
+    let isCurrent = true;
+    const refreshConfiguracion = () => { void fetchConfiguracion(() => isCurrent); };
     const channel = supabase
       .channel('configuracion-menu-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracion', filter: 'id=eq.1' }, refreshConfiguracion)
@@ -162,6 +164,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
 
     window.addEventListener('focus', refreshConfiguracion);
     return () => {
+      isCurrent = false;
       window.removeEventListener('focus', refreshConfiguracion);
       void supabase.removeChannel(channel);
     };

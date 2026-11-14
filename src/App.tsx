@@ -31,8 +31,10 @@ export default function App() {
   const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
   const sessionVersion = useRef(0);
   const activeSessionUserId = useRef<string | null | undefined>(undefined);
+  const authListenerActive = useRef(false);
 
   const handleUserSession = async (currentUser: User | null) => {
+    if (!authListenerActive.current) return;
     const userId = currentUser?.id ?? null;
     setUser(currentUser);
     if (activeSessionUserId.current === userId) return;
@@ -48,12 +50,12 @@ export default function App() {
           .select('rol')
           .eq('id', currentUser.id)
           .single();
-        if (currentVersion === sessionVersion.current) {
+        if (authListenerActive.current && currentVersion === sessionVersion.current) {
           setUserRole(data?.rol || 'cliente');
         }
       } catch (error: unknown) {
         console.error('No se pudo cargar el rol de usuario desde Supabase.', error);
-        if (currentVersion === sessionVersion.current) setUserRole('cliente');
+        if (authListenerActive.current && currentVersion === sessionVersion.current) setUserRole('cliente');
       }
     } else {
       setUserRole('cliente');
@@ -62,15 +64,17 @@ export default function App() {
   };
 
   useEffect(() => {
-    let active = true;
+    authListenerActive.current = true;
+    let timeoutId: number | undefined;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      window.setTimeout(() => {
-        if (active) void handleUserSession(session?.user ?? null);
+      timeoutId = window.setTimeout(() => {
+        if (authListenerActive.current) void handleUserSession(session?.user ?? null);
       }, 0);
     });
 
     return () => {
-      active = false;
+      authListenerActive.current = false;
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -86,9 +90,12 @@ export default function App() {
     const rememberScrollPosition = () => sessionStorage.setItem('antares_scroll_position', String(window.scrollY));
 
     window.history.scrollRestoration = 'manual';
-    requestAnimationFrame(restoreScrollPosition);
+    const animationFrame = requestAnimationFrame(restoreScrollPosition);
     window.addEventListener('scroll', rememberScrollPosition, { passive: true });
-    return () => window.removeEventListener('scroll', rememberScrollPosition);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('scroll', rememberScrollPosition);
+    };
   }, []);
 
   if (!areSupabaseCredentialsSet) return null;
