@@ -14,6 +14,7 @@ interface ProductGalleryProps {
   userRole: string;
 }
 
+const PRODUCT_BATCH_SIZE = 16;
 const normalizeCatalogValue = (value: string | null | undefined) => value?.toLowerCase().trim() ?? '';
 
 export default function ProductGallery({ category, userRole }: ProductGalleryProps) {
@@ -32,8 +33,8 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [ordenPrecio, setOrdenPrecio] = useState<string>('');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const [readyCategory, setReadyCategory] = useState(category);
+  const [productBatch, setProductBatch] = useState({ key: '', count: PRODUCT_BATCH_SIZE });
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   const [productoSeleccionado, setProductoSeleccionado] = useState<Product | null>(null);
   
@@ -42,46 +43,12 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const [editandoId, setEditandoId] = useState<string | number | null>(null);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
-  const showInlineFormRef = useRef(showInlineForm);
   const originalPieza = useRef<NuevaPieza | null>(null);
   const [nuevaPieza, setNuevaPieza] = useState<NuevaPieza>({ 
     titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
   });
   const [imagenPreviewUrl, setImagenPreviewUrl] = useState<string | null>(null);
   const imagenPreviewRef = useRef<string | null>(null);
-
-  if (readyCategory !== category) {
-    setReadyCategory(category);
-    setIsReady(false);
-  }
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setIsReady(true), 500);
-    return () => window.clearTimeout(timeoutId);
-  }, [category]);
-
-  useEffect(() => {
-    showInlineFormRef.current = showInlineForm;
-  }, [showInlineForm]);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    let timer = 0;
-    const unlockBodyWhenReady = () => {
-      if (showInlineFormRef.current || document.querySelector('[aria-modal="true"]')) {
-        timer = window.setTimeout(unlockBodyWhenReady, 100);
-        return;
-      }
-      document.body.style.overflow = previousOverflow || 'auto';
-    };
-
-    timer = window.setTimeout(unlockBodyWhenReady, 1000);
-    return () => {
-      window.clearTimeout(timer);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
 
   const categoryKey = normalizeCatalogValue(category);
   const isJewelryCategory = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(categoryKey);
@@ -128,6 +95,31 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     }
     return filtrados;
   }, [productos, categoryKey, activeSubCategory, filtroColor, filtroTalla, ordenPrecio, favoritos, parseTallasseguro]);
+  const productListKey = [categoryKey, activeSubCategory, filtroColor, filtroTalla, ordenPrecio].join('\u0000');
+  const visibleProductCount = typeof IntersectionObserver === 'undefined'
+    ? productosMostrar.length
+    : productBatch.key === productListKey ? productBatch.count : PRODUCT_BATCH_SIZE;
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || typeof IntersectionObserver === 'undefined' || visibleProductCount >= productosMostrar.length) return;
+
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        observer.disconnect();
+        setProductBatch(current => ({
+          key: productListKey,
+          count: Math.min(
+            (current.key === productListKey ? current.count : PRODUCT_BATCH_SIZE) + PRODUCT_BATCH_SIZE,
+            productosMostrar.length
+          )
+        }));
+      }
+    }, { rootMargin: '500px 0px' });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [productListKey, productosMostrar.length, visibleProductCount]);
 
   // Funciones Admin
   const prepararEdicion = (producto: Product) => {
@@ -604,8 +596,8 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className={`mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 ${isReady ? '' : 'pointer-events-none opacity-50'}`}>
-        {productosMostrar.map(producto => (
+      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+        {productosMostrar.slice(0, visibleProductCount).map(producto => (
           <ProductCard 
             key={producto.id} 
             producto={producto} 
@@ -614,6 +606,9 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
             onEdit={prepararEdicion}
           />
         ))}
+        {visibleProductCount < productosMostrar.length && (
+          <div ref={loadMoreRef} aria-hidden="true" className="col-span-full h-px" />
+        )}
         {productosMostrar.length === 0 && (
           <div className="col-span-full text-center py-20">
             <p className="text-gray-400 tracking-[0.14em] uppercase text-[11px]">
