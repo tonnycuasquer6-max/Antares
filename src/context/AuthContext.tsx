@@ -1,14 +1,6 @@
-import { createContext, useContext } from 'react';
+import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from '../types';
-
-interface AuthContextType {
-  user: User | null;
-  userRole: string;
-  setShowLoginModal: (show: boolean) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, type AuthContextType } from './auth-context';
 
 export const AuthProvider = ({ 
   children, 
@@ -17,17 +9,15 @@ export const AuthProvider = ({
   children: ReactNode; 
   value: AuthContextType 
 }) => {
+  const { user, userRole, setShowLoginModal } = value;
+  const stableValue = useMemo(
+    () => ({ user, userRole, setShowLoginModal }),
+    [user, userRole, setShowLoginModal]
+  );
+
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={stableValue}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

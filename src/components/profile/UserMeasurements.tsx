@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import manos from '../../assets/Manos.png';
 import iconos from '../../assets/ICONOS.png';
 import { femaleMeasurements, maleMeasurements, type BodyMeasurementDefinition } from '../../data/bodyMeasurements';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { supabase } from '../../services/supabase';
 
 interface UserMeasurementsProps {
@@ -125,7 +125,7 @@ export default function UserMeasurements({ onNavigate }: UserMeasurementsProps) 
                   ))}
                 </div>
               </div>
-              <img src={manos} alt="Guía de manos para tallas de anillos" className="ring-hand-image w-full h-auto object-contain opacity-75 select-none pointer-events-none" />
+              <img loading="lazy" decoding="async" src={manos} alt="Guía de manos para tallas de anillos" className="ring-hand-image w-full h-auto object-contain opacity-75 select-none pointer-events-none" />
             </div>
           </div>
         )}

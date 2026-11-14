@@ -1,4 +1,4 @@
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 
 export default function CartFlyAnimation() {
   const { stars } = useShop();

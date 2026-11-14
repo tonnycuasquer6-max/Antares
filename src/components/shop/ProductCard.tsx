@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import { supabase } from '../../services/supabase';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product } from '../../types';

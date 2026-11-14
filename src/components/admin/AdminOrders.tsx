@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '../../services/supabase';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { PedidoData } from '../../types';
 

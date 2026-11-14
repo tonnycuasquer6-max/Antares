@@ -67,7 +67,15 @@ export interface EnvioConfig {
 export interface User {
   id: string;
   email?: string;
-  user_metadata?: Record<string, any>;
+  user_metadata?: {
+    [key: string]: unknown;
+    tratamiento?: string;
+    first_name?: string;
+    second_name?: string;
+    last_name?: string;
+    second_last_name?: string;
+    telefono?: string;
+  };
 }
 
 export interface NuevaPieza {
@@ -79,7 +87,7 @@ export interface NuevaPieza {
   porcentaje_inversionista?: string | number;
   disponibilidad: string;
   subcategoria: string;
-  tallas: Record<string, any>;
+  tallas: Record<string, number | string>;
   color: string;
   imagen: File | null;
   imagen_url: string;

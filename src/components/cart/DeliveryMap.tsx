@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { useEffect } from 'react';
 import Map, { Marker, type MapRef } from 'react-map-gl/mapbox';
 import { MapPin } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -13,6 +14,10 @@ interface DeliveryMapProps {
 }
 
 export default function DeliveryMap({ mapRef, location, onLocationChange }: DeliveryMapProps) {
+  useEffect(() => () => {
+    mapRef.current?.getMap().remove();
+  }, [mapRef]);
+
   if (!mapboxToken) {
     return (
       <p role="alert" className="border border-red-400/30 bg-red-950/30 p-4 text-[10px] text-red-200">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useShop } from '../../context/ShopContext';
+import { useAuth } from '../../context/useAuth';
+import { useShop } from '../../context/useShop';
 import { getAuthRedirectUrl, supabase } from '../../services/supabase';
 import patron from '../../assets/patron.jpeg';
 import logo from '../../assets/logo.png';
@@ -62,13 +62,18 @@ export default function UserProfile({ onNavigate }: UserProfileProps) {
   };
 
   const profileDraftKey = `antares_profile_draft_${user?.id || 'guest'}`;
-  let savedDraft: Partial<{ tratamiento: string; firstName: string; secondName: string; lastName: string; secondLastName: string; telefono: string }> | null = null;
-  try {
-    const draft = localStorage.getItem(profileDraftKey);
-    savedDraft = draft ? JSON.parse(draft) : null;
-  } catch {
-    savedDraft = null;
-  }
+  const savedDraft = (() => {
+    try {
+      const draft = localStorage.getItem(profileDraftKey);
+      if (!draft) return null;
+      const parsed: unknown = JSON.parse(draft);
+      return typeof parsed === 'object' && parsed !== null
+        ? parsed as Partial<{ tratamiento: string; firstName: string; secondName: string; lastName: string; secondLastName: string; telefono: string }>
+        : null;
+    } catch {
+      return null;
+    }
+  })();
 
   const [profileForm, setProfileForm] = useState({
     tratamiento: String(savedDraft?.tratamiento ?? user?.user_metadata?.tratamiento ?? ''),

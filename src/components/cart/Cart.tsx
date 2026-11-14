@@ -1,8 +1,8 @@
 import { lazy, Suspense, useRef, useState } from 'react';
 import { distance, point } from '@turf/turf';
 import type { MapRef } from 'react-map-gl/mapbox';
-import { useShop } from '../../context/ShopContext';
-import { useAuth } from '../../context/AuthContext';
+import { useShop } from '../../context/useShop';
+import { useAuth } from '../../context/useAuth';
 import { supabase } from '../../services/supabase';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
@@ -104,7 +104,7 @@ export default function Cart() {
 
     const total = totalPedido;
     const nombreCliente = `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`;
-    const telfCliente = user?.user_metadata?.telefono || '';
+    const telfCliente = String(user?.user_metadata?.telefono || '');
     
     const { error: orderError } = await supabase.from('pedidos').insert([{
       cliente_nombre: nombreCliente,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 import type { Product } from '../../types';
 

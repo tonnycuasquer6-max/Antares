@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef, useMemo } from 'react';
 import { supabase, areSupabaseCredentialsSet } from './services/supabase';
 import type { User } from './types';
 
@@ -28,6 +28,10 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string>('cliente');
   const [user, setUser] = useState<User | null>(null);
+  const authContextValue = useMemo(
+    () => ({ user, userRole, setShowLoginModal }),
+    [user, userRole]
+  );
   const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
   const sessionVersion = useRef(0);
   const activeSessionUserId = useRef<string | null | undefined>(undefined);
@@ -126,7 +130,7 @@ export default function App() {
   };
 
   return (
-    <AuthProvider value={{ user, userRole, setShowLoginModal }}>
+    <AuthProvider value={authContextValue}>
       <ShopProvider>
         <div className="min-h-screen bg-black text-white font-serif flex flex-col relative w-full overflow-x-hidden overflow-y-auto selection:bg-white/30 selection:text-black transition-colors duration-700">
           

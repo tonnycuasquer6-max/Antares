@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
 
 const getMockupUrl = (prenda: string, vista: string) => {

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import { supabase } from '../../services/supabase';
@@ -512,7 +512,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
                 <p className="text-[10px] md:text-xs tracking-[0.2em] text-gray-300 mb-6 uppercase drop-shadow-md">Inventario por talla:</p>
                 <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
                   {tallasDisponibles.map(talla => (
-                    <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = parseInt(nuevaPieza.tallas[talla]) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
+                    <div key={talla} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => { const current = Number.parseInt(String(nuevaPieza.tallas[talla])) || 0; setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: current + 1 }}); }}>
                       <span className="text-white text-[12px] md:text-sm font-light font-serif">{talla}</span>
                       <input type="number" min="0" value={nuevaPieza.tallas[talla] || ''} onChange={(e) => setNuevaPieza({...nuevaPieza, tallas: { ...nuevaPieza.tallas, [talla]: e.target.value }})} onClick={(e) => e.stopPropagation()} placeholder="0" className="w-10 bg-transparent text-white text-center text-[10px] md:text-xs py-1 outline-none border-b border-white/20 placeholder-gray-500 transition-colors focus:border-white/50 m-0 font-serif" />
                     </div>

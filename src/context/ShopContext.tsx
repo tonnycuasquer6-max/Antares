@@ -1,32 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../services/supabase';
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
+import { ShopContext, type ShopContextType } from './shop-context';
 import type { Product, CartItem, Star, TallasType } from '../types';
-
-interface ShopContextType {
-  productos: Product[];
-  setProductos: React.Dispatch<React.SetStateAction<Product[]>>;
-  carrito: CartItem[];
-  setCarrito: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  favoritos: (string | number)[];
-  setFavoritos: React.Dispatch<React.SetStateAction<(string | number)[]>>;
-  hiddenItems: string[];
-  setHiddenItems: React.Dispatch<React.SetStateAction<string[]>>;
-  stars: Star[];
-  cartPulse: boolean;
-  tallasDisponibles: string[];
-  estructuraCatalogo: Record<string, string[]>;
-  subcategoriasJoyeria: string[];
-  parseTallasseguro: (tallasData: Product['tallas']) => TallasType;
-  triggerStarAnimation: (e: React.MouseEvent) => void;
-  agregarAlCarrito: (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad?: number, cantidadesPorTalla?: Record<string, number>) => void;
-  updateCantidad: (id: string | number, tallaSeleccionada: string | undefined, delta: number) => void;
-  toggleFavorito: (id: string | number) => void;
-  fetchProductos: () => Promise<void>;
-}
-
-const ShopContext = createContext<ShopContextType | undefined>(undefined);
 const CONFIG_HIDDEN_ITEMS_KEY = 'antares_hidden_items';
 const TALLAS_DISPONIBLES = ['5', '6', '7', '8', '9', '10', '11', '12'];
 const SUBCATEGORIAS_JOYERIA = ['Todo', 'Anillos', 'Pulseras', 'Collares', 'Aretes', 'Piercings'];
@@ -170,7 +147,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [fetchConfiguracion]);
 
-  const triggerStarAnimation = (e: React.MouseEvent) => {
+  const triggerStarAnimation = useCallback((e: React.MouseEvent) => {
     if (!e || !e.currentTarget) return;
     const cart = document.getElementById('cart-icon');
     const cartRect = cart?.getBoundingClientRect();
@@ -187,9 +164,9 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       setCartPulse(true);
       setTimeout(() => setCartPulse(false), 400); 
     }, 720);
-  };
+  }, []);
 
-  const agregarAlCarrito = (producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad = 1, cantidadesPorTalla: Record<string, number> = {}) => {
+  const agregarAlCarrito = useCallback((producto: Product, tallasSeleccionadas: string[], e?: React.MouseEvent, cantidad = 1, cantidadesPorTalla: Record<string, number> = {}) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -224,9 +201,9 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       }
       return newCart;
     });
-  };
+  }, [triggerStarAnimation]);
 
-  const updateCantidad = (id: string | number, tallaSeleccionada: string | undefined, delta: number) => {
+  const updateCantidad = useCallback((id: string | number, tallaSeleccionada: string | undefined, delta: number) => {
     setCarrito(prev => prev.map(item => {
       if (item.id === id && item.tallaSeleccionada === tallaSeleccionada) {
         const nuevaCantidad = Math.max(1, Math.min((item.cantidad || 1) + delta, item.stockMaximo));
@@ -234,35 +211,32 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
       }
       return item;
     }));
-  };
+  }, []);
 
-  const toggleFavorito = (id: string | number) => {
+  const toggleFavorito = useCallback((id: string | number) => {
     setFavoritos(prev => 
       prev.includes(id) ? prev.filter(favId => favId !== id) : [...prev, id]
     );
-  };
+  }, []);
+
+  const value = useMemo<ShopContextType>(() => ({
+    productos, setProductos,
+    carrito, setCarrito,
+    favoritos, setFavoritos,
+    hiddenItems, setHiddenItems,
+    stars, cartPulse,
+    tallasDisponibles: TALLAS_DISPONIBLES,
+    estructuraCatalogo: ESTRUCTURA_CATALOGO,
+    subcategoriasJoyeria: SUBCATEGORIAS_JOYERIA,
+    parseTallasseguro, triggerStarAnimation, agregarAlCarrito, updateCantidad, toggleFavorito, fetchProductos
+  }), [
+    productos, carrito, favoritos, hiddenItems, stars, cartPulse,
+    fetchProductos, triggerStarAnimation, agregarAlCarrito, updateCantidad, toggleFavorito
+  ]);
 
   return (
-    <ShopContext.Provider value={{
-      productos, setProductos,
-      carrito, setCarrito,
-      favoritos, setFavoritos,
-      hiddenItems, setHiddenItems,
-      stars, cartPulse,
-      tallasDisponibles: TALLAS_DISPONIBLES,
-      estructuraCatalogo: ESTRUCTURA_CATALOGO,
-      subcategoriasJoyeria: SUBCATEGORIAS_JOYERIA,
-      parseTallasseguro, triggerStarAnimation, agregarAlCarrito, updateCantidad, toggleFavorito, fetchProductos
-    }}>
+    <ShopContext.Provider value={value}>
       {children}
     </ShopContext.Provider>
   );
-};
-
-export const useShop = () => {
-  const context = useContext(ShopContext);
-  if (context === undefined) {
-    throw new Error('useShop must be used within a ShopProvider');
-  }
-  return context;
 };

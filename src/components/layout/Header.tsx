@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useShop } from '../../context/ShopContext';
+import { useAuth } from '../../context/useAuth';
+import { useShop } from '../../context/useShop';
 import { supabase } from '../../services/supabase';
 import logo from '../../assets/logo.png';
 
@@ -76,7 +76,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   return (
     <header ref={headerRef} onMouseLeave={handleHeaderMouseLeave} className={`site-header screen-only ${isAdminPanel ? 'relative' : 'fixed top-0 left-0'} w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500`}>
       
-      {/* Botón Volver */}
+      {/* BotÃ³n Volver */}
       {user && activeView !== 'home' && (
         <button 
           onClick={() => setActiveView('home')} 
@@ -87,18 +87,9 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
         </button>
       )}
 
-      {/* Menú de Usuario y Carrito */}
+      {/* MenÃº de Usuario y Carrito */}
       {user ? (
         <div className="absolute top-6 right-4 md:right-12 flex items-center gap-4 md:gap-6 z-[100]">
-          {false && userRole !== 'admin' && (
-            <button 
-              onClick={() => setActiveView('bag')} 
-              className={`text-white hover:text-gray-300 transition-all duration-300 relative cursor-pointer bg-transparent border-none outline-none ${cartPulse ? 'scale-125 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'scale-100'}`}
-            >
-              <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="20" width="20"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
-              <span className="absolute -top-1 -right-2 bg-white text-black text-[8px] md:text-[9px] font-bold px-[5px] py-[1px] rounded-full shadow-lg">{carrito.length}</span>
-            </button>
-          )}
 
           {userRole !== 'admin' && (
             <button
@@ -112,7 +103,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             </button>
           )}
 
-          <button aria-label="Abrir menú de cuenta" className="relative cursor-pointer text-white hover:text-gray-300 transition-colors bg-transparent border-none outline-none py-2" onClick={() => { setActiveView('home'); setMenuUsuarioActivo(!menuUsuarioActivo); setMenuAbierto(null); }}>
+          <button aria-label="Abrir menÃº de cuenta" className="relative cursor-pointer text-white hover:text-gray-300 transition-colors bg-transparent border-none outline-none py-2" onClick={() => { setActiveView('home'); setMenuUsuarioActivo(!menuUsuarioActivo); setMenuAbierto(null); }}>
             <div className="text-white transition-colors">
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="22" width="22"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
             </div>
@@ -124,17 +115,17 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       <img src={logo} alt="ANTARES" fetchPriority="high" decoding="async" onClick={() => setActiveView('home')} className="h-14 sm:h-16 md:h-20 max-w-[52vw] w-auto mt-2 mb-0 z-[100] cursor-pointer drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500" />
 
       {!user && (
-        <button onClick={() => setShowLoginModal(true)} aria-label="Iniciar sesión" className="text-white hover:text-gray-400 transition-colors p-0 mb-3 bg-transparent border-none outline-none cursor-pointer z-[100]">
+        <button onClick={() => setShowLoginModal(true)} aria-label="Iniciar sesiÃ³n" className="text-white hover:text-gray-400 transition-colors p-0 mb-3 bg-transparent border-none outline-none cursor-pointer z-[100]">
           <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" height="28" width="28"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         </button>
       )}
 
-      {/* Navegación (Solo Home) */}
+      {/* NavegaciÃ³n (Solo Home) */}
       {user && activeView === 'home' && (
         <nav className="w-full relative z-[100] px-2 md:px-6 pb-2 animate-fade-in">
           <button
             type="button"
-            aria-label={mobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
+            aria-label={mobileMenuOpen ? 'Cerrar menÃº de navegaciÃ³n' : 'Abrir menÃº de navegaciÃ³n'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
             onClick={() => {
@@ -178,7 +169,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                     onClick={() => { setMobileMenuOpen(false); void handleLogout(); }}
                     className="w-full rounded-lg px-3 py-3 text-xs text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
                   >
-                    Cerrar Sesión
+                    Cerrar SesiÃ³n
                   </button>
                 </>
               ) : (
@@ -249,12 +240,12 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
           )}
 
           <ul className="hidden flex-wrap justify-center gap-y-1 gap-x-3 md:flex md:gap-x-8 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
-            {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar Sesión'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
+            {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
                 return (
                   <li key={menu} className="relative cursor-pointer py-1" onClick={() => action ? setActiveView(action) : handleLogout()}>
-                    <div className={`inline-block relative transition-colors ${menu === 'Cerrar Sesión' ? 'text-red-400 hover:text-red-300' : 'text-gray-300 hover:text-white'}`}>
+                    <div className={`inline-block relative transition-colors ${menu === 'Cerrar SesiÃ³n' ? 'text-red-400 hover:text-red-300' : 'text-gray-300 hover:text-white'}`}>
                       {menu}
                     </div>
                   </li>

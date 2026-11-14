@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, ChevronDown, ChevronUp, DollarSign, Download, Info, Package, Percent, RotateCcw, Search, TrendingUp, X } from 'lucide-react';
-import { useShop } from '../../context/ShopContext';
+import { useShop } from '../../context/useShop';
 import { supabase } from '../../services/supabase';
 import BulkProductForm from './BulkProductForm';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimization';
