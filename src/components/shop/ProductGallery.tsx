@@ -32,6 +32,8 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [ordenPrecio, setOrdenPrecio] = useState<string>('');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [readyCategory, setReadyCategory] = useState(category);
   
   const [productoSeleccionado, setProductoSeleccionado] = useState<Product | null>(null);
   
@@ -46,6 +48,16 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   });
   const [imagenPreviewUrl, setImagenPreviewUrl] = useState<string | null>(null);
   const imagenPreviewRef = useRef<string | null>(null);
+
+  if (readyCategory !== category) {
+    setReadyCategory(category);
+    setIsReady(false);
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setIsReady(true), 500);
+    return () => window.clearTimeout(timeoutId);
+  }, [category]);
 
   const categoryKey = normalizeCatalogValue(category);
   const isJewelryCategory = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(categoryKey);
@@ -568,7 +580,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 transform-gpu will-change-transform">
+      <div className={`mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 ${isReady ? '' : 'pointer-events-none opacity-50'}`}>
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 

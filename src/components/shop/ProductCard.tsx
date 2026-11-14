@@ -151,10 +151,10 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   };
 
   return (
-    <div className={`group relative flex flex-col p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel ${isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'}`}>
+    <div className={`group relative flex flex-col w-full p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel ${isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'}`}>
 
       {/* Imagen */}
-      <div className={`overflow-hidden aspect-square relative w-full mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
+      <div className={`relative w-full aspect-square bg-neutral-900/50 overflow-hidden mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
         <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className="w-full h-full object-cover bg-neutral-900/40 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
         
         {producto.vendido && (
@@ -183,8 +183,9 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
           <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
         </div>
         
-        <div className="flex flex-col w-full gap-4 mt-auto">
-          <div className="flex h-32 min-h-32 w-full flex-col justify-center">
+        <div className="flex flex-col w-full mt-auto">
+          <div className="flex flex-col w-full gap-4 mt-4">
+            <div className="w-full min-h-32 flex flex-col justify-center">
             {isDescriptionExpanded ? (
               <div className="h-full max-h-full w-full overflow-y-auto text-center text-xs text-gray-300 leading-snug break-words uppercase">
                 {producto.descripcion}
@@ -233,43 +234,43 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                 )}
               </>
             )}
-          </div>
-
-          {/* Acciones Cliente */}
-          {userRole === 'cliente' && (
-            <div className="flex flex-row gap-2 w-full z-30 justify-center">
-              <button
-                type="button"
-                aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
-                aria-expanded={isDescriptionExpanded}
-                onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
-                className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
-              >
-                {isDescriptionExpanded ? '-' : '+'}
-              </button>
-              {!producto.vendido && (
-                <>
-                  <button 
-                    onClick={handleComprar}
-                    disabled={!canBuy}
-                    className={`min-w-0 flex-1 py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-all duration-300 cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-white/10 text-gray-500 cursor-not-allowed border border-white/10'}`}
-                  >
-                    {canBuy ? 'COMPRAR' : isRing ? 'ELIJA TALLA Y CANTIDAD' : 'ELIJA CANTIDAD'}
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                    className={`shrink-0 px-2 sm:px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
-                  >
-                    {favoritos.includes(producto.id) ? '♥' : '♡'}
-                  </button>
-                </>
-              )}
             </div>
-          )}
 
-          {/* Acciones Admin */}
-          {userRole === 'admin' && (
-            <div className="flex flex-col w-full gap-4 z-30">
+            {/* Acciones Cliente */}
+            {userRole === 'cliente' && (
+              <div className="flex flex-row gap-2 w-full z-30 justify-center">
+                <button
+                  type="button"
+                  aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
+                  aria-expanded={isDescriptionExpanded}
+                  onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
+                  className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
+                >
+                  {isDescriptionExpanded ? '-' : '+'}
+                </button>
+                {!producto.vendido && (
+                  <>
+                    <button 
+                      onClick={handleComprar}
+                      disabled={!canBuy}
+                      className={`min-w-0 flex-1 py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-all duration-300 cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-white/10 text-gray-500 cursor-not-allowed border border-white/10'}`}
+                    >
+                      {canBuy ? 'COMPRAR' : isRing ? 'ELIJA TALLA Y CANTIDAD' : 'ELIJA CANTIDAD'}
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
+                      className={`shrink-0 px-2 sm:px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
+                    >
+                      {favoritos.includes(producto.id) ? '♥' : '♡'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Acciones Admin */}
+            {userRole === 'admin' && (
+              <>
               <button
                 type="button"
                 aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
@@ -282,12 +283,13 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
               <button 
                 onClick={handleToggleVendidoAdmin} 
                 disabled={producto.vendido}
-                className={`w-full mt-2 py-2 sm:py-2.5 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 cursor-not-allowed' : 'bg-white text-black border-white hover:bg-gray-300 cursor-pointer'}`}
+                className="w-full bg-white text-black py-3 px-4 rounded-none uppercase text-sm tracking-widest font-bold text-center block"
               >
                 {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
               </button>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
       {showSaleForm && (

@@ -17,7 +17,6 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
   const [menuUsuarioActivo, setMenuUsuarioActivo] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   const catalogMenus = Object.keys(estructuraCatalogo);
 
@@ -70,7 +69,6 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
     setActiveView('categoria');
     setMenuAbierto(null);
     setMenuUsuarioActivo(false);
-    setMobileMenuOpen(false);
   };
 
   return (
@@ -122,124 +120,8 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
 
       {/* NavegaciÃ³n (Solo Home) */}
       {user && activeView === 'home' && (
-        <nav className="w-full relative z-[100] px-2 md:px-6 pb-2 animate-fade-in">
-          <button
-            type="button"
-            aria-label={mobileMenuOpen ? 'Cerrar menÃº de navegaciÃ³n' : 'Abrir menÃº de navegaciÃ³n'}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => {
-              setMobileMenuOpen(!mobileMenuOpen);
-              setMenuAbierto(null);
-            }}
-            className="mx-auto flex items-center justify-center p-2 text-white/80 hover:text-white md:hidden"
-          >
-            <svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="h-6 w-6">
-              {mobileMenuOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />}
-            </svg>
-          </button>
-
-          {mobileMenuOpen && (
-            <div id="mobile-navigation" className="glass-panel mx-auto mt-2 flex max-h-[calc(100dvh-10rem)] w-full max-w-md flex-col gap-1 overflow-y-auto overscroll-contain rounded-2xl p-3 text-center uppercase tracking-[0.16em] md:hidden">
-              {menuUsuarioActivo ? (
-                <>
-                  {[
-                    { label: 'Mi Perfil', action: 'perfil' },
-                    ...(userRole === 'admin'
-                      ? [{ label: 'Gestionar Pedidos', action: 'pedidos' }, { label: 'Inventario / Finanzas', action: 'inventario' }]
-                      : [{ label: 'Mis Pedidos', action: 'pedidos' }, { label: `Deseos (${favoritos.length})`, action: 'deseos' }])
-                  ].map(({ label, action }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        setActiveView(action);
-                        setMenuUsuarioActivo(false);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full rounded-lg px-3 py-3 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => { setMobileMenuOpen(false); void handleLogout(); }}
-                    className="w-full rounded-lg px-3 py-3 text-xs text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
-                  >
-                    Cerrar SesiÃ³n
-                  </button>
-                </>
-              ) : (
-                <>
-                  {catalogMenus.map(menu => {
-                    const isMenuHidden = isItemHidden(menu) || estructuraCatalogo[menu].every(sub => isItemHidden(sub));
-                    if (isMenuHidden && userRole !== 'admin') return null;
-
-                    const visibleSubmenus = estructuraCatalogo[menu].filter(sub => userRole === 'admin' || !isItemHidden(sub));
-                    const isOpen = menuAbierto === menu;
-
-                    return (
-                      <div key={menu} className="w-full">
-                        <button
-                          type="button"
-                          aria-expanded={isOpen}
-                          onClick={() => setMenuAbierto(isOpen ? null : menu)}
-                          className={`w-full rounded-lg px-3 py-3 text-xs transition-colors hover:bg-white/10 hover:text-white ${isMenuHidden ? 'text-red-500' : 'text-gray-300'}`}
-                        >
-                          {menu}
-                        </button>
-                        {isOpen && (
-                          <div className="flex flex-col gap-1 px-2 pb-2">
-                            {visibleSubmenus.map(sub => (
-                              <button
-                                key={sub}
-                                type="button"
-                                onClick={() => irACategoria(sub)}
-                                className="w-full break-words rounded-lg px-3 py-2 text-[11px] text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-                              >
-                                {sub}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {!normalizedHiddenItems.includes('obsequios') && (
-                    <div className="w-full">
-                      <button
-                        type="button"
-                        aria-expanded={menuAbierto === 'Obsequios'}
-                        onClick={() => setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios')}
-                        className="w-full rounded-lg px-3 py-3 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-                      >
-                        Obsequios
-                      </button>
-                      {menuAbierto === 'Obsequios' && (
-                        <div className="flex flex-col gap-1 px-2 pb-2">
-                          {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(price => (
-                            <button
-                              key={price}
-                              type="button"
-                              onClick={() => irACategoria(`Obsequios $${price}`)}
-                              className="w-full rounded-lg px-3 py-2 text-[11px] text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-                            >
-                              $ {price}.00 USD
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          <ul className="no-scrollbar flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full gap-5 px-4 md:justify-center items-center py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
+        <nav className="flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full gap-6 px-4 py-2 items-center md:justify-center no-scrollbar">
+          <ul className="flex w-max min-w-max flex-row items-center gap-6 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
             {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
