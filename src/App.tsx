@@ -91,13 +91,21 @@ export default function App() {
   useEffect(() => {
     const savedScrollPosition = Number(sessionStorage.getItem('antares_scroll_position') || 0);
     const restoreScrollPosition = () => window.scrollTo({ top: savedScrollPosition, behavior: 'auto' });
-    const rememberScrollPosition = () => sessionStorage.setItem('antares_scroll_position', String(window.scrollY));
+    let scrollFrame: number | null = null;
+    const rememberScrollPosition = () => {
+      if (scrollFrame !== null) return;
+      scrollFrame = requestAnimationFrame(() => {
+        sessionStorage.setItem('antares_scroll_position', String(window.scrollY));
+        scrollFrame = null;
+      });
+    };
 
     window.history.scrollRestoration = 'manual';
     const animationFrame = requestAnimationFrame(restoreScrollPosition);
     window.addEventListener('scroll', rememberScrollPosition, { passive: true });
     return () => {
       cancelAnimationFrame(animationFrame);
+      if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
       window.removeEventListener('scroll', rememberScrollPosition);
     };
   }, []);

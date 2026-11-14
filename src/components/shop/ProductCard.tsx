@@ -183,110 +183,112 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
           <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
         </div>
         
-        <div className="flex h-32 min-h-32 w-full flex-col justify-center">
-          {isDescriptionExpanded ? (
-            <div className="h-full max-h-full w-full overflow-y-auto text-center text-xs text-gray-300 leading-snug break-words uppercase">
-              {producto.descripcion}
-            </div>
-          ) : (
-            <>
-              {isRing && (
-                <div className="flex flex-col items-center w-full z-30">
-                  <div className="grid grid-cols-4 gap-3 sm:gap-4 w-full">
-                    {tallasDisponibles.map(talla => {
-                      const stock = parseInt(String(tallasObj[talla] || 0));
-                      const isAvailable = stock > 0;
-                      const isSelected = tallasSeleccionadas.includes(talla);
-                      
-                      return (
-                        <div key={talla} className="flex min-w-0 flex-col items-center gap-1">
-                          <button 
-                            type="button"
-                            disabled={!isAvailable}
-                            onClick={(e) => handleSelectTalla(e, talla)}
-                            className={`w-full aspect-square max-w-9 flex items-center justify-center text-[10px] sm:text-[11px] tracking-[0.04em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer' : 'bg-black/20 text-white border-white/25 font-semibold hover:border-white cursor-pointer') : 'border-white/15 text-gray-400 bg-white/5 cursor-not-allowed'}`}
-                          >
-                            <span>{talla}</span>
-                          </button>
-                          {isAvailable ? (
-                            <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400">
-                              <button type="button" aria-label={`Reducir cantidad de talla ${talla}`} disabled={!isSelected || !(cantidadesPorTalla[talla] || 0)} onClick={(e) => handleCantidad(e, talla, -1, stock)} className="px-1 disabled:opacity-30">-</button>
-                              <span className="min-w-3 text-center">{cantidadesPorTalla[talla] || 0}</span>
-                              <button type="button" aria-label={`Aumentar cantidad de talla ${talla}`} disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock} onClick={(e) => handleCantidad(e, talla, 1, stock)} className="px-1 disabled:opacity-30">+</button>
-                            </div>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              {!isRing && (
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400">Cantidad</span>
-                  <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="p-2 text-white disabled:opacity-30">-</button>
-                  <span className="min-w-4 text-center text-white">{cantidadSeleccionada}</span>
-                  <button type="button" aria-label="Aumentar cantidad" disabled={Number.isNaN(stockDisponible) ? false : cantidadSeleccionada >= stockDisponible} onClick={(e) => handleCantidad(e, 'general', 1, Number.isNaN(stockDisponible) ? 99 : stockDisponible)} className="p-2 text-white disabled:opacity-30">+</button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Acciones Cliente */}
-        {userRole === 'cliente' && (
-          <div className="flex flex-row gap-2 mt-auto w-full z-30 justify-center">
-            <button
-              type="button"
-              aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
-              aria-expanded={isDescriptionExpanded}
-              onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
-              className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
-            >
-              {isDescriptionExpanded ? '-' : '+'}
-            </button>
-            {!producto.vendido && (
+        <div className="flex flex-col w-full gap-4 mt-auto">
+          <div className="flex h-32 min-h-32 w-full flex-col justify-center">
+            {isDescriptionExpanded ? (
+              <div className="h-full max-h-full w-full overflow-y-auto text-center text-xs text-gray-300 leading-snug break-words uppercase">
+                {producto.descripcion}
+              </div>
+            ) : (
               <>
-                <button 
-                  onClick={handleComprar}
-                  disabled={!canBuy}
-                  className={`min-w-0 flex-1 py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-all duration-300 cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-white/10 text-gray-500 cursor-not-allowed border border-white/10'}`}
-                >
-                  {canBuy ? 'COMPRAR' : isRing ? 'ELIJA TALLA Y CANTIDAD' : 'ELIJA CANTIDAD'}
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
-                  className={`shrink-0 px-2 sm:px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
-                >
-                  {favoritos.includes(producto.id) ? '♥' : '♡'}
-                </button>
+                {isRing && (
+                  <div className="flex flex-col items-center w-full z-30">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-auto-fit gap-2 w-full">
+                      {tallasDisponibles.map(talla => {
+                        const stock = parseInt(String(tallasObj[talla] || 0));
+                        const isAvailable = stock > 0;
+                        const isSelected = tallasSeleccionadas.includes(talla);
+                        
+                        return (
+                          <div key={talla} className="flex min-w-0 flex-col items-center gap-1">
+                            <button 
+                              type="button"
+                              disabled={!isAvailable}
+                              onClick={(e) => handleSelectTalla(e, talla)}
+                              className={`w-full aspect-square max-w-9 flex items-center justify-center text-[10px] sm:text-[11px] tracking-[0.04em] transition-all duration-300 border outline-none ${isAvailable ? (isSelected ? 'bg-white text-black border-white font-bold scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer' : 'bg-black/20 text-white border-white/25 font-semibold hover:border-white cursor-pointer') : 'border-white/15 text-gray-400 bg-white/5 cursor-not-allowed'}`}
+                            >
+                              <span>{talla}</span>
+                            </button>
+                            {isAvailable ? (
+                              <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400">
+                                <button type="button" aria-label={`Reducir cantidad de talla ${talla}`} disabled={!isSelected || !(cantidadesPorTalla[talla] || 0)} onClick={(e) => handleCantidad(e, talla, -1, stock)} className="px-1 disabled:opacity-30">-</button>
+                                <span className="min-w-3 text-center">{cantidadesPorTalla[talla] || 0}</span>
+                                <button type="button" aria-label={`Aumentar cantidad de talla ${talla}`} disabled={!isSelected || (cantidadesPorTalla[talla] || 0) >= stock} onClick={(e) => handleCantidad(e, talla, 1, stock)} className="px-1 disabled:opacity-30">+</button>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {!isRing && (
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.1em] text-gray-400">Cantidad</span>
+                    <button type="button" aria-label="Reducir cantidad" disabled={cantidadSeleccionada === 0} onClick={(e) => handleCantidad(e, 'general', -1, stockDisponible)} className="p-2 text-white disabled:opacity-30">-</button>
+                    <span className="min-w-4 text-center text-white">{cantidadSeleccionada}</span>
+                    <button type="button" aria-label="Aumentar cantidad" disabled={Number.isNaN(stockDisponible) ? false : cantidadSeleccionada >= stockDisponible} onClick={(e) => handleCantidad(e, 'general', 1, Number.isNaN(stockDisponible) ? 99 : stockDisponible)} className="p-2 text-white disabled:opacity-30">+</button>
+                  </div>
+                )}
               </>
             )}
           </div>
-        )}
 
-        {/* Acciones Admin */}
-        {userRole === 'admin' && (
-          <div className="flex flex-row gap-2 mt-auto w-full z-30">
-            <button
-              type="button"
-              aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
-              aria-expanded={isDescriptionExpanded}
-              onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
-              className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
-            >
-              {isDescriptionExpanded ? '-' : '+'}
-            </button>
-            <button 
-              onClick={handleToggleVendidoAdmin} 
-              disabled={producto.vendido}
-              className={`min-w-0 flex-1 py-2 sm:py-2.5 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 cursor-not-allowed' : 'bg-white text-black border-white hover:bg-gray-300 cursor-pointer'}`}
-            >
-              {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
-            </button>
-          </div>
-        )}
+          {/* Acciones Cliente */}
+          {userRole === 'cliente' && (
+            <div className="flex flex-row gap-2 w-full z-30 justify-center">
+              <button
+                type="button"
+                aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
+                aria-expanded={isDescriptionExpanded}
+                onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
+                className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
+              >
+                {isDescriptionExpanded ? '-' : '+'}
+              </button>
+              {!producto.vendido && (
+                <>
+                  <button 
+                    onClick={handleComprar}
+                    disabled={!canBuy}
+                    className={`min-w-0 flex-1 py-2 sm:py-3 text-[7px] sm:text-[8px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-all duration-300 cursor-pointer border-none outline-none rounded-sm ${canBuy ? 'bg-white text-black hover:bg-gray-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-white/10 text-gray-500 cursor-not-allowed border border-white/10'}`}
+                  >
+                    {canBuy ? 'COMPRAR' : isRing ? 'ELIJA TALLA Y CANTIDAD' : 'ELIJA CANTIDAD'}
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleFavorito(producto.id); }} 
+                    className={`shrink-0 px-2 sm:px-4 md:px-5 py-2 md:py-3 border transition-colors cursor-pointer text-xs sm:text-sm flex items-center justify-center bg-transparent outline-none rounded-sm ${favoritos.includes(producto.id) ? 'border-white text-white' : 'border-white/20 text-gray-400 hover:text-white hover:border-white/50'}`}
+                  >
+                    {favoritos.includes(producto.id) ? '♥' : '♡'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Acciones Admin */}
+          {userRole === 'admin' && (
+            <div className="flex flex-col w-full gap-4 z-30">
+              <button
+                type="button"
+                aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
+                aria-expanded={isDescriptionExpanded}
+                onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
+                className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
+              >
+                {isDescriptionExpanded ? '-' : '+'}
+              </button>
+              <button 
+                onClick={handleToggleVendidoAdmin} 
+                disabled={producto.vendido}
+                className={`w-full mt-2 py-2 sm:py-2.5 text-[8px] sm:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase transition-colors border outline-none rounded-sm z-30 ${producto.vendido ? 'bg-transparent text-gray-500 border-gray-800 cursor-not-allowed' : 'bg-white text-black border-white hover:bg-gray-300 cursor-pointer'}`}
+              >
+                {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {showSaleForm && (
         <div

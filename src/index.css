@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@utility grid-cols-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(2.25rem, 1fr));
+}
+
 @layer base {
   :root {
     font-size: 16px;
@@ -49,6 +53,15 @@
 
 /* Custom Animations & Styles */
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   .glass-panel {
     /* Desenfoque fuerte y liso para el efecto esmerilado */
     backdrop-filter: blur(16px);
@@ -545,8 +558,9 @@
     gap: 0.8rem;
     grid-column: 1 / -1;
   }
+}
 
-  .bulk-ring-sizes label {
+.bulk-ring-sizes label {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -1153,7 +1167,6 @@
     0%, 100% { opacity: 1; }
     50% { opacity: .7; }
   }
-}
 
 /* Scrollbar Modification for aesthetics */
 ::-webkit-scrollbar { 

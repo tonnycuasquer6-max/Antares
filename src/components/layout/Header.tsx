@@ -239,12 +239,12 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             </div>
           )}
 
-          <ul className="hidden flex-wrap justify-center gap-y-1 gap-x-3 md:flex md:gap-x-8 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
+          <ul className="no-scrollbar flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full gap-5 px-4 md:justify-center items-center py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
             {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
                 return (
-                  <li key={menu} className="relative cursor-pointer py-1" onClick={() => action ? setActiveView(action) : handleLogout()}>
+                  <li key={menu} className="relative shrink-0 cursor-pointer py-1" onClick={() => action ? setActiveView(action) : handleLogout()}>
                     <div className={`inline-block relative transition-colors ${menu === 'Cerrar SesiÃ³n' ? 'text-red-400 hover:text-red-300' : 'text-gray-300 hover:text-white'}`}>
                       {menu}
                     </div>
@@ -262,7 +262,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
               const visibleSubmenus = estructuraCatalogo[menu].filter(sub => !isItemHidden(sub));
 
               return (
-                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative cursor-pointer py-1 menu-item-visibility ${menuAbierto === menu ? 'z-[300]' : 'z-0'}`} onMouseEnter={() => handleMenuHover(menu, !isMenuHidden)} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
+                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative shrink-0 cursor-pointer py-1 menu-item-visibility ${menuAbierto === menu ? 'z-[300]' : 'z-0'}`} onMouseEnter={() => handleMenuHover(menu, !isMenuHidden)} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
@@ -285,7 +285,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             
             {/* Obsequios */}
             {!menuUsuarioActivo && !normalizedHiddenItems.includes('obsequios') && (
-              <li aria-hidden={userRole !== 'admin' && normalizedHiddenItems.includes('obsequios')} className="group relative cursor-pointer py-1 menu-item-visibility" onMouseEnter={() => handleMenuHover('Obsequios', !normalizedHiddenItems.includes('obsequios'))} onClick={(e) => { e.stopPropagation(); if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
+              <li aria-hidden={userRole !== 'admin' && normalizedHiddenItems.includes('obsequios')} className="group relative shrink-0 cursor-pointer py-1 menu-item-visibility" onMouseEnter={() => handleMenuHover('Obsequios', !normalizedHiddenItems.includes('obsequios'))} onClick={(e) => { e.stopPropagation(); if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
                 <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>

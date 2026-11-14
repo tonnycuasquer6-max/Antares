@@ -568,7 +568,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
       )}
 
       {/* Rejilla de Productos */}
-      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="mt-8 grid w-full grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 transform-gpu will-change-transform">
         {productosMostrar.map(producto => (
           <ProductCard 
             key={producto.id} 

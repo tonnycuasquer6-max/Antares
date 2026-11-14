@@ -27,14 +27,14 @@ export default function DeliveryMap({ mapRef, location, onLocationChange }: Deli
   }
 
   return (
-    <div className="delivery-map-container relative w-full overflow-hidden rounded-sm border border-white/15">
+    <div className="delivery-map-container relative w-full h-[50vh] min-h-[300px] max-h-[500px] overflow-hidden rounded-sm border border-white/15">
       <Map
         ref={mapRef}
         initialViewState={INITIAL_MAP_VIEW}
         mapboxAccessToken={mapboxToken}
         mapStyle="mapbox://styles/mapbox/dark-v11"
         onClick={event => onLocationChange(event.lngLat.lng, event.lngLat.lat)}
-        style={{ width: '100%' }}
+        style={{ width: '100%', height: '100%' }}
         aria-label="Mapa para seleccionar la ubicación de entrega"
       >
         {location && (
