@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/useAuth';
 import { useShop } from '../../context/useShop';
 import { supabase } from '../../services/supabase';
@@ -18,6 +19,8 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
   const [menuUsuarioActivo, setMenuUsuarioActivo] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRefs = useRef(new Map<string, HTMLButtonElement>());
   const catalogMenus = Object.keys(estructuraCatalogo);
 
   const cristalOpacoSubmenuClass = "glass-panel flex flex-col py-2.5 px-5 rounded-2xl";
@@ -27,14 +30,13 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
-  const supportsHover = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const handleMenuHover = (menu: string, isVisible: boolean) => {
-    if (!supportsHover()) return;
     if (isVisible || userRole === 'admin') setMenuAbierto(menu);
     setMenuUsuarioActivo(false);
   };
-  const handleHeaderMouseLeave = () => {
-    if (!supportsHover()) return;
+  const handleHeaderPointerLeave = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'mouse') return;
+    if (event.relatedTarget instanceof Node && submenuRef.current?.contains(event.relatedTarget)) return;
     setMenuAbierto(null);
     setMenuUsuarioActivo(false);
   };
@@ -45,9 +47,8 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
       const clickedInsideDropdown = target instanceof Element && (
-        target.closest('.glass-panel') ||
-        target.closest('.menu-item-visibility') ||
-        target.closest('.menu-hover-bridge')
+        target.closest('.menu-dropdown') ||
+        target.closest('.menu-item-visibility')
       );
 
       if (headerRef.current && !headerRef.current.contains(target as Node) && !clickedInsideDropdown) {
@@ -58,6 +59,32 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!menuAbierto) return;
+
+    const updatePosition = () => {
+      const trigger = menuTriggerRefs.current.get(menuAbierto);
+      const submenu = submenuRef.current;
+      if (!trigger || !submenu) return;
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const submenuWidth = submenu.getBoundingClientRect().width;
+      submenu.style.left = `${Math.max(8, Math.min(
+        triggerRect.left + (triggerRect.width - submenuWidth) / 2,
+        window.innerWidth - submenuWidth - 8
+      ))}px`;
+      submenu.style.top = `${triggerRect.bottom + 8}px`;
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [menuAbierto]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -72,7 +99,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
   };
 
   return (
-    <header ref={headerRef} onMouseLeave={handleHeaderMouseLeave} className={`site-header screen-only ${isAdminPanel ? 'relative' : 'fixed top-0 left-0'} w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500`}>
+    <header ref={headerRef} onPointerLeave={handleHeaderPointerLeave} className={`site-header screen-only ${isAdminPanel ? 'relative' : 'fixed top-0 left-0'} w-full h-auto flex flex-col items-center glass-panel z-[100] pt-2 px-4 sm:px-6 md:px-8 transition-all duration-500`}>
       
       {/* BotÃ³n Volver */}
       {user && activeView !== 'home' && (
@@ -121,8 +148,8 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
       {/* NavegaciÃ³n (Solo Home) */}
       {user && activeView === 'home' && (
         <nav className="relative z-[100] w-full flex overflow-x-auto whitespace-nowrap justify-start md:justify-center items-center gap-6 px-4 py-3 no-scrollbar pointer-events-auto">
-          <ul className="flex w-max min-w-max flex-row items-center gap-6 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent md:mx-auto">
-            {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
+          <ul className="mx-auto flex w-max min-w-max flex-row items-center gap-6 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
+            {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map(menu => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
                 return (
@@ -141,78 +168,94 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
               const isMenuHidden = isItemHidden(menu) || (estructuraCatalogo[menu] && estructuraCatalogo[menu].every(sub => isItemHidden(sub)));
               if (isMenuHidden && userRole !== 'admin') return null;
 
-              const visibleSubmenus = estructuraCatalogo[menu].filter(sub => !isItemHidden(sub));
-
               return (
-                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative shrink-0 cursor-pointer py-1 menu-item-visibility ${menuAbierto === menu ? 'z-[300]' : 'z-0'}`} onMouseEnter={() => handleMenuHover(menu, !isMenuHidden)} onClick={(e) => { e.stopPropagation(); if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu); setMenuUsuarioActivo(false); }}>
-                  <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+                <li key={menu} aria-hidden={userRole !== 'admin' && isMenuHidden} className={`group relative shrink-0 py-1 menu-item-visibility ${menuAbierto === menu ? 'z-[300]' : 'z-0'}`} onPointerEnter={event => {
+                  if (event.pointerType === 'mouse') handleMenuHover(menu, !isMenuHidden);
+                }}>
+                  <button
+                    ref={element => {
+                      if (element) menuTriggerRefs.current.set(menu, element);
+                      else menuTriggerRefs.current.delete(menu);
+                    }}
+                    type="button"
+                    aria-expanded={menuAbierto === menu}
+                    aria-haspopup="true"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isMenuHidden || userRole === 'admin') setMenuAbierto(menuAbierto === menu ? null : menu);
+                      setMenuUsuarioActivo(false);
+                    }}
+                    className={`inline-block relative bg-transparent border-none p-0 cursor-pointer transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                  >
                     {menu}
-                  </div>
-                  <div className={`header-dropdown absolute top-full ${menuIndex === catalogMenus.length - 1 ? 'right-0' : 'left-0'} pt-0 z-[300] ${menuAbierto === menu ? 'hidden pointer-events-none md:block md:pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-                    <div className="menu-hover-bridge" />
-                    <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[180px] max-w-[calc(100vw-2rem)] break-words md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-                      {visibleSubmenus.map(sub => {
-                        const isSubHidden = isItemHidden(sub);
-                        return (
-                          <div key={sub} aria-hidden={userRole !== 'admin' && isSubHidden} onClick={(e) => { e.stopPropagation(); if (!isSubHidden || userRole === 'admin') irACategoria(sub); }} className={`cursor-pointer block mt-2 first:mt-0 text-xs md:text-sm transition-colors py-1 ${isSubHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
-                            {sub}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  </button>
                 </li>
               );
             })}
             
             {/* Obsequios */}
             {!menuUsuarioActivo && !normalizedHiddenItems.includes('obsequios') && (
-              <li aria-hidden={userRole !== 'admin' && normalizedHiddenItems.includes('obsequios')} className="group relative shrink-0 cursor-pointer py-1 menu-item-visibility" onMouseEnter={() => handleMenuHover('Obsequios', !normalizedHiddenItems.includes('obsequios'))} onClick={(e) => { e.stopPropagation(); if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios'); setMenuUsuarioActivo(false); }}>
-                <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
+              <li aria-hidden={userRole !== 'admin' && normalizedHiddenItems.includes('obsequios')} className="group relative shrink-0 py-1 menu-item-visibility" onPointerEnter={event => {
+                if (event.pointerType === 'mouse') handleMenuHover('Obsequios', !normalizedHiddenItems.includes('obsequios'));
+              }}>
+                <button
+                  ref={element => {
+                    if (element) menuTriggerRefs.current.set('Obsequios', element);
+                    else menuTriggerRefs.current.delete('Obsequios');
+                  }}
+                  type="button"
+                  aria-expanded={menuAbierto === 'Obsequios'}
+                  aria-haspopup="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!normalizedHiddenItems.includes('obsequios') || userRole === 'admin') setMenuAbierto(menuAbierto === 'Obsequios' ? null : 'Obsequios');
+                    setMenuUsuarioActivo(false);
+                  }}
+                  className={`inline-block relative bg-transparent border-none p-0 cursor-pointer transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                >
                   Obsequios
-                </div>
-                <div className={`header-dropdown absolute top-full right-0 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'hidden pointer-events-none md:block md:pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-                  <div className="menu-hover-bridge" />
-                  <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[150px] max-w-[calc(100vw-2rem)] break-words md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-                    {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
-                      <div key={p} onClick={(e) => { e.stopPropagation(); irACategoria(`Obsequios $${p}`); }} className="text-gray-400 hover:text-white transition-colors cursor-pointer block mt-2 first:mt-0 text-xs md:text-sm py-1">
-                        $ {p}.00 USD
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                </button>
               </li>
             )}
           </ul>
         </nav>
       )}
 
-      {user && activeView === 'home' && menuAbierto && (
-        <div className="absolute top-full left-1/2 z-[400] w-[min(90vw,24rem)] -translate-x-1/2 md:hidden">
-          <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} text-center`}>
-            {menuAbierto === 'Obsequios'
-              ? [5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(price => (
-                <button
-                  key={price}
-                  type="button"
-                  onClick={() => irACategoria(`Obsequios $${price}`)}
-                  className="mt-2 first:mt-0 w-full rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  $ {price}.00 USD
-                </button>
-              ))
-              : (estructuraCatalogo[menuAbierto] ?? []).filter(sub => !isItemHidden(sub)).map(sub => (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => irACategoria(sub)}
-                  className="mt-2 first:mt-0 w-full rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {sub}
-                </button>
-              ))}
-          </div>
-        </div>
+      {user && activeView === 'home' && menuAbierto && createPortal(
+        <div
+          ref={submenuRef}
+          className={`menu-dropdown fixed z-[10000] header-dropdown-panel ${cristalOpacoSubmenuClass} w-max max-w-[calc(100vw-1rem)] text-center`}
+          style={{ left: 0, top: 0 }}
+          onPointerLeave={event => {
+            if (event.pointerType !== 'mouse') return;
+            if (event.relatedTarget instanceof Node && headerRef.current?.contains(event.relatedTarget)) return;
+            setMenuAbierto(null);
+            setMenuUsuarioActivo(false);
+          }}
+        >
+          {menuAbierto === 'Obsequios'
+            ? [5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(price => (
+              <button
+                key={price}
+                type="button"
+                onClick={() => irACategoria(`Obsequios $${price}`)}
+                className="whitespace-nowrap mt-2 first:mt-0 rounded-lg px-3 py-2 text-center text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                $ {price}.00 USD
+              </button>
+            ))
+            : (estructuraCatalogo[menuAbierto] ?? []).filter(sub => !isItemHidden(sub)).map(sub => (
+              <button
+                key={sub}
+                type="button"
+                onClick={() => irACategoria(sub)}
+                className="whitespace-nowrap mt-2 first:mt-0 rounded-lg px-3 py-2 text-center text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {sub}
+              </button>
+            ))}
+        </div>,
+        document.body
       )}
     </header>
   );

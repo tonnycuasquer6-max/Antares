@@ -151,7 +151,12 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
   };
 
   return (
-    <div className={`group relative flex flex-col w-full p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel ${isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'}`}>
+    <div className="group relative w-full [perspective:1200px]">
+      <div className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] [-webkit-transform-style:preserve-3d] ${showSaleForm ? '[transform:rotateY(180deg)]' : ''}`}>
+        <div
+          aria-hidden={showSaleForm}
+          className={`relative flex flex-col w-full p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel [backface-visibility:hidden] [-webkit-backface-visibility:hidden] ${showSaleForm ? '' : isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'} ${showSaleForm ? 'pointer-events-none' : ''}`}
+        >
 
       {/* Imagen */}
       <div className="relative w-full aspect-[4/5] overflow-hidden bg-neutral-900" onClick={onClick}>
@@ -193,7 +198,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
             ) : (
               <>
                 {isRing && (
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 w-full">
+                    <div className="grid grid-cols-4 gap-2 w-full">
                       {tallasDisponibles.map(talla => {
                         const stock = parseInt(String(tallasObj[talla] || 0));
                         const isAvailable = stock > 0;
@@ -268,40 +273,39 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
 
             {/* Acciones Admin */}
             {userRole === 'admin' && (
-              <>
-              <button
-                type="button"
-                aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
-                aria-expanded={isDescriptionExpanded}
-                onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
-                className="w-9 shrink-0 border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
-              >
-                {isDescriptionExpanded ? '-' : '+'}
-              </button>
-              <button 
-                onClick={handleToggleVendidoAdmin} 
-                disabled={producto.vendido}
-                className="w-full bg-white text-black py-3 px-4 uppercase text-sm tracking-widest font-bold block mt-2"
-              >
-                {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
-              </button>
-              </>
+              <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] gap-2">
+                <button
+                  type="button"
+                  aria-label={isDescriptionExpanded ? 'Cerrar descripción' : 'Ver descripción completa'}
+                  aria-expanded={isDescriptionExpanded}
+                  onClick={(e) => { e.stopPropagation(); setIsDescriptionExpanded(prev => !prev); }}
+                  className="h-9 w-9 self-center border border-white/20 text-white hover:border-white/50 transition-colors cursor-pointer text-base flex items-center justify-center bg-transparent outline-none rounded-sm"
+                >
+                  {isDescriptionExpanded ? '-' : '+'}
+                </button>
+                <button 
+                  onClick={handleToggleVendidoAdmin} 
+                  disabled={producto.vendido}
+                  className="h-9 w-full whitespace-nowrap bg-white text-black px-2 text-[10px] tracking-[0.1em] uppercase font-bold block"
+                >
+                  {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
-      {showSaleForm && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-          onClick={() => !isSavingSale && setShowSaleForm(false)}
-        >
+        </div>
+        {showSaleForm && (
+          <div
+            aria-hidden={!showSaleForm}
+            className={`absolute inset-0 z-20 overflow-hidden text-shadow glass-panel [transform:rotateY(180deg)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden] ${isJewelry ? 'bg-black/80' : 'bg-black/45'}`}
+          >
           <form
-            role="dialog"
-            aria-modal="true"
             aria-labelledby={`sale-form-title-${producto.id}`}
             onSubmit={handleSaveSale}
             onClick={e => e.stopPropagation()}
-            className="glass-panel max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-sm p-4 sm:p-6 md:p-8"
+            className="h-full max-h-full w-full min-w-0 overflow-y-auto overscroll-contain rounded-sm p-3 sm:p-4"
           >
             <h3 id={`sale-form-title-${producto.id}`} className="text-sm tracking-[0.2em] uppercase text-white">
               Registrar venta: {producto.titulo}
@@ -368,26 +372,27 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
               Retiro de socio (Venta al costo)
             </label>
             {saleError && <p role="alert" className="mt-4 text-xs text-red-400">{saleError}</p>}
-            <div className="mt-7 flex justify-end gap-3">
+            <div className="mt-7 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 disabled={isSavingSale}
                 onClick={() => setShowSaleForm(false)}
-                className="border border-white/30 px-4 py-2 text-[10px] tracking-[0.15em] uppercase text-white disabled:opacity-50"
+                className="flex min-h-12 w-full items-center justify-center border border-white/30 px-3 py-2 text-center text-[10px] tracking-[0.15em] uppercase text-white disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSavingSale}
-                className="bg-white px-5 py-2 text-[10px] font-bold tracking-[0.15em] uppercase text-black disabled:opacity-50"
+                className="flex min-h-12 w-full items-center justify-center bg-white px-3 py-2 text-center text-[10px] font-bold tracking-[0.15em] uppercase text-black disabled:opacity-50"
               >
                 {isSavingSale ? 'Guardando...' : 'Guardar venta'}
               </button>
             </div>
           </form>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
