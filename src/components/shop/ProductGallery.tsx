@@ -42,6 +42,7 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const [editandoId, setEditandoId] = useState<string | number | null>(null);
   const [openFormSelect, setOpenFormSelect] = useState<string | null>(null);
+  const showInlineFormRef = useRef(showInlineForm);
   const originalPieza = useRef<NuevaPieza | null>(null);
   const [nuevaPieza, setNuevaPieza] = useState<NuevaPieza>({ 
     titulo: '', descripcion: '', costo: '', precio: '', porcentaje_inversionista: 0, disponibilidad: '', subcategoria: '', tallas: {}, color: '', imagen: null, imagen_url: '' 
@@ -58,6 +59,29 @@ export default function ProductGallery({ category, userRole }: ProductGalleryPro
     const timeoutId = window.setTimeout(() => setIsReady(true), 500);
     return () => window.clearTimeout(timeoutId);
   }, [category]);
+
+  useEffect(() => {
+    showInlineFormRef.current = showInlineForm;
+  }, [showInlineForm]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    let timer = 0;
+    const unlockBodyWhenReady = () => {
+      if (showInlineFormRef.current || document.querySelector('[aria-modal="true"]')) {
+        timer = window.setTimeout(unlockBodyWhenReady, 100);
+        return;
+      }
+      document.body.style.overflow = previousOverflow || 'auto';
+    };
+
+    timer = window.setTimeout(unlockBodyWhenReady, 1000);
+    return () => {
+      window.clearTimeout(timer);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const categoryKey = normalizeCatalogValue(category);
   const isJewelryCategory = ['joyería exclusiva', 'acero fino', 'plata de ley 925', 'gemas y piedras naturales'].includes(categoryKey);

@@ -154,8 +154,8 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
     <div className={`group relative flex flex-col w-full p-3 sm:p-4 text-shadow transition-all duration-500 glass-panel ${isJewelry ? 'jewelry-product-card product-card-surface' : 'product-card-surface'}`}>
 
       {/* Imagen */}
-      <div className={`relative w-full aspect-square bg-neutral-900/50 overflow-hidden mb-3 sm:mb-4 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} onClick={onClick}>
-        <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className="w-full h-full object-cover bg-neutral-900/40 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+      <div className="relative w-full aspect-[4/5] overflow-hidden bg-neutral-900" onClick={onClick}>
+        <img loading="lazy" decoding="async" src={optimizeCloudinaryUrl(producto.imagen_url, 600)} alt={producto.titulo} className={`w-full h-full object-cover bg-neutral-900/40 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ${userRole === 'cliente' ? 'cursor-pointer' : ''}`} />
         
         {producto.vendido && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -177,7 +177,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
       </div>
       
       {/* Info */}
-      <div className="flex flex-col flex-grow items-center text-center w-full z-10 relative">
+      <div className="mt-3 sm:mt-4 flex flex-col flex-grow text-center w-full z-10 relative">
         <div className="flex flex-row justify-between items-center w-full gap-3 mb-1.5">
           <h4 className="text-left text-xs md:text-sm font-bold tracking-[0.1em] uppercase text-white line-clamp-2 break-words min-w-0 group-hover:text-gray-300 transition-colors">{producto.titulo}</h4>
           <span className="text-right text-xs md:text-base tracking-[0.06em] text-white font-semibold whitespace-nowrap">${producto.precio}</span>
@@ -193,8 +193,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
             ) : (
               <>
                 {isRing && (
-                  <div className="flex flex-col items-center w-full z-30">
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-auto-fit gap-2 w-full">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 w-full">
                       {tallasDisponibles.map(talla => {
                         const stock = parseInt(String(tallasObj[talla] || 0));
                         const isAvailable = stock > 0;
@@ -221,7 +220,6 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
                         );
                       })}
                     </div>
-                  </div>
                 )}
                 
                 {!isRing && (
@@ -283,7 +281,7 @@ export default function ProductCard({ producto, userRole, onClick, onEdit }: Pro
               <button 
                 onClick={handleToggleVendidoAdmin} 
                 disabled={producto.vendido}
-                className="w-full bg-white text-black py-3 px-4 rounded-none uppercase text-sm tracking-widest font-bold text-center block"
+                className="w-full bg-white text-black py-3 px-4 uppercase text-sm tracking-widest font-bold block mt-2"
               >
                 {producto.vendido ? 'Agotado' : 'Marcar como Vendida'}
               </button>

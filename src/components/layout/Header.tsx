@@ -120,8 +120,8 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
 
       {/* NavegaciÃ³n (Solo Home) */}
       {user && activeView === 'home' && (
-        <nav className="flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full gap-6 px-4 py-2 items-center md:justify-center no-scrollbar">
-          <ul className="flex w-max min-w-max flex-row items-center gap-6 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent">
+        <nav className="relative z-[100] w-full flex overflow-x-auto whitespace-nowrap justify-start md:justify-center items-center gap-6 px-4 py-3 no-scrollbar pointer-events-auto">
+          <ul className="flex w-max min-w-max flex-row items-center gap-6 py-0.5 text-[12px] md:text-[14px] tracking-[0.2em] md:tracking-[0.3em] uppercase border-none bg-transparent md:mx-auto">
             {(menuUsuarioActivo ? ['Mi Perfil', ...(userRole === 'admin' ? ['Gestionar Pedidos', 'Inventario / Finanzas'] : ['Mis Pedidos', `Deseos (${favoritos.length})`]), 'Cerrar SesiÃ³n'] : [...catalogMenus, 'Obsequios']).map((menu, menuIndex) => {
               if (menuUsuarioActivo) {
                 const action = menu.startsWith('Deseos') ? 'deseos' : menu === 'Mi Perfil' ? 'perfil' : menu === 'Mis Pedidos' || menu === 'Gestionar Pedidos' ? 'pedidos' : menu === 'Inventario / Finanzas' ? 'inventario' : null;
@@ -148,7 +148,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                   <div className={`inline-block relative transition-colors duration-300 ${isMenuHidden ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                     {menu}
                   </div>
-                  <div className={`header-dropdown absolute top-full ${menuIndex === catalogMenus.length - 1 ? 'right-0' : 'left-0'} pt-0 z-[300] ${menuAbierto === menu ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                  <div className={`header-dropdown absolute top-full ${menuIndex === catalogMenus.length - 1 ? 'right-0' : 'left-0'} pt-0 z-[300] ${menuAbierto === menu ? 'hidden pointer-events-none md:block md:pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                     <div className="menu-hover-bridge" />
                     <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[180px] max-w-[calc(100vw-2rem)] break-words md:min-w-[240px] text-center`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       {visibleSubmenus.map(sub => {
@@ -171,7 +171,7 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
                 <div className={`inline-block relative transition-colors duration-300 ${normalizedHiddenItems.includes('obsequios') ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
                   Obsequios
                 </div>
-                <div className={`header-dropdown absolute top-full right-0 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'block pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                <div className={`header-dropdown absolute top-full right-0 pt-0 z-[300] ${menuAbierto === 'Obsequios' ? 'hidden pointer-events-none md:block md:pointer-events-auto' : 'hidden pointer-events-none'}`} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                   <div className="menu-hover-bridge" />
                   <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} min-w-[150px] max-w-[calc(100vw-2rem)] break-words md:min-w-[200px] text-center max-h-64 overflow-y-auto`} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                     {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(p => (
@@ -185,6 +185,34 @@ export default function Header({ activeView, setActiveView, setActiveCategory }:
             )}
           </ul>
         </nav>
+      )}
+
+      {user && activeView === 'home' && menuAbierto && (
+        <div className="absolute top-full left-1/2 z-[400] w-[min(90vw,24rem)] -translate-x-1/2 md:hidden">
+          <div className={`header-dropdown-panel ${cristalOpacoSubmenuClass} text-center`}>
+            {menuAbierto === 'Obsequios'
+              ? [5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(price => (
+                <button
+                  key={price}
+                  type="button"
+                  onClick={() => irACategoria(`Obsequios $${price}`)}
+                  className="mt-2 first:mt-0 w-full rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  $ {price}.00 USD
+                </button>
+              ))
+              : (estructuraCatalogo[menuAbierto] ?? []).filter(sub => !isItemHidden(sub)).map(sub => (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => irACategoria(sub)}
+                  className="mt-2 first:mt-0 w-full rounded-lg px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  {sub}
+                </button>
+              ))}
+          </div>
+        </div>
       )}
     </header>
   );
