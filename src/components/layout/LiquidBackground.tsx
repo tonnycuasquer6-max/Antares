@@ -33,7 +33,8 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.5);
     const resizeCanvas = () => {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -47,7 +48,9 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
 
     let time = 0;
     let animationFrame = 0;
-    const starCount = window.matchMedia('(max-width: 640px)').matches ? 90 : 180;
+    let lastFrameTime = 0;
+    const frameInterval = isMobile ? 1000 / 30 : 0;
+    const starCount = isMobile ? 90 : 180;
     const skyStars: SkyStar[] = Array.from({ length: starCount }, (_, index) => ({
       x: (Math.sin(index * 12.9898) * 43758.5453) % 1,
       y: (Math.sin((index + 41) * 78.233) * 24634.6345) % 1,
@@ -60,8 +63,13 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
       if (star.y < 0) star.y += 1;
     });
 
-    const draw = () => {
+    const draw = (timestamp = 0) => {
       animationFrame = 0;
+      if (timestamp - lastFrameTime < frameInterval) {
+        animationFrame = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameTime = timestamp;
       ctx.clearRect(0, 0, width, height);
       
       // Cielo profundo en negro y gris, sin un patrón geométrico dominante.
@@ -110,6 +118,7 @@ export default function LiquidBackground({ className = '' }: LiquidBackgroundPro
         if (animationFrame) cancelAnimationFrame(animationFrame);
         animationFrame = 0;
       } else if (!prefersReducedMotion && !animationFrame) {
+        lastFrameTime = 0;
         animationFrame = requestAnimationFrame(draw);
       }
     };

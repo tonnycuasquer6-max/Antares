@@ -30,10 +30,15 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const isAdminPanel = userRole === 'admin' && ['pedidos', 'inventario'].includes(activeView);
   const sessionVersion = useRef(0);
+  const activeSessionUserId = useRef<string | null | undefined>(undefined);
 
   const handleUserSession = async (currentUser: User | null) => {
-    const currentVersion = ++sessionVersion.current;
+    const userId = currentUser?.id ?? null;
     setUser(currentUser);
+    if (activeSessionUserId.current === userId) return;
+
+    activeSessionUserId.current = userId;
+    const currentVersion = ++sessionVersion.current;
     if (currentUser) {
       setShowLoginModal(false);
       setUserRole('cliente');
